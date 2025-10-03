@@ -13,7 +13,7 @@ An AI-powered web app that analyzes and scores your punching technique in real-t
   - **Battle Cry** - Did you shout? 💪
 
 ## Try It Live
-[Click here to try it!](https://YOUR_USERNAME.github.io/punch-analyzer/)
+[Click here to try it!](https://victortanws.github.io/punch-analyzer/)
 
 ## How to Use
 1. Open the web app in your browser (Chrome or Edge recommended)
