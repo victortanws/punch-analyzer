@@ -29,7 +29,7 @@ An AI-powered web app that analyzes and scores your punching technique in real-t
 - Vanilla JavaScript
 
 ## Local Development
-Simply open `index.html` in your browser - no build process needed!
+Simply open `punchanalyzer.html` in your browser - no build process needed!
 
 ## License
 MIT License - Feel free to use and modify!
