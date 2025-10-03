@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punch Power Analyzer</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #8B1538 0%, #4A0E1F 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .video-container {
+            position: relative;
+            display: inline-block;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            background: #000;
+        }
+
+        #videoElement {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #canvasElement {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            position: relative;
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #C41E3A 0%, #8B1538 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin: 0 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            font-size: 1.5em;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-board {
+            display: none;
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+
+        .score-board.show {
+            display: block;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            font-size: 1.3em;
+        }
+
+        .score-label {
+            font-weight: bold;
+        }
+
+        .score-value {
+            font-size: 1.5em;
+            color: #FFB6C1;
+            text-shadow: 0 0 10px rgba(255,182,193,0.5);
+        }
+
+        .final-score {
+            font-size: 2.5em;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .recording-indicator {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #C41E3A;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+            z-index: 10;
+        }
+
+        .recording-indicator.active {
+            display: block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            text-align: left;
+            display: inline-block;
+            list-style-position: inside;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+        }
+
+        .debug-info {
+            font-size: 0.9em;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥊 Punch Power Analyzer</h1>
+        <p class="subtitle">Show us your best punch and get scored!</p>
+
+        <div class="instructions">
+            <h3>How to Play:</h3>
+            <ul>
+                <li>Stand facing the camera with your full body visible</li>
+                <li>Click "Start Camera" to begin</li>
+                <li>Click "Ready to Punch" when you're in position</li>
+                <li>Throw your best punch when the countdown ends!</li>
+                <li>Make sure to SHOUT while punching for bonus points! 💪</li>
+            </ul>
+        </div>
+
+        <div class="video-container">
+            <video id="videoElement" autoplay playsinline></video>
+            <canvas id="canvasElement"></canvas>
+            <div class="recording-indicator" id="recordingIndicator">● RECORDING</div>
+        </div>
+
+        <div class="controls">
+            <button id="startButton" onclick="startCamera()">Start Camera</button>
+            <button id="punchButton" onclick="readyToPunch()" disabled>Ready to Punch!</button>
+            <button id="tryAgainButton" onclick="tryAgain()" style="display:none;">Try Again</button>
+        </div>
+
+        <div class="status" id="status">Click "Start Camera" to begin</div>
+
+        <div class="score-board" id="scoreBoard">
+            <h2>Your Punch Results!</h2>
+            <div class="score-item">
+                <span class="score-label">Speed:</span>
+                <span class="score-value" id="speedScore">-</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Power (Distance):</span>
+                <span class="score-value" id="powerScore">-</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Extension:</span>
+                <span class="score-value" id="extensionScore">-</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Hip Rotation:</span>
+                <span class="score-value" id="rotationScore">-</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Form:</span>
+                <span class="score-value" id="formScore">-</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Battle Cry:</span>
+                <span class="score-value" id="soundScore">-</span>
+            </div>
+            <div class="final-score">
+                <div class="score-label">TOTAL POWER SCORE:</div>
+                <div class="score-value" id="totalScore">-</div>
+            </div>
+        </div>
+
+        <div class="debug-info" id="debugInfo"></div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('videoElement');
+        const canvasElement = document.getElementById('canvasElement');
+        const canvasCtx = canvasElement.getContext('2d');
+        const status = document.getElementById('status');
+        const startButton = document.getElementById('startButton');
+        const punchButton = document.getElementById('punchButton');
+        const tryAgainButton = document.getElementById('tryAgainButton');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const scoreBoard = document.getElementById('scoreBoard');
+        const debugInfo = document.getElementById('debugInfo');
+
+        let pose;
+        let isRecording = false;
+        let punchData = [];
+        let previousPositions = {};
+        let frameCount = 0;
+        let audioContext;
+        let analyser;
+        let microphone;
+        let maxVolume = 0;
+        let animationFrame;
+
+        function log(message) {
+            console.log(message);
+            debugInfo.textContent = message;
+        }
+
+        // Initialize MediaPipe Pose
+        function initPose() {
+            log('Initializing pose detection...');
+            pose = new Pose({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                }
+            });
+
+            pose.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                enableSegmentation: false,
+                smoothSegmentation: false,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            pose.onResults(onResults);
+            log('Pose detection initialized');
+        }
+
+        // Start camera
+        async function startCamera() {
+            try {
+                log('Requesting camera and microphone access...');
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    },
+                    audio: true 
+                });
+                
+                log('Camera access granted');
+                videoElement.srcObject = stream;
+                
+                // Setup audio analysis
+                audioContext = new AudioContext();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                log('Audio analysis setup complete');
+
+                // Wait for video to be ready
+                await new Promise((resolve) => {
+                    videoElement.onloadedmetadata = () => {
+                        videoElement.play();
+                        resolve();
+                    };
+                });
+
+                // Set canvas size to match video
+                canvasElement.width = videoElement.videoWidth;
+                canvasElement.height = videoElement.videoHeight;
+                
+                log(`Video ready: ${videoElement.videoWidth}x${videoElement.videoHeight}`);
+                
+                // Start processing frames
+                processFrame();
+                
+                status.textContent = '✅ Camera ready! Position yourself and click "Ready to Punch"';
+                startButton.disabled = true;
+                punchButton.disabled = false;
+            } catch (err) {
+                status.textContent = '❌ Error accessing camera: ' + err.message;
+                log('Error: ' + err.message);
+                console.error(err);
+            }
+        }
+
+        // Process video frames
+        async function processFrame() {
+            if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                await pose.send({image: videoElement});
+            }
+            animationFrame = requestAnimationFrame(processFrame);
+        }
+
+        // Process pose results
+        function onResults(results) {
+            // Clear and draw video frame
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.poseLandmarks) {
+                // Draw skeleton
+                drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 4});
+                drawLandmarks(canvasCtx, results.poseLandmarks, {color: '#FF0000', lineWidth: 2, radius: 6});
+
+                // Record data if we're tracking a punch
+                if (isRecording) {
+                    recordPunchFrame(results.poseLandmarks);
+                }
+            }
+
+            canvasCtx.restore();
+        }
+
+        // Ready to punch - start countdown
+        function readyToPunch() {
+            punchButton.disabled = true;
+            scoreBoard.classList.remove('show');
+            tryAgainButton.style.display = 'none';
+            
+            let countdown = 3;
+            
+            const countdownInterval = setInterval(() => {
+                if (countdown > 0) {
+                    status.textContent = `Get ready... ${countdown}`;
+                    countdown--;
+                } else {
+                    clearInterval(countdownInterval);
+                    status.textContent = '🥊 PUNCH NOW! 🥊';
+                    startRecording();
+                    
+                    // Stop recording after 2 seconds
+                    setTimeout(() => {
+                        stopRecording();
+                    }, 2000);
+                }
+            }, 1000);
+        }
+
+        // Start recording punch data
+        function startRecording() {
+            isRecording = true;
+            punchData = [];
+            previousPositions = {};
+            frameCount = 0;
+            maxVolume = 0;
+            recordingIndicator.classList.add('active');
+            log('Recording started');
+        }
+
+        // Record frame data
+        function recordPunchFrame(landmarks) {
+            frameCount++;
+            
+            // Get key points
+            const rightWrist = landmarks[16];
+            const leftWrist = landmarks[15];
+            const rightElbow = landmarks[14];
+            const leftElbow = landmarks[13];
+            const rightShoulder = landmarks[12];
+            const leftShoulder = landmarks[11];
+            const rightHip = landmarks[24];
+            const leftHip = landmarks[23];
+            
+            // Get hand landmarks for size calculation
+            const rightIndex = landmarks[20];  // Right index finger
+            const rightPinky = landmarks[18];  // Right pinky
+            const leftIndex = landmarks[19];   // Left index finger
+            const leftPinky = landmarks[17];   // Left pinky
+
+            // Calculate velocities if we have previous positions
+            let rightWristSpeed = 0;
+            let leftWristSpeed = 0;
+
+            if (previousPositions.rightWrist) {
+                rightWristSpeed = calculateDistance(previousPositions.rightWrist, rightWrist);
+            }
+            if (previousPositions.leftWrist) {
+                leftWristSpeed = calculateDistance(previousPositions.leftWrist, leftWrist);
+            }
+            
+            // Calculate hand size (distance between index and pinky as a proxy for visible hand size)
+            // Larger visible hand = closer to camera
+            const rightHandSize = calculateDistance(rightIndex, rightPinky);
+            const leftHandSize = calculateDistance(leftIndex, leftPinky);
+            
+            // Calculate Z-depth (closer to camera = higher Z value in MediaPipe)
+            // Lower Z value actually means closer to camera in MediaPipe
+            const rightDepth = rightWrist.z;
+            const leftDepth = leftWrist.z;
+
+            // Store current positions for next frame
+            previousPositions = {
+                rightWrist: {...rightWrist},
+                leftWrist: {...leftWrist},
+                rightElbow: {...rightElbow},
+                leftElbow: {...leftElbow},
+                rightShoulder: {...rightShoulder},
+                leftShoulder: {...leftShoulder},
+                rightHip: {...rightHip},
+                leftHip: {...leftHip}
+            };
+
+            // Check audio level
+            if (analyser) {
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(dataArray);
+                const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                maxVolume = Math.max(maxVolume, volume);
+            }
+
+            punchData.push({
+                frame: frameCount,
+                rightWristSpeed,
+                leftWristSpeed,
+                rightHandSize,
+                leftHandSize,
+                rightDepth,
+                leftDepth,
+                rightWrist,
+                leftWrist,
+                rightElbow,
+                leftElbow,
+                rightShoulder,
+                leftShoulder,
+                rightHip,
+                leftHip
+            });
+        }
+
+        // Stop recording and calculate score
+        function stopRecording() {
+            isRecording = false;
+            recordingIndicator.classList.remove('active');
+            status.textContent = 'Analyzing your punch...';
+            log(`Recorded ${punchData.length} frames`);
+            
+            setTimeout(() => {
+                const scores = calculatePunchScore();
+                displayScores(scores);
+            }, 500);
+        }
+
+        // Calculate distance between two points
+        function calculateDistance(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const dz = (p2.z || 0) - (p1.z || 0);
+            return Math.sqrt(dx*dx + dy*dy + dz*dz);
+        }
+
+        // Calculate angle between three points
+        function calculateAngle(p1, p2, p3) {
+            const v1 = {x: p1.x - p2.x, y: p1.y - p2.y};
+            const v2 = {x: p3.x - p2.x, y: p3.y - p2.y};
+            
+            const dot = v1.x * v2.x + v1.y * v2.y;
+            const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+            const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+            
+            const angle = Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2)))) * (180 / Math.PI);
+            return angle;
+        }
+
+        // Calculate punch score
+        function calculatePunchScore() {
+            if (punchData.length === 0) {
+                log('No punch data recorded!');
+                return {speed: 0, power: 0, extension: 0, rotation: 0, form: 0, sound: 0, total: 0};
+            }
+
+            // Find maximum speeds and hand sizes
+            let maxRightSpeed = 0;
+            let maxLeftSpeed = 0;
+            let maxRightHandSize = 0;
+            let maxLeftHandSize = 0;
+            let minRightDepth = Infinity;
+            let minLeftDepth = Infinity;
+            let bestExtensionRight = 0;
+            let bestExtensionLeft = 0;
+            let maxRotation = 0;
+
+            punchData.forEach(frame => {
+                maxRightSpeed = Math.max(maxRightSpeed, frame.rightWristSpeed);
+                maxLeftSpeed = Math.max(maxLeftSpeed, frame.leftWristSpeed);
+                
+                // Track maximum hand size (closer to camera = bigger hand)
+                maxRightHandSize = Math.max(maxRightHandSize, frame.rightHandSize);
+                maxLeftHandSize = Math.max(maxLeftHandSize, frame.leftHandSize);
+                
+                // Track minimum depth (lower Z = closer to camera)
+                minRightDepth = Math.min(minRightDepth, frame.rightDepth);
+                minLeftDepth = Math.min(minLeftDepth, frame.leftDepth);
+
+                // Check arm extension (straighter = better)
+                const rightExtension = calculateAngle(frame.rightShoulder, frame.rightElbow, frame.rightWrist);
+                const leftExtension = calculateAngle(frame.leftShoulder, frame.leftElbow, frame.leftWrist);
+                
+                bestExtensionRight = Math.max(bestExtensionRight, rightExtension);
+                bestExtensionLeft = Math.max(bestExtensionLeft, leftExtension);
+
+                // Check hip rotation (shoulder line vs hip line angle difference)
+                const shoulderAngle = Math.atan2(
+                    frame.rightShoulder.y - frame.leftShoulder.y,
+                    frame.rightShoulder.x - frame.leftShoulder.x
+                );
+                const hipAngle = Math.atan2(
+                    frame.rightHip.y - frame.leftHip.y,
+                    frame.rightHip.x - frame.leftHip.x
+                );
+                
+                const rotation = Math.abs(shoulderAngle - hipAngle) * (180 / Math.PI);
+                maxRotation = Math.max(maxRotation, rotation);
+            });
+
+            // Determine which hand punched
+            const punchedWithRight = maxRightSpeed > maxLeftSpeed;
+            const maxSpeed = Math.max(maxRightSpeed, maxLeftSpeed);
+            const maxHandSize = punchedWithRight ? maxRightHandSize : maxLeftHandSize;
+            const minDepth = punchedWithRight ? minRightDepth : minLeftDepth;
+            const bestExtension = punchedWithRight ? bestExtensionRight : bestExtensionLeft;
+
+            log(`Max speed: ${maxSpeed.toFixed(4)}, Hand size: ${maxHandSize.toFixed(4)}, Min depth: ${minDepth.toFixed(4)}, Extension: ${bestExtension.toFixed(1)}°, Rotation: ${maxRotation.toFixed(1)}°, Volume: ${maxVolume.toFixed(1)}`);
+
+            // Calculate scores (0-100)
+            // SPEED: Made much stricter - requires significant movement
+            const speedScore = Math.min(100, Math.round(maxSpeed * 5000));
+            
+            // POWER/DISTANCE: Combination of hand size and depth
+            // Larger hand size means closer to camera
+            // Lower depth value also means closer to camera
+            const handSizeScore = Math.min(100, Math.round(maxHandSize * 500));
+            const depthScore = Math.min(100, Math.round((0.5 - minDepth) * 200)); // Normalized depth
+            const powerScore = Math.round((handSizeScore + depthScore) / 2);
+            
+            // EXTENSION: How straight the arm gets
+            const extensionScore = Math.min(100, Math.round((bestExtension / 180) * 100));
+            
+            // ROTATION: Hip rotation for power
+            const rotationScore = Math.min(100, Math.round((maxRotation / 45) * 100));
+            
+            // FORM: Derived from other metrics
+            const formScore = Math.round((speedScore + extensionScore + rotationScore) / 3 * 0.8);
+            
+            // SOUND: Battle cry
+            const soundScore = Math.min(100, Math.round(maxVolume * 1.5));
+
+            // TOTAL: Weighted average with emphasis on speed and power
+            const totalScore = Math.round(
+                (speedScore * 0.25 + powerScore * 0.25 + extensionScore * 0.15 + 
+                 rotationScore * 0.15 + formScore * 0.1 + soundScore * 0.1)
+            );
+
+            return {
+                speed: speedScore,
+                power: powerScore,
+                extension: extensionScore,
+                rotation: rotationScore,
+                form: formScore,
+                sound: soundScore,
+                total: totalScore
+            };
+        }
+
+        // Display scores
+        function displayScores(scores) {
+            document.getElementById('speedScore').textContent = scores.speed + '/100';
+            document.getElementById('powerScore').textContent = scores.power + '/100';
+            document.getElementById('extensionScore').textContent = scores.extension + '/100';
+            document.getElementById('rotationScore').textContent = scores.rotation + '/100';
+            document.getElementById('formScore').textContent = scores.form + '/100';
+            document.getElementById('soundScore').textContent = scores.sound + '/100';
+            document.getElementById('totalScore').textContent = scores.total + '/100';
+
+            scoreBoard.classList.add('show');
+            tryAgainButton.style.display = 'inline-block';
+            
+            let message = '';
+            if (scores.total >= 80) message = '🔥 LEGENDARY PUNCH! 🔥';
+            else if (scores.total >= 60) message = '💪 Great punch!';
+            else if (scores.total >= 40) message = '👊 Not bad!';
+            else message = '🥊 Keep practicing!';
+
+            status.textContent = message;
+        }
+
+        // Try again
+        function tryAgain() {
+            scoreBoard.classList.remove('show');
+            tryAgainButton.style.display = 'none';
+            punchButton.disabled = false;
+            status.textContent = 'Ready when you are! Click "Ready to Punch"';
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initPose();
+            log('Page loaded, ready to start');
+        });
+    </script>
+</body>
+</html>
