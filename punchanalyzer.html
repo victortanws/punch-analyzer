@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="Punch Power Analyzer - Test Your Punch!">
+    <meta property="og:description" content="AI-powered punch analyzer. Test your speed, power, and technique!">
+    <meta property="og:image" content="https://victortanws.github.io/punch-analyzer/preview.png">
+    <meta property="og:url" content="https://victortanws.github.io/punch-analyzer/punchanalyzer.html">
     <title>Punch Power Analyzer</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
@@ -114,6 +118,25 @@
             justify-content: center;
         }
 
+        .personal-best {
+            background: rgba(255,215,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,215,0,0.5);
+        }
+
+        .personal-best h3 {
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+
+        .personal-best-score {
+            font-size: 2em;
+            color: #FFD700;
+            font-weight: bold;
+        }
+
         .score-board {
             display: none;
             background: rgba(255,255,255,0.15);
@@ -164,6 +187,17 @@
             border-top: 2px solid rgba(255,255,255,0.3);
         }
 
+        .new-record {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
         .recording-indicator {
             display: none;
             position: absolute;
@@ -209,6 +243,94 @@
             margin: 8px 0;
         }
 
+        .social-share {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .social-share.show {
+            display: block;
+        }
+
+        .social-share h3 {
+            margin-bottom: 15px;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            text-decoration: none;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .share-btn.facebook {
+            background: #1877f2;
+        }
+
+        .share-btn.twitter {
+            background: #1da1f2;
+        }
+
+        .share-btn.whatsapp {
+            background: #25d366;
+        }
+
+        .share-btn.linkedin {
+            background: #0077b5;
+        }
+
+        .donation-section {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .donation-section h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .donation-section p {
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .donate-btn {
+            background: #0070ba;
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .donate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
         .debug-info {
             font-size: 0.9em;
             margin-top: 10px;
@@ -217,12 +339,103 @@
             border-radius: 5px;
             font-family: monospace;
         }
+
+        .skeleton-toggle {
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .skeleton-toggle label {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .skeleton-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .follow-section {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .follow-section h3 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            text-decoration: none;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .social-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .social-link.instagram {
+            background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+        }
+
+        .social-link.tiktok {
+            background: #000000;
+            border: 2px solid #00f2ea;
+        }
+
+        .social-link.youtube {
+            background: #FF0000;
+        }
+
+        .keyboard-hint {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
+            backdrop-filter: blur(10px);
+        }
+
+        .keyboard-hint kbd {
+            background: rgba(255,255,255,0.2);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🥊 Punch Power Analyzer</h1>
         <p class="subtitle">Show us your best punch and get scored!</p>
+
+        <div class="personal-best" id="personalBest" style="display:none;">
+            <h3>🏆 Your Personal Best</h3>
+            <div class="personal-best-score" id="personalBestScore">-</div>
+        </div>
 
         <div class="instructions">
             <h3>How to Play:</h3>
@@ -239,6 +452,13 @@
             <video id="videoElement" autoplay playsinline></video>
             <canvas id="canvasElement"></canvas>
             <div class="recording-indicator" id="recordingIndicator">● RECORDING</div>
+        </div>
+
+        <div class="skeleton-toggle">
+            <label>
+                <input type="checkbox" id="showSkeletonToggle" checked>
+                Show skeleton overlay (for debugging)
+            </label>
         </div>
 
         <div class="controls">
@@ -278,7 +498,34 @@
             <div class="final-score">
                 <div class="score-label">TOTAL POWER SCORE:</div>
                 <div class="score-value" id="totalScore">-</div>
+                <div id="newRecordBadge"></div>
             </div>
+        </div>
+
+        <div class="social-share" id="socialShare">
+            <h3>📢 Share Your Score!</h3>
+            <div class="share-buttons">
+                <a href="#" class="share-btn facebook" id="shareFacebook" target="_blank">
+                    📘 Share on Facebook
+                </a>
+                <a href="#" class="share-btn twitter" id="shareTwitter" target="_blank">
+                    🐦 Share on Twitter
+                </a>
+                <a href="#" class="share-btn whatsapp" id="shareWhatsApp" target="_blank">
+                    💬 Share on WhatsApp
+                </a>
+                <a href="#" class="share-btn linkedin" id="shareLinkedIn" target="_blank">
+                    💼 Share on LinkedIn
+                </a>
+            </div>
+        </div>
+
+        <div class="donation-section">
+            <h3>💪 Support This Project</h3>
+            <p>Enjoying the Punch Analyzer? Help keep it free and ad-free with a small donation!</p>
+            <a href="https://www.paypal.me/itsvictortan" class="donate-btn" target="_blank">
+                ☕ Buy Me a Coffee via PayPal
+            </a>
         </div>
 
         <div class="debug-info" id="debugInfo"></div>
@@ -294,7 +541,11 @@
         const tryAgainButton = document.getElementById('tryAgainButton');
         const recordingIndicator = document.getElementById('recordingIndicator');
         const scoreBoard = document.getElementById('scoreBoard');
+        const socialShare = document.getElementById('socialShare');
         const debugInfo = document.getElementById('debugInfo');
+        const showSkeletonToggle = document.getElementById('showSkeletonToggle');
+        const personalBestDisplay = document.getElementById('personalBest');
+        const personalBestScore = document.getElementById('personalBestScore');
 
         let pose;
         let isRecording = false;
@@ -306,6 +557,35 @@
         let microphone;
         let maxVolume = 0;
         let animationFrame;
+        let showSkeleton = true;
+        let personalBest = 0;
+
+        // Load personal best from localStorage
+        function loadPersonalBest() {
+            const saved = localStorage.getItem('punchAnalyzerBest');
+            if (saved) {
+                personalBest = parseInt(saved);
+                personalBestDisplay.style.display = 'block';
+                personalBestScore.textContent = personalBest + '/100';
+            }
+        }
+
+        // Save personal best to localStorage
+        function savePersonalBest(score) {
+            if (score > personalBest) {
+                personalBest = score;
+                localStorage.setItem('punchAnalyzerBest', score);
+                personalBestDisplay.style.display = 'block';
+                personalBestScore.textContent = personalBest + '/100';
+                return true; // New record!
+            }
+            return false;
+        }
+
+        // Toggle skeleton visibility
+        showSkeletonToggle.addEventListener('change', (e) => {
+            showSkeleton = e.target.checked;
+        });
 
         function log(message) {
             console.log(message);
@@ -331,7 +611,7 @@
             });
 
             pose.onResults(onResults);
-            log('Pose detection initialized');
+            log('Pose detection initialized and ready');
         }
 
         // Start camera
@@ -372,10 +652,10 @@
                 
                 log(`Video ready: ${videoElement.videoWidth}x${videoElement.videoHeight}`);
                 
-                // Start processing frames
+                // Start processing frames IMMEDIATELY
                 processFrame();
                 
-                status.textContent = '✅ Camera ready! Position yourself and click "Ready to Punch"';
+                status.textContent = '✅ Camera ready! Pose detection is now active. Click "Ready to Punch" when positioned!';
                 startButton.disabled = true;
                 punchButton.disabled = false;
             } catch (err) {
@@ -401,11 +681,13 @@
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
             if (results.poseLandmarks) {
-                // Draw skeleton
-                drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 4});
-                drawLandmarks(canvasCtx, results.poseLandmarks, {color: '#FF0000', lineWidth: 2, radius: 6});
+                // Draw skeleton only if toggle is enabled
+                if (showSkeleton) {
+                    drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 4});
+                    drawLandmarks(canvasCtx, results.poseLandmarks, {color: '#FF0000', lineWidth: 2, radius: 6});
+                }
 
-                // Record data if we're tracking a punch
+                // Always record data if we're tracking a punch (regardless of skeleton visibility)
                 if (isRecording) {
                     recordPunchFrame(results.poseLandmarks);
                 }
@@ -418,6 +700,7 @@
         function readyToPunch() {
             punchButton.disabled = true;
             scoreBoard.classList.remove('show');
+            socialShare.classList.remove('show');
             tryAgainButton.style.display = 'none';
             
             let countdown = 3;
@@ -447,7 +730,7 @@
             frameCount = 0;
             maxVolume = 0;
             recordingIndicator.classList.add('active');
-            log('Recording started');
+            log('Recording started - pose detection already running');
         }
 
         // Record frame data
@@ -465,10 +748,10 @@
             const leftHip = landmarks[23];
             
             // Get hand landmarks for size calculation
-            const rightIndex = landmarks[20];  // Right index finger
-            const rightPinky = landmarks[18];  // Right pinky
-            const leftIndex = landmarks[19];   // Left index finger
-            const leftPinky = landmarks[17];   // Left pinky
+            const rightIndex = landmarks[20];
+            const rightPinky = landmarks[18];
+            const leftIndex = landmarks[19];
+            const leftPinky = landmarks[17];
 
             // Calculate velocities if we have previous positions
             let rightWristSpeed = 0;
@@ -481,13 +764,11 @@
                 leftWristSpeed = calculateDistance(previousPositions.leftWrist, leftWrist);
             }
             
-            // Calculate hand size (distance between index and pinky as a proxy for visible hand size)
-            // Larger visible hand = closer to camera
+            // Calculate hand size
             const rightHandSize = calculateDistance(rightIndex, rightPinky);
             const leftHandSize = calculateDistance(leftIndex, leftPinky);
             
-            // Calculate Z-depth (closer to camera = higher Z value in MediaPipe)
-            // Lower Z value actually means closer to camera in MediaPipe
+            // Calculate Z-depth
             const rightDepth = rightWrist.z;
             const leftDepth = leftWrist.z;
 
@@ -571,7 +852,6 @@
                 return {speed: 0, power: 0, extension: 0, rotation: 0, form: 0, sound: 0, total: 0};
             }
 
-            // Find maximum speeds and hand sizes
             let maxRightSpeed = 0;
             let maxLeftSpeed = 0;
             let maxRightHandSize = 0;
@@ -586,22 +866,18 @@
                 maxRightSpeed = Math.max(maxRightSpeed, frame.rightWristSpeed);
                 maxLeftSpeed = Math.max(maxLeftSpeed, frame.leftWristSpeed);
                 
-                // Track maximum hand size (closer to camera = bigger hand)
                 maxRightHandSize = Math.max(maxRightHandSize, frame.rightHandSize);
                 maxLeftHandSize = Math.max(maxLeftHandSize, frame.leftHandSize);
                 
-                // Track minimum depth (lower Z = closer to camera)
                 minRightDepth = Math.min(minRightDepth, frame.rightDepth);
                 minLeftDepth = Math.min(minLeftDepth, frame.leftDepth);
 
-                // Check arm extension (straighter = better)
                 const rightExtension = calculateAngle(frame.rightShoulder, frame.rightElbow, frame.rightWrist);
                 const leftExtension = calculateAngle(frame.leftShoulder, frame.leftElbow, frame.leftWrist);
                 
                 bestExtensionRight = Math.max(bestExtensionRight, rightExtension);
                 bestExtensionLeft = Math.max(bestExtensionLeft, leftExtension);
 
-                // Check hip rotation (shoulder line vs hip line angle difference)
                 const shoulderAngle = Math.atan2(
                     frame.rightShoulder.y - frame.leftShoulder.y,
                     frame.rightShoulder.x - frame.leftShoulder.x
@@ -615,7 +891,6 @@
                 maxRotation = Math.max(maxRotation, rotation);
             });
 
-            // Determine which hand punched
             const punchedWithRight = maxRightSpeed > maxLeftSpeed;
             const maxSpeed = Math.max(maxRightSpeed, maxLeftSpeed);
             const maxHandSize = punchedWithRight ? maxRightHandSize : maxLeftHandSize;
@@ -624,30 +899,15 @@
 
             log(`Max speed: ${maxSpeed.toFixed(4)}, Hand size: ${maxHandSize.toFixed(4)}, Min depth: ${minDepth.toFixed(4)}, Extension: ${bestExtension.toFixed(1)}°, Rotation: ${maxRotation.toFixed(1)}°, Volume: ${maxVolume.toFixed(1)}`);
 
-            // Calculate scores (0-100)
-            // SPEED: Made much stricter - requires significant movement
             const speedScore = Math.min(100, Math.round(maxSpeed * 5000));
-            
-            // POWER/DISTANCE: Combination of hand size and depth
-            // Larger hand size means closer to camera
-            // Lower depth value also means closer to camera
             const handSizeScore = Math.min(100, Math.round(maxHandSize * 500));
-            const depthScore = Math.min(100, Math.round((0.5 - minDepth) * 200)); // Normalized depth
+            const depthScore = Math.min(100, Math.round((0.5 - minDepth) * 200));
             const powerScore = Math.round((handSizeScore + depthScore) / 2);
-            
-            // EXTENSION: How straight the arm gets
             const extensionScore = Math.min(100, Math.round((bestExtension / 180) * 100));
-            
-            // ROTATION: Hip rotation for power
             const rotationScore = Math.min(100, Math.round((maxRotation / 45) * 100));
-            
-            // FORM: Derived from other metrics
             const formScore = Math.round((speedScore + extensionScore + rotationScore) / 3 * 0.8);
-            
-            // SOUND: Battle cry
             const soundScore = Math.min(100, Math.round(maxVolume * 1.5));
 
-            // TOTAL: Weighted average with emphasis on speed and power
             const totalScore = Math.round(
                 (speedScore * 0.25 + powerScore * 0.25 + extensionScore * 0.15 + 
                  rotationScore * 0.15 + formScore * 0.1 + soundScore * 0.1)
@@ -674,7 +934,17 @@
             document.getElementById('soundScore').textContent = scores.sound + '/100';
             document.getElementById('totalScore').textContent = scores.total + '/100';
 
+            // Check for new personal best
+            const isNewRecord = savePersonalBest(scores.total);
+            const newRecordBadge = document.getElementById('newRecordBadge');
+            if (isNewRecord) {
+                newRecordBadge.innerHTML = '<div class="new-record">🎉 NEW PERSONAL BEST! 🎉</div>';
+            } else {
+                newRecordBadge.innerHTML = '';
+            }
+
             scoreBoard.classList.add('show');
+            socialShare.classList.add('show');
             tryAgainButton.style.display = 'inline-block';
             
             let message = '';
@@ -684,11 +954,33 @@
             else message = '🥊 Keep practicing!';
 
             status.textContent = message;
+
+            // Update social share links
+            updateSocialLinks(scores.total);
+        }
+
+        // Update social sharing links
+        function updateSocialLinks(score) {
+            const url = 'https://victortanws.github.io/punch-analyzer/punchanalyzer.html';
+            const text = `I just scored ${score}/100 on the Punch Power Analyzer! 🥊 Can you beat my score?`;
+            
+            document.getElementById('shareFacebook').href = 
+                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+            
+            document.getElementById('shareTwitter').href = 
+                `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+            
+            document.getElementById('shareWhatsApp').href = 
+                `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+            
+            document.getElementById('shareLinkedIn').href = 
+                `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
         }
 
         // Try again
         function tryAgain() {
             scoreBoard.classList.remove('show');
+            socialShare.classList.remove('show');
             tryAgainButton.style.display = 'none';
             punchButton.disabled = false;
             status.textContent = 'Ready when you are! Click "Ready to Punch"';
@@ -697,6 +989,7 @@
         // Initialize on page load
         window.addEventListener('load', () => {
             initPose();
+            loadPersonalBest();
             log('Page loaded, ready to start');
         });
     </script>
