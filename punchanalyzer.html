@@ -359,41 +359,42 @@
         }
 
         .follow-section {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 20px;
-            margin: 30px 0;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0 10px 0;
             backdrop-filter: blur(10px);
         }
 
         .follow-section h3 {
-            margin-bottom: 20px;
-            font-size: 1.5em;
+            margin-bottom: 12px;
+            font-size: 1em;
+            opacity: 0.8;
         }
 
         .social-links {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             justify-content: center;
             flex-wrap: wrap;
         }
 
         .social-link {
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 1em;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
             text-decoration: none;
             color: white;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            gap: 6px;
+            transition: transform 0.2s, opacity 0.2s;
+            opacity: 0.85;
         }
 
         .social-link:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            opacity: 1;
         }
 
         .social-link.instagram {
@@ -402,7 +403,7 @@
 
         .social-link.tiktok {
             background: #000000;
-            border: 2px solid #00f2ea;
+            border: 1px solid #00f2ea;
         }
 
         .social-link.youtube {
@@ -523,23 +524,28 @@
             </div>
         </div>
 
+        <div class="donation-section">
+            <h3>💪 Support This Project</h3>
+            <p>Enjoying the Punch Analyzer? Help keep it free and ad-free with a small donation!</p>
+            <a href="https://www.paypal.me/itsvictortan" class="donate-btn" target="_blank">
+                ☕ Buy Me a Coffee via PayPal
+            </a>
+        </div>
+
         <div class="follow-section">
-            <h3>👋 Follow Victor Tan</h3>
-            <p>Join the community and see more fun projects!</p>
+            <h3>Follow me on socials!</h3>
             <div class="social-links">
                 <a href="https://www.instagram.com/victortanws" class="social-link instagram" target="_blank">
-                    📷 @victortanws on Instagram
+                    📷 Instagram
                 </a>
                 <a href="https://www.tiktok.com/@victortanws" class="social-link tiktok" target="_blank">
-                    🎵 @victortanws on TikTok
+                    🎵 TikTok
                 </a>
                 <a href="https://www.youtube.com/victortan" class="social-link youtube" target="_blank">
-                    ▶️ Victor Tan on YouTube
+                    ▶️ YouTube
                 </a>
             </div>
         </div>
-
-        <div class="donation-section">
             <h3>💪 Support This Project</h3>
             <p>Enjoying the Punch Analyzer? Help keep it free and ad-free with a small donation!</p>
             <a href="https://www.paypal.me/itsvictortan" class="donate-btn" target="_blank">
@@ -576,7 +582,7 @@
         let microphone;
         let maxVolume = 0;
         let animationFrame;
-        let showSkeleton = true;
+        let showSkeleton = false; // Start with skeleton hidden
         let personalBest = 0;
 
         // Load personal best from localStorage
