@@ -3,11 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta property="og:title" content="Punch Power Analyzer - Test Your Punch!">
-    <meta property="og:description" content="AI-powered punch analyzer. Test your speed, power, and technique!">
-    <meta property="og:image" content="https://victortanws.github.io/punch-analyzer/preview.png">
+    <meta property="og:title" content="🥊 Punch Power Analyzer - Test Your Punch!">
+    <meta property="og:description" content="AI-powered punch analyzer. Test your speed, power, and technique! Can you get a perfect score?">
+    <meta property="og:image" content="https://victortanws.github.io/punch-analyzer/punch-preview.png">
     <meta property="og:url" content="https://victortanws.github.io/punch-analyzer/punchanalyzer.html">
-    <title>Punch Power Analyzer</title>
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="🥊 Punch Power Analyzer">
+    <meta name="twitter:description" content="AI-powered punch analyzer. Test your speed, power, and technique!">
+    <meta name="twitter:image" content="https://victortanws.github.io/punch-analyzer/punch-preview.png">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥊</text></svg>">
+    <title>🥊 Punch Power Analyzer</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -352,12 +358,6 @@
             gap: 8px;
         }
 
-        .skeleton-toggle input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
         .follow-section {
             background: rgba(255,255,255,0.1);
             padding: 30px;
@@ -442,10 +442,13 @@
             <ul>
                 <li>Stand facing the camera with your full body visible</li>
                 <li>Click "Start Camera" to begin</li>
-                <li>Click "Ready to Punch" when you're in position</li>
+                <li>Click "Ready to Punch" when you're in position (or press <kbd>P</kbd> on keyboard)</li>
                 <li>Throw your best punch when the countdown ends!</li>
                 <li>Make sure to SHOUT while punching for bonus points! 💪</li>
             </ul>
+            <div class="keyboard-hint">
+                💡 <strong>Keyboard Shortcut:</strong> Press <kbd>P</kbd> to start punching!
+            </div>
         </div>
 
         <div class="video-container">
@@ -456,15 +459,15 @@
 
         <div class="skeleton-toggle">
             <label>
-                <input type="checkbox" id="showSkeletonToggle" checked>
-                Show skeleton overlay (for debugging)
+                <input type="checkbox" id="showSkeletonToggle" style="width: 18px; height: 18px; cursor: pointer;">
+                Show skeleton overlay
             </label>
         </div>
 
         <div class="controls">
             <button id="startButton" onclick="startCamera()">Start Camera</button>
-            <button id="punchButton" onclick="readyToPunch()" disabled>Ready to Punch!</button>
-            <button id="tryAgainButton" onclick="tryAgain()" style="display:none;">Try Again</button>
+            <button id="punchButton" onclick="readyToPunch()" disabled>Ready to Punch! (Press P)</button>
+            <button id="tryAgainButton" onclick="tryAgain()" style="display:none;">Try Again (Press T)</button>
         </div>
 
         <div class="status" id="status">Click "Start Camera" to begin</div>
@@ -516,6 +519,22 @@
                 </a>
                 <a href="#" class="share-btn linkedin" id="shareLinkedIn" target="_blank">
                     💼 Share on LinkedIn
+                </a>
+            </div>
+        </div>
+
+        <div class="follow-section">
+            <h3>👋 Follow Victor Tan</h3>
+            <p>Join the community and see more fun projects!</p>
+            <div class="social-links">
+                <a href="https://www.instagram.com/victortanws" class="social-link instagram" target="_blank">
+                    📷 @victortanws on Instagram
+                </a>
+                <a href="https://www.tiktok.com/@victortanws" class="social-link tiktok" target="_blank">
+                    🎵 @victortanws on TikTok
+                </a>
+                <a href="https://www.youtube.com/victortan" class="social-link youtube" target="_blank">
+                    ▶️ Victor Tan on YouTube
                 </a>
             </div>
         </div>
@@ -991,6 +1010,22 @@
             initPose();
             loadPersonalBest();
             log('Page loaded, ready to start');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Press 'P' to start punching (if button is enabled)
+            if (e.key.toLowerCase() === 'p' && !punchButton.disabled) {
+                readyToPunch();
+            }
+            // Press 'S' to start camera (if button is enabled)
+            if (e.key.toLowerCase() === 's' && !startButton.disabled) {
+                startCamera();
+            }
+            // Press 'T' to try again (if button is visible)
+            if (e.key.toLowerCase() === 't' && tryAgainButton.style.display !== 'none') {
+                tryAgain();
+            }
         });
     </script>
 </body>
