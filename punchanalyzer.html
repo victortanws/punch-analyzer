@@ -64,19 +64,15 @@
             background: #000;
         }
 
+        /* The video element feeds MediaPipe; the canvas is what users see */
         #videoElement {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            display: none;
         }
 
         #canvasElement {
             display: block;
             max-width: 100%;
             height: auto;
-            position: relative;
         }
 
         .controls {
@@ -220,6 +216,28 @@
 
         .recording-indicator.active {
             display: block;
+        }
+
+        .tracking-indicator {
+            display: none;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .tracking-indicator.ok {
+            display: block;
+            background: rgba(0, 150, 60, 0.8);
+        }
+
+        .tracking-indicator.lost {
+            display: block;
+            background: rgba(196, 30, 58, 0.85);
         }
 
         @keyframes pulse {
@@ -441,20 +459,21 @@
         <div class="instructions">
             <h3>How to Play:</h3>
             <ul>
-                <li>Stand facing the camera with your full body visible</li>
+                <li>Stand facing the camera with your upper body and hips visible</li>
                 <li>Click "Start Camera" to begin</li>
-                <li>Click "Ready to Punch" when you're in position (or press <kbd>P</kbd> on keyboard)</li>
+                <li>Wait for the green "Body detected" badge, then click "Ready to Punch"</li>
                 <li>Throw your best punch when the countdown ends!</li>
                 <li>Make sure to SHOUT while punching for bonus points! 💪</li>
             </ul>
             <div class="keyboard-hint">
-                💡 <strong>Keyboard Shortcut:</strong> Press <kbd>P</kbd> to start punching!
+                💡 <strong>Keyboard Shortcuts:</strong> <kbd>S</kbd> start camera · <kbd>P</kbd> punch · <kbd>T</kbd> try again
             </div>
         </div>
 
         <div class="video-container">
-            <video id="videoElement" autoplay playsinline></video>
+            <video id="videoElement" autoplay playsinline muted></video>
             <canvas id="canvasElement"></canvas>
+            <div class="tracking-indicator" id="trackingIndicator"></div>
             <div class="recording-indicator" id="recordingIndicator">● RECORDING</div>
         </div>
 
@@ -492,7 +511,7 @@
                 <span class="score-value" id="rotationScore">-</span>
             </div>
             <div class="score-item">
-                <span class="score-label">Form:</span>
+                <span class="score-label">Form (Guard Up):</span>
                 <span class="score-value" id="formScore">-</span>
             </div>
             <div class="score-item">
@@ -559,6 +578,7 @@
         const punchButton = document.getElementById('punchButton');
         const tryAgainButton = document.getElementById('tryAgainButton');
         const recordingIndicator = document.getElementById('recordingIndicator');
+        const trackingIndicator = document.getElementById('trackingIndicator');
         const scoreBoard = document.getElementById('scoreBoard');
         const socialShare = document.getElementById('socialShare');
         const debugInfo = document.getElementById('debugInfo');
@@ -566,24 +586,41 @@
         const personalBestDisplay = document.getElementById('personalBest');
         const personalBestScore = document.getElementById('personalBestScore');
 
+        // MediaPipe Pose landmark indices
+        const LM = {
+            NOSE: 0,
+            L_SHOULDER: 11, R_SHOULDER: 12,
+            L_ELBOW: 13, R_ELBOW: 14,
+            L_WRIST: 15, R_WRIST: 16,
+            L_PINKY: 17, R_PINKY: 18,
+            L_INDEX: 19, R_INDEX: 20,
+            L_HIP: 23, R_HIP: 24
+        };
+        const MIN_VISIBILITY = 0.5;
+
         let pose;
+        let poseReady = false;
+        let cameraStarted = false;
         let isRecording = false;
+        let busy = false;               // true from countdown start until "Try Again"
         let punchData = [];
-        let previousPositions = {};
-        let frameCount = 0;
         let audioContext;
         let analyser;
-        let microphone;
-        let maxVolume = 0;
+        let audioDataArray;
+        let micAvailable = false;
+        let maxVolume = 0;              // peak mic RMS during recording
+        let ambientVolume = 0;          // rolling ambient RMS when idle
         let animationFrame;
-        let showSkeleton = false; // Start with skeleton hidden
+        let sendingFrame = false;
+        let lastPoseTime = 0;           // last time a usable body was detected
+        let showSkeleton = false;       // must match the unchecked checkbox default
         let personalBest = 0;
 
         // Load personal best from localStorage
         function loadPersonalBest() {
-            const saved = localStorage.getItem('punchAnalyzerBest');
-            if (saved) {
-                personalBest = parseInt(saved);
+            const saved = parseInt(localStorage.getItem('punchAnalyzerBest'), 10);
+            if (!Number.isNaN(saved) && saved > 0) {
+                personalBest = saved;
                 personalBestDisplay.style.display = 'block';
                 personalBestScore.textContent = personalBest + '/100';
             }
@@ -611,8 +648,19 @@
             debugInfo.textContent = message;
         }
 
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+        const visible = (landmark) =>
+            landmark && (landmark.visibility === undefined || landmark.visibility >= MIN_VISIBILITY);
+
         // Initialize MediaPipe Pose
         function initPose() {
+            if (typeof Pose === 'undefined') {
+                status.textContent = '❌ Could not load the AI pose library. Check your internet connection and refresh the page.';
+                startButton.disabled = true;
+                log('MediaPipe scripts failed to load from CDN');
+                return;
+            }
+
             log('Initializing pose detection...');
             pose = new Pose({
                 locateFile: (file) => {
@@ -630,32 +678,54 @@
             });
 
             pose.onResults(onResults);
+            poseReady = true;
             log('Pose detection initialized and ready');
         }
 
-        // Start camera
+        // Start camera (mic is optional — denying it only disables the Battle Cry score)
         async function startCamera() {
+            if (!poseReady) {
+                status.textContent = '❌ Pose detection failed to load. Refresh the page and check your connection.';
+                return;
+            }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                status.textContent = '❌ Camera not supported here. Use Chrome/Edge over HTTPS (or a local file).';
+                return;
+            }
+
+            const videoConstraints = {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                facingMode: 'user'
+            };
+
+            let stream;
             try {
                 log('Requesting camera and microphone access...');
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 },
-                        facingMode: 'user'
-                    },
-                    audio: true 
-                });
-                
-                log('Camera access granted');
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
+                    micAvailable = true;
+                } catch (audioErr) {
+                    log(`Mic unavailable (${audioErr.name}), retrying with camera only...`);
+                    stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+                    micAvailable = false;
+                }
+
+                log('Camera access granted' + (micAvailable ? ' (with microphone)' : ' (no microphone — Battle Cry disabled)'));
                 videoElement.srcObject = stream;
-                
-                // Setup audio analysis
-                audioContext = new AudioContext();
-                analyser = audioContext.createAnalyser();
-                microphone = audioContext.createMediaStreamSource(stream);
-                microphone.connect(analyser);
-                analyser.fftSize = 256;
-                log('Audio analysis setup complete');
+
+                if (micAvailable) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    audioContext = new AudioContextClass();
+                    if (audioContext.state === 'suspended') {
+                        await audioContext.resume();
+                    }
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                    audioDataArray = new Uint8Array(analyser.fftSize);
+                    audioContext.createMediaStreamSource(stream).connect(analyser);
+                    log('Audio analysis setup complete');
+                }
 
                 // Wait for video to be ready
                 await new Promise((resolve) => {
@@ -668,15 +738,14 @@
                 // Set canvas size to match video
                 canvasElement.width = videoElement.videoWidth;
                 canvasElement.height = videoElement.videoHeight;
-                
+
                 log(`Video ready: ${videoElement.videoWidth}x${videoElement.videoHeight}`);
-                
-                // Start processing frames IMMEDIATELY
-                processFrame();
-                
-                status.textContent = '✅ Camera ready! Pose detection is now active. Click "Ready to Punch" when positioned!';
+
+                // First pose.send() downloads the model — warm it up before the user can punch
+                status.textContent = '⏳ Loading AI model (first time can take a few seconds)...';
                 startButton.disabled = true;
-                punchButton.disabled = false;
+                cameraStarted = true;
+                processFrame();
             } catch (err) {
                 status.textContent = '❌ Error accessing camera: ' + err.message;
                 log('Error: ' + err.message);
@@ -684,31 +753,88 @@
             }
         }
 
-        // Process video frames
+        // Process video frames (pose + audio sampling)
         async function processFrame() {
-            if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
-                await pose.send({image: videoElement});
+            if (videoElement.readyState >= videoElement.HAVE_CURRENT_DATA && !sendingFrame) {
+                sendingFrame = true;
+                try {
+                    await pose.send({ image: videoElement });
+                } catch (err) {
+                    log('Pose processing error: ' + err.message);
+                }
+                sendingFrame = false;
             }
+            sampleAudio();
+            updateTrackingIndicator();
             animationFrame = requestAnimationFrame(processFrame);
+        }
+
+        // Sample mic loudness (time-domain RMS). Tracks ambient noise while idle so a
+        // noisy room doesn't hand out free Battle Cry points.
+        function sampleAudio() {
+            if (!analyser) return;
+            analyser.getByteTimeDomainData(audioDataArray);
+            let sumSquares = 0;
+            for (let i = 0; i < audioDataArray.length; i++) {
+                const deviation = audioDataArray[i] - 128;
+                sumSquares += deviation * deviation;
+            }
+            const rms = Math.sqrt(sumSquares / audioDataArray.length);
+            if (isRecording) {
+                maxVolume = Math.max(maxVolume, rms);
+            } else {
+                ambientVolume = ambientVolume * 0.95 + rms * 0.05;
+            }
+        }
+
+        // A body is usable when shoulders + hips and at least one full arm are confidently visible
+        function isBodyUsable(landmarks) {
+            const coreVisible = visible(landmarks[LM.L_SHOULDER]) && visible(landmarks[LM.R_SHOULDER]) &&
+                                visible(landmarks[LM.L_HIP]) && visible(landmarks[LM.R_HIP]);
+            const leftArm = visible(landmarks[LM.L_ELBOW]) && visible(landmarks[LM.L_WRIST]);
+            const rightArm = visible(landmarks[LM.R_ELBOW]) && visible(landmarks[LM.R_WRIST]);
+            return coreVisible && (leftArm || rightArm);
+        }
+
+        function updateTrackingIndicator() {
+            if (!cameraStarted) return;
+            const tracked = performance.now() - lastPoseTime < 1000;
+            if (tracked) {
+                trackingIndicator.textContent = '👤 Body detected';
+                trackingIndicator.className = 'tracking-indicator ok';
+                if (!busy && punchButton.disabled) {
+                    punchButton.disabled = false;
+                    status.textContent = '✅ Camera ready! Click "Ready to Punch" when positioned!';
+                }
+            } else {
+                trackingIndicator.textContent = '❌ No body detected — step back';
+                trackingIndicator.className = 'tracking-indicator lost';
+                if (!busy) punchButton.disabled = true;
+            }
         }
 
         // Process pose results
         function onResults(results) {
-            // Clear and draw video frame
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            // Mirror the preview so it behaves like a mirror
+            canvasCtx.translate(canvasElement.width, 0);
+            canvasCtx.scale(-1, 1);
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
             if (results.poseLandmarks) {
-                // Draw skeleton only if toggle is enabled
                 if (showSkeleton) {
                     drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 4});
                     drawLandmarks(canvasCtx, results.poseLandmarks, {color: '#FF0000', lineWidth: 2, radius: 6});
                 }
 
-                // Always record data if we're tracking a punch (regardless of skeleton visibility)
+                if (isBodyUsable(results.poseLandmarks)) {
+                    lastPoseTime = performance.now();
+                }
+
+                // Always record data during a punch (regardless of skeleton visibility)
                 if (isRecording) {
-                    recordPunchFrame(results.poseLandmarks);
+                    recordPunchFrame(results.poseLandmarks, performance.now());
                 }
             }
 
@@ -717,13 +843,14 @@
 
         // Ready to punch - start countdown
         function readyToPunch() {
+            busy = true;
             punchButton.disabled = true;
             scoreBoard.classList.remove('show');
             socialShare.classList.remove('show');
             tryAgainButton.style.display = 'none';
-            
+
             let countdown = 3;
-            
+
             const countdownInterval = setInterval(() => {
                 if (countdown > 0) {
                     status.textContent = `Get ready... ${countdown}`;
@@ -732,7 +859,7 @@
                     clearInterval(countdownInterval);
                     status.textContent = '🥊 PUNCH NOW! 🥊';
                     startRecording();
-                    
+
                     // Stop recording after 2 seconds
                     setTimeout(() => {
                         stopRecording();
@@ -745,88 +872,39 @@
         function startRecording() {
             isRecording = true;
             punchData = [];
-            previousPositions = {};
-            frameCount = 0;
             maxVolume = 0;
             recordingIndicator.classList.add('active');
             log('Recording started - pose detection already running');
         }
 
-        // Record frame data
-        function recordPunchFrame(landmarks) {
-            frameCount++;
-            
-            // Get key points
-            const rightWrist = landmarks[16];
-            const leftWrist = landmarks[15];
-            const rightElbow = landmarks[14];
-            const leftElbow = landmarks[13];
-            const rightShoulder = landmarks[12];
-            const leftShoulder = landmarks[11];
-            const rightHip = landmarks[24];
-            const leftHip = landmarks[23];
-            
-            // Get hand landmarks for size calculation
-            const rightIndex = landmarks[20];
-            const rightPinky = landmarks[18];
-            const leftIndex = landmarks[19];
-            const leftPinky = landmarks[17];
+        // Record one frame of punch data with a real timestamp
+        function recordPunchFrame(landmarks, timestamp) {
+            const copy = (i) => ({ ...landmarks[i] });
 
-            // Calculate velocities if we have previous positions
-            let rightWristSpeed = 0;
-            let leftWristSpeed = 0;
+            // Shoulder width is the body-scale reference: it makes speed and guard
+            // distance independent of how far the player stands from the camera
+            const shoulderWidth = Math.hypot(
+                landmarks[LM.R_SHOULDER].x - landmarks[LM.L_SHOULDER].x,
+                landmarks[LM.R_SHOULDER].y - landmarks[LM.L_SHOULDER].y
+            );
 
-            if (previousPositions.rightWrist) {
-                rightWristSpeed = calculateDistance(previousPositions.rightWrist, rightWrist);
-            }
-            if (previousPositions.leftWrist) {
-                leftWristSpeed = calculateDistance(previousPositions.leftWrist, leftWrist);
-            }
-            
-            // Calculate hand size
-            const rightHandSize = calculateDistance(rightIndex, rightPinky);
-            const leftHandSize = calculateDistance(leftIndex, leftPinky);
-            
-            // Calculate Z-depth
-            const rightDepth = rightWrist.z;
-            const leftDepth = leftWrist.z;
-
-            // Store current positions for next frame
-            previousPositions = {
-                rightWrist: {...rightWrist},
-                leftWrist: {...leftWrist},
-                rightElbow: {...rightElbow},
-                leftElbow: {...leftElbow},
-                rightShoulder: {...rightShoulder},
-                leftShoulder: {...leftShoulder},
-                rightHip: {...rightHip},
-                leftHip: {...leftHip}
-            };
-
-            // Check audio level
-            if (analyser) {
-                const dataArray = new Uint8Array(analyser.frequencyBinCount);
-                analyser.getByteFrequencyData(dataArray);
-                const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
-                maxVolume = Math.max(maxVolume, volume);
-            }
+            const handSize = (indexTip, pinky) =>
+                (visible(indexTip) && visible(pinky)) ? calculateDistance(indexTip, pinky) : null;
 
             punchData.push({
-                frame: frameCount,
-                rightWristSpeed,
-                leftWristSpeed,
-                rightHandSize,
-                leftHandSize,
-                rightDepth,
-                leftDepth,
-                rightWrist,
-                leftWrist,
-                rightElbow,
-                leftElbow,
-                rightShoulder,
-                leftShoulder,
-                rightHip,
-                leftHip
+                t: timestamp,
+                shoulderWidth,
+                nose: copy(LM.NOSE),
+                rightWrist: copy(LM.R_WRIST),
+                leftWrist: copy(LM.L_WRIST),
+                rightElbow: copy(LM.R_ELBOW),
+                leftElbow: copy(LM.L_ELBOW),
+                rightShoulder: copy(LM.R_SHOULDER),
+                leftShoulder: copy(LM.L_SHOULDER),
+                rightHip: copy(LM.R_HIP),
+                leftHip: copy(LM.L_HIP),
+                rightHandSize: handSize(landmarks[LM.R_INDEX], landmarks[LM.R_PINKY]),
+                leftHandSize: handSize(landmarks[LM.L_INDEX], landmarks[LM.L_PINKY])
             });
         }
 
@@ -834,9 +912,15 @@
         function stopRecording() {
             isRecording = false;
             recordingIndicator.classList.remove('active');
-            status.textContent = 'Analyzing your punch...';
             log(`Recorded ${punchData.length} frames`);
-            
+
+            if (punchData.length < 3) {
+                status.textContent = '🤔 No body detected during the punch! Step back so your upper body and hips are visible, then try again.';
+                tryAgainButton.style.display = 'inline-block';
+                return;
+            }
+
+            status.textContent = 'Analyzing your punch...';
             setTimeout(() => {
                 const scores = calculatePunchScore();
                 displayScores(scores);
@@ -855,89 +939,137 @@
         function calculateAngle(p1, p2, p3) {
             const v1 = {x: p1.x - p2.x, y: p1.y - p2.y};
             const v2 = {x: p3.x - p2.x, y: p3.y - p2.y};
-            
+
             const dot = v1.x * v2.x + v1.y * v2.y;
             const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
             const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
-            
+
             const angle = Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2)))) * (180 / Math.PI);
             return angle;
         }
 
-        // Calculate punch score
+        // Wrist speed between consecutive frames, in shoulder-widths per second.
+        // Time-normalized so slow devices don't score lower, and body-scale
+        // normalized so standing closer to the camera doesn't score higher.
+        function wristSpeed(prevFrame, frame, wristKey) {
+            const prev = prevFrame[wristKey];
+            const curr = frame[wristKey];
+            if (!visible(prev) || !visible(curr)) return 0;
+            const dt = (frame.t - prevFrame.t) / 1000;
+            if (dt <= 0) return 0;
+            const scale = Math.max(frame.shoulderWidth, 0.05);
+            return calculateDistance(prev, curr) / scale / dt;
+        }
+
+        // Shoulder-vs-hip rotation in degrees, with atan2 wraparound handled
+        function torsoRotation(frame) {
+            const shoulderAngle = Math.atan2(
+                frame.rightShoulder.y - frame.leftShoulder.y,
+                frame.rightShoulder.x - frame.leftShoulder.x
+            );
+            const hipAngle = Math.atan2(
+                frame.rightHip.y - frame.leftHip.y,
+                frame.rightHip.x - frame.leftHip.x
+            );
+            let diff = Math.abs(shoulderAngle - hipAngle);
+            if (diff > Math.PI) diff = 2 * Math.PI - diff;
+            return diff * (180 / Math.PI);
+        }
+
+        // Calculate punch score. Metrics that can't be measured (no mic, hand not
+        // visible) come back null and are excluded from the weighted total.
         function calculatePunchScore() {
-            if (punchData.length === 0) {
-                log('No punch data recorded!');
-                return {speed: 0, power: 0, extension: 0, rotation: 0, form: 0, sound: 0, total: 0};
+            // --- Find the punch: peak wrist speed and which hand threw it ---
+            let maxRightSpeed = 0, maxLeftSpeed = 0;
+            let peakIndex = 1;
+            for (let i = 1; i < punchData.length; i++) {
+                const r = wristSpeed(punchData[i - 1], punchData[i], 'rightWrist');
+                const l = wristSpeed(punchData[i - 1], punchData[i], 'leftWrist');
+                if (r > maxRightSpeed) { maxRightSpeed = r; if (r >= maxLeftSpeed) peakIndex = i; }
+                if (l > maxLeftSpeed) { maxLeftSpeed = l; if (l >= maxRightSpeed) peakIndex = i; }
+            }
+            const punchedWithRight = maxRightSpeed >= maxLeftSpeed;
+            const maxSpeed = Math.max(maxRightSpeed, maxLeftSpeed);
+            const peakTime = punchData[peakIndex].t;
+
+            // Frames near the moment of impact — technique is judged here, not on
+            // whatever the arms did during the rest of the 2-second window
+            const impactWindow = punchData.filter(f => Math.abs(f.t - peakTime) <= 300);
+
+            // --- Speed (shoulder-widths per second) ---
+            const speedScore = clamp(Math.round(maxSpeed * 7), 0, 100);
+
+            // --- Power: hand growing / wrist z moving toward the camera vs. the start ---
+            const handKey = punchedWithRight ? 'rightHandSize' : 'leftHandSize';
+            const wristKey = punchedWithRight ? 'rightWrist' : 'leftWrist';
+            const baselineFrames = punchData.slice(0, 3);
+            const baselineSizes = baselineFrames.map(f => f[handKey]).filter(s => s > 0);
+            const baselineSize = baselineSizes.length
+                ? baselineSizes.reduce((a, b) => a + b, 0) / baselineSizes.length : null;
+            const maxHandSize = Math.max(...punchData.map(f => f[handKey] || 0));
+
+            const baselineZ = baselineFrames.reduce((a, f) => a + (f[wristKey].z || 0), 0) / baselineFrames.length;
+            const minZ = Math.min(...punchData.map(f => f[wristKey].z || 0));
+
+            const sizeGrowth = baselineSize ? maxHandSize / baselineSize : null;
+            const sizeScore = sizeGrowth !== null ? clamp(Math.round((sizeGrowth - 1) * 125), 0, 100) : null;
+            const depthScore = clamp(Math.round((baselineZ - minZ) * 200), 0, 100);
+            const powerScore = sizeScore !== null ? Math.round((sizeScore + depthScore) / 2) : depthScore;
+
+            // --- Extension: elbow angle near impact (not while arms hang at your sides) ---
+            let bestExtension = 0;
+            impactWindow.forEach(f => {
+                const shoulder = punchedWithRight ? f.rightShoulder : f.leftShoulder;
+                const elbow = punchedWithRight ? f.rightElbow : f.leftElbow;
+                const wrist = punchedWithRight ? f.rightWrist : f.leftWrist;
+                if (visible(shoulder) && visible(elbow) && visible(wrist)) {
+                    bestExtension = Math.max(bestExtension, calculateAngle(shoulder, elbow, wrist));
+                }
+            });
+            // 90° (bent) → 0, 180° (fully extended) → 100
+            const extensionScore = clamp(Math.round((bestExtension - 90) / 90 * 100), 0, 100);
+
+            // --- Hip rotation near impact ---
+            const maxRotation = Math.max(...impactWindow.map(torsoRotation));
+            const rotationScore = clamp(Math.round((maxRotation / 45) * 100), 0, 100);
+
+            // --- Form: is the OTHER hand kept up as a guard during the punch? ---
+            let guardScore = null;
+            const guardSamples = [];
+            impactWindow.forEach(f => {
+                const guardWrist = punchedWithRight ? f.leftWrist : f.rightWrist;
+                if (visible(guardWrist) && visible(f.nose)) {
+                    guardSamples.push(calculateDistance(guardWrist, f.nose) / Math.max(f.shoulderWidth, 0.05));
+                }
+            });
+            if (guardSamples.length) {
+                const avgGuardDistance = guardSamples.reduce((a, b) => a + b, 0) / guardSamples.length;
+                guardScore = clamp(Math.round(140 - avgGuardDistance * 70), 0, 100);
             }
 
-            let maxRightSpeed = 0;
-            let maxLeftSpeed = 0;
-            let maxRightHandSize = 0;
-            let maxLeftHandSize = 0;
-            let minRightDepth = Infinity;
-            let minLeftDepth = Infinity;
-            let bestExtensionRight = 0;
-            let bestExtensionLeft = 0;
-            let maxRotation = 0;
+            // --- Battle cry: how far the shout rose above the room's ambient noise ---
+            const soundScore = micAvailable
+                ? clamp(Math.round((maxVolume - ambientVolume) * 4), 0, 100)
+                : null;
 
-            punchData.forEach(frame => {
-                maxRightSpeed = Math.max(maxRightSpeed, frame.rightWristSpeed);
-                maxLeftSpeed = Math.max(maxLeftSpeed, frame.leftWristSpeed);
-                
-                maxRightHandSize = Math.max(maxRightHandSize, frame.rightHandSize);
-                maxLeftHandSize = Math.max(maxLeftHandSize, frame.leftHandSize);
-                
-                minRightDepth = Math.min(minRightDepth, frame.rightDepth);
-                minLeftDepth = Math.min(minLeftDepth, frame.leftDepth);
+            log(`Speed: ${maxSpeed.toFixed(2)} sw/s | Size growth: ${sizeGrowth ? sizeGrowth.toFixed(2) : 'n/a'} | ` +
+                `Depth Δ: ${(baselineZ - minZ).toFixed(3)} | Extension: ${bestExtension.toFixed(1)}° | ` +
+                `Rotation: ${maxRotation.toFixed(1)}° | Volume: ${maxVolume.toFixed(1)} (ambient ${ambientVolume.toFixed(1)})`);
 
-                const rightExtension = calculateAngle(frame.rightShoulder, frame.rightElbow, frame.rightWrist);
-                const leftExtension = calculateAngle(frame.leftShoulder, frame.leftElbow, frame.leftWrist);
-                
-                bestExtensionRight = Math.max(bestExtensionRight, rightExtension);
-                bestExtensionLeft = Math.max(bestExtensionLeft, leftExtension);
-
-                const shoulderAngle = Math.atan2(
-                    frame.rightShoulder.y - frame.leftShoulder.y,
-                    frame.rightShoulder.x - frame.leftShoulder.x
-                );
-                const hipAngle = Math.atan2(
-                    frame.rightHip.y - frame.leftHip.y,
-                    frame.rightHip.x - frame.leftHip.x
-                );
-                
-                const rotation = Math.abs(shoulderAngle - hipAngle) * (180 / Math.PI);
-                maxRotation = Math.max(maxRotation, rotation);
-            });
-
-            const punchedWithRight = maxRightSpeed > maxLeftSpeed;
-            const maxSpeed = Math.max(maxRightSpeed, maxLeftSpeed);
-            const maxHandSize = punchedWithRight ? maxRightHandSize : maxLeftHandSize;
-            const minDepth = punchedWithRight ? minRightDepth : minLeftDepth;
-            const bestExtension = punchedWithRight ? bestExtensionRight : bestExtensionLeft;
-
-            log(`Max speed: ${maxSpeed.toFixed(4)}, Hand size: ${maxHandSize.toFixed(4)}, Min depth: ${minDepth.toFixed(4)}, Extension: ${bestExtension.toFixed(1)}°, Rotation: ${maxRotation.toFixed(1)}°, Volume: ${maxVolume.toFixed(1)}`);
-
-            const speedScore = Math.min(100, Math.round(maxSpeed * 5000));
-            const handSizeScore = Math.min(100, Math.round(maxHandSize * 500));
-            const depthScore = Math.min(100, Math.round((0.5 - minDepth) * 200));
-            const powerScore = Math.round((handSizeScore + depthScore) / 2);
-            const extensionScore = Math.min(100, Math.round((bestExtension / 180) * 100));
-            const rotationScore = Math.min(100, Math.round((maxRotation / 45) * 100));
-            const formScore = Math.round((speedScore + extensionScore + rotationScore) / 3 * 0.8);
-            const soundScore = Math.min(100, Math.round(maxVolume * 1.5));
-
-            const totalScore = Math.round(
-                (speedScore * 0.25 + powerScore * 0.25 + extensionScore * 0.15 + 
-                 rotationScore * 0.15 + formScore * 0.1 + soundScore * 0.1)
-            );
+            // --- Weighted total, skipping unmeasurable metrics ---
+            const parts = [
+                [speedScore, 0.25], [powerScore, 0.25], [extensionScore, 0.15],
+                [rotationScore, 0.15], [guardScore, 0.10], [soundScore, 0.10]
+            ].filter(([score]) => score !== null);
+            const weightSum = parts.reduce((a, [, w]) => a + w, 0);
+            const totalScore = Math.round(parts.reduce((a, [s, w]) => a + s * w, 0) / weightSum);
 
             return {
                 speed: speedScore,
                 power: powerScore,
                 extension: extensionScore,
                 rotation: rotationScore,
-                form: formScore,
+                form: guardScore,
                 sound: soundScore,
                 total: totalScore
             };
@@ -945,12 +1077,15 @@
 
         // Display scores
         function displayScores(scores) {
-            document.getElementById('speedScore').textContent = scores.speed + '/100';
-            document.getElementById('powerScore').textContent = scores.power + '/100';
-            document.getElementById('extensionScore').textContent = scores.extension + '/100';
-            document.getElementById('rotationScore').textContent = scores.rotation + '/100';
-            document.getElementById('formScore').textContent = scores.form + '/100';
-            document.getElementById('soundScore').textContent = scores.sound + '/100';
+            const show = (id, value, missingText) => {
+                document.getElementById(id).textContent = value !== null ? value + '/100' : missingText;
+            };
+            show('speedScore', scores.speed);
+            show('powerScore', scores.power);
+            show('extensionScore', scores.extension);
+            show('rotationScore', scores.rotation);
+            show('formScore', scores.form, 'not visible');
+            show('soundScore', scores.sound, 'N/A (no mic)');
             document.getElementById('totalScore').textContent = scores.total + '/100';
 
             // Check for new personal best
@@ -965,7 +1100,7 @@
             scoreBoard.classList.add('show');
             socialShare.classList.add('show');
             tryAgainButton.style.display = 'inline-block';
-            
+
             let message = '';
             if (scores.total >= 80) message = '🔥 LEGENDARY PUNCH! 🔥';
             else if (scores.total >= 60) message = '💪 Great punch!';
@@ -982,26 +1117,26 @@
         function updateSocialLinks(score) {
             const url = 'https://victortanws.github.io/punch-analyzer/punchanalyzer.html';
             const text = `I just scored ${score}/100 on the Punch Power Analyzer! 🥊 Can you beat my score?`;
-            
-            document.getElementById('shareFacebook').href = 
+
+            document.getElementById('shareFacebook').href =
                 `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
-            
-            document.getElementById('shareTwitter').href = 
+
+            document.getElementById('shareTwitter').href =
                 `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-            
-            document.getElementById('shareWhatsApp').href = 
+
+            document.getElementById('shareWhatsApp').href =
                 `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
-            
-            document.getElementById('shareLinkedIn').href = 
+
+            document.getElementById('shareLinkedIn').href =
                 `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
         }
 
         // Try again
         function tryAgain() {
+            busy = false;
             scoreBoard.classList.remove('show');
             socialShare.classList.remove('show');
             tryAgainButton.style.display = 'none';
-            punchButton.disabled = false;
             status.textContent = 'Ready when you are! Click "Ready to Punch"';
         }
 
@@ -1012,17 +1147,15 @@
             log('Page loaded, ready to start');
         });
 
-        // Keyboard shortcuts
+        // Keyboard shortcuts (skip when a modifier is held, e.g. Cmd+P = print)
         document.addEventListener('keydown', (e) => {
-            // Press 'P' to start punching (if button is enabled)
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
             if (e.key.toLowerCase() === 'p' && !punchButton.disabled) {
                 readyToPunch();
             }
-            // Press 'S' to start camera (if button is enabled)
             if (e.key.toLowerCase() === 's' && !startButton.disabled) {
                 startCamera();
             }
-            // Press 'T' to try again (if button is visible)
             if (e.key.toLowerCase() === 't' && tryAgainButton.style.display !== 'none') {
                 tryAgain();
             }
