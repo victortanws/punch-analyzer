@@ -459,9 +459,9 @@
         <div class="instructions">
             <h3>How to Play:</h3>
             <ul>
-                <li>Stand facing the camera with your upper body and hips visible</li>
                 <li>Click "Start Camera" to begin</li>
-                <li>Wait for the green "Body detected" badge, then click "Ready to Punch"</li>
+                <li>Press <kbd>P</kbd> (or click "Ready to Punch"), then you have <strong>5 seconds</strong> to step back into position</li>
+                <li>Make sure the green "Body detected" badge shows — shoulders and punching arm in frame is enough</li>
                 <li>Throw your best punch when the countdown ends!</li>
                 <li>Make sure to SHOUT while punching for bonus points! 💪</li>
             </ul>
@@ -613,6 +613,7 @@
         let animationFrame;
         let sendingFrame = false;
         let lastPoseTime = 0;           // last time a usable body was detected
+        let modelWarmedUp = false;      // first pose result received
         let showSkeleton = false;       // must match the unchecked checkbox default
         let personalBest = 0;
 
@@ -787,29 +788,27 @@
             }
         }
 
-        // A body is usable when shoulders + hips and at least one full arm are confidently visible
+        // A body is usable when the shoulders and at least one full arm are confidently
+        // visible. Hips are NOT required — demanding them forced players to stand so far
+        // back they couldn't reach the keyboard.
         function isBodyUsable(landmarks) {
-            const coreVisible = visible(landmarks[LM.L_SHOULDER]) && visible(landmarks[LM.R_SHOULDER]) &&
-                                visible(landmarks[LM.L_HIP]) && visible(landmarks[LM.R_HIP]);
+            const shouldersVisible = visible(landmarks[LM.L_SHOULDER]) && visible(landmarks[LM.R_SHOULDER]);
             const leftArm = visible(landmarks[LM.L_ELBOW]) && visible(landmarks[LM.L_WRIST]);
             const rightArm = visible(landmarks[LM.R_ELBOW]) && visible(landmarks[LM.R_WRIST]);
-            return coreVisible && (leftArm || rightArm);
+            return shouldersVisible && (leftArm || rightArm);
         }
 
+        // Informational only — it must never lock the punch button, because the player
+        // has to leave the frame to press P and then step back during the countdown
         function updateTrackingIndicator() {
             if (!cameraStarted) return;
             const tracked = performance.now() - lastPoseTime < 1000;
             if (tracked) {
                 trackingIndicator.textContent = '👤 Body detected';
                 trackingIndicator.className = 'tracking-indicator ok';
-                if (!busy && punchButton.disabled) {
-                    punchButton.disabled = false;
-                    status.textContent = '✅ Camera ready! Click "Ready to Punch" when positioned!';
-                }
             } else {
-                trackingIndicator.textContent = '❌ No body detected — step back';
+                trackingIndicator.textContent = '⚠️ Body not detected — step back';
                 trackingIndicator.className = 'tracking-indicator lost';
-                if (!busy) punchButton.disabled = true;
             }
         }
 
@@ -821,6 +820,16 @@
             canvasCtx.translate(canvasElement.width, 0);
             canvasCtx.scale(-1, 1);
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            // First result means the model is warmed up — the punch button unlocks here
+            // and stays unlocked, regardless of whether a body is currently in frame
+            if (!modelWarmedUp) {
+                modelWarmedUp = true;
+                if (!busy) {
+                    punchButton.disabled = false;
+                    status.textContent = '✅ Camera ready! Press P — you get 5 seconds to step back into position.';
+                }
+            }
 
             if (results.poseLandmarks) {
                 if (showSkeleton) {
@@ -849,11 +858,12 @@
             socialShare.classList.remove('show');
             tryAgainButton.style.display = 'none';
 
-            let countdown = 3;
+            // 5 seconds: enough time to press P at the keyboard and step back into frame
+            let countdown = 5;
 
             const countdownInterval = setInterval(() => {
                 if (countdown > 0) {
-                    status.textContent = `Get ready... ${countdown}`;
+                    status.textContent = `Get into position... punching in ${countdown}`;
                     countdown--;
                 } else {
                     clearInterval(countdownInterval);
@@ -889,7 +899,8 @@
             );
 
             const handSize = (indexTip, pinky) =>
-                (visible(indexTip) && visible(pinky)) ? calculateDistance(indexTip, pinky) : null;
+                (visible(indexTip) && visible(pinky))
+                    ? Math.hypot(indexTip.x - pinky.x, indexTip.y - pinky.y) : null;
 
             punchData.push({
                 t: timestamp,
@@ -915,7 +926,7 @@
             log(`Recorded ${punchData.length} frames`);
 
             if (punchData.length < 3) {
-                status.textContent = '🤔 No body detected during the punch! Step back so your upper body and hips are visible, then try again.';
+                status.textContent = '🤔 No body detected during the punch! Make sure your shoulders and punching arm are in frame, then try again.';
                 tryAgainButton.style.display = 'inline-block';
                 return;
             }
@@ -948,17 +959,22 @@
             return angle;
         }
 
-        // Wrist speed between consecutive frames, in shoulder-widths per second.
-        // Time-normalized so slow devices don't score lower, and body-scale
-        // normalized so standing closer to the camera doesn't score higher.
-        function wristSpeed(prevFrame, frame, wristKey) {
-            const prev = prevFrame[wristKey];
-            const curr = frame[wristKey];
-            if (!visible(prev) || !visible(curr)) return 0;
-            const dt = (frame.t - prevFrame.t) / 1000;
-            if (dt <= 0) return 0;
-            const scale = Math.max(frame.shoulderWidth, 0.05);
-            return calculateDistance(prev, curr) / scale / dt;
+        // Wrist speed in shoulder-widths per second, measured over a window of at
+        // least SPEED_WINDOW_MS. Consecutive pose results can arrive milliseconds
+        // apart, so per-frame deltas divide landmark jitter by a near-zero dt and
+        // explode — a slow wave scored 100. The window keeps dt honest, and only
+        // x/y are used because MediaPipe's z estimate is far too noisy for velocity.
+        const SPEED_WINDOW_MS = 60;
+        function wristSpeed(frames, i, wristKey) {
+            const curr = frames[i][wristKey];
+            if (!visible(curr)) return 0;
+            let j = i - 1;
+            while (j > 0 && frames[i].t - frames[j].t < SPEED_WINDOW_MS) j--;
+            const prev = frames[j][wristKey];
+            const dt = (frames[i].t - frames[j].t) / 1000;
+            if (dt < SPEED_WINDOW_MS / 1000 || !visible(prev)) return 0;
+            const scale = Math.max(frames[i].shoulderWidth, 0.05);
+            return Math.hypot(curr.x - prev.x, curr.y - prev.y) / scale / dt;
         }
 
         // Shoulder-vs-hip rotation in degrees, with atan2 wraparound handled
@@ -983,8 +999,8 @@
             let maxRightSpeed = 0, maxLeftSpeed = 0;
             let peakIndex = 1;
             for (let i = 1; i < punchData.length; i++) {
-                const r = wristSpeed(punchData[i - 1], punchData[i], 'rightWrist');
-                const l = wristSpeed(punchData[i - 1], punchData[i], 'leftWrist');
+                const r = wristSpeed(punchData, i, 'rightWrist');
+                const l = wristSpeed(punchData, i, 'leftWrist');
                 if (r > maxRightSpeed) { maxRightSpeed = r; if (r >= maxLeftSpeed) peakIndex = i; }
                 if (l > maxLeftSpeed) { maxLeftSpeed = l; if (l >= maxRightSpeed) peakIndex = i; }
             }
@@ -1029,9 +1045,14 @@
             // 90° (bent) → 0, 180° (fully extended) → 100
             const extensionScore = clamp(Math.round((bestExtension - 90) / 90 * 100), 0, 100);
 
-            // --- Hip rotation near impact ---
-            const maxRotation = Math.max(...impactWindow.map(torsoRotation));
-            const rotationScore = clamp(Math.round((maxRotation / 45) * 100), 0, 100);
+            // --- Hip rotation near impact (only when hips are actually in frame) ---
+            const rotationSamples = impactWindow
+                .filter(f => visible(f.leftHip) && visible(f.rightHip) &&
+                             visible(f.leftShoulder) && visible(f.rightShoulder))
+                .map(torsoRotation);
+            const maxRotation = rotationSamples.length ? Math.max(...rotationSamples) : null;
+            const rotationScore = maxRotation !== null
+                ? clamp(Math.round((maxRotation / 45) * 100), 0, 100) : null;
 
             // --- Form: is the OTHER hand kept up as a guard during the punch? ---
             let guardScore = null;
@@ -1054,7 +1075,7 @@
 
             log(`Speed: ${maxSpeed.toFixed(2)} sw/s | Size growth: ${sizeGrowth ? sizeGrowth.toFixed(2) : 'n/a'} | ` +
                 `Depth Δ: ${(baselineZ - minZ).toFixed(3)} | Extension: ${bestExtension.toFixed(1)}° | ` +
-                `Rotation: ${maxRotation.toFixed(1)}° | Volume: ${maxVolume.toFixed(1)} (ambient ${ambientVolume.toFixed(1)})`);
+                `Rotation: ${maxRotation !== null ? maxRotation.toFixed(1) + '°' : 'n/a'} | Volume: ${maxVolume.toFixed(1)} (ambient ${ambientVolume.toFixed(1)})`);
 
             // --- Weighted total, skipping unmeasurable metrics ---
             const parts = [
@@ -1083,7 +1104,7 @@
             show('speedScore', scores.speed);
             show('powerScore', scores.power);
             show('extensionScore', scores.extension);
-            show('rotationScore', scores.rotation);
+            show('rotationScore', scores.rotation, 'hips not visible');
             show('formScore', scores.form, 'not visible');
             show('soundScore', scores.sound, 'N/A (no mic)');
             document.getElementById('totalScore').textContent = scores.total + '/100';
@@ -1134,10 +1155,11 @@
         // Try again
         function tryAgain() {
             busy = false;
+            punchButton.disabled = false;
             scoreBoard.classList.remove('show');
             socialShare.classList.remove('show');
             tryAgainButton.style.display = 'none';
-            status.textContent = 'Ready when you are! Click "Ready to Punch"';
+            status.textContent = 'Ready when you are! Press P and step into position.';
         }
 
         // Initialize on page load

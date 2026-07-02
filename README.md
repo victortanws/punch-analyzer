@@ -20,12 +20,12 @@ An AI-powered web app that analyzes and scores your punching technique in real-t
 ## How to Use
 1. Open the web app in your browser (Chrome or Edge recommended)
 2. Click "Start Camera" and allow camera/microphone access (mic is optional)
-3. Position yourself so your upper body and hips are visible
-4. Wait for the green "Body detected" badge, then click "Ready to Punch"
+3. Press <kbd>P</kbd> (or click "Ready to Punch"), then step back into position — you have 5 seconds
+4. Check the green "Body detected" badge: shoulders and punching arm in frame is enough
 5. Throw your best punch after the countdown!
 
 ## Troubleshooting
-- **No "Body detected" badge?** Step back so your shoulders, arms, and hips are in frame; improve lighting; use a plain background.
+- **No "Body detected" badge?** Make sure your shoulders and at least one full arm are in frame; improve lighting; use a plain background.
 - **Page says the AI library failed to load?** Check your internet connection — the pose model loads from a CDN.
 - **Camera error?** The page must be served over HTTPS (GitHub Pages is) or opened as a local file in Chrome/Edge.
 

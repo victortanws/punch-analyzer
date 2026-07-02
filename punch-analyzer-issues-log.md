@@ -158,6 +158,26 @@ A code review of the scoring logic found several correctness bugs:
 
 ---
 
+## 14. v2 Field-Test Failures: Self-Defeating Body Gate & Speed Spikes
+
+**Problem (reported in live testing):**
+1. The punch button was disabled unless the *full body* (shoulders + hips + arm) was detected — but you had to stand far from the camera for that, and then you couldn't reach the keyboard to press P. Walking up to press P dropped detection and re-disabled the button. The gate defeated itself.
+2. Speed hit 100/100 even for slow movements.
+
+**Causes:**
+1. Over-strict visibility requirements combined with hard-locking the button on live tracking state.
+2. Velocity was computed between *consecutive* pose results, which can arrive milliseconds apart. Landmark jitter divided by a near-zero time delta explodes — and including MediaPipe's noisy z-estimate made it worse.
+
+**Resolutions:**
+- Detection now needs only shoulders + one full arm (hips optional; hip rotation shows "hips not visible" and is excluded from the total when they're out of frame).
+- The tracking badge is informational only; the punch button unlocks as soon as the AI model produces its first frame and never re-locks.
+- Countdown extended from 3 to 5 seconds so you can press P and step back into position.
+- Speed is measured over a ≥60 ms window using x/y only, which averages out jitter. Verified with synthetic data: slow jittery movement now scores 12, a fast punch 59+.
+
+**Lesson:** Gate on what the user *can* do (record window validation), not on live state they can't hold while reaching the keyboard — and never divide motion deltas by tiny, jittery timestamps.
+
+---
+
 ## Key Takeaways
 
 1. **Camera-based apps can't run inside artifact viewers** — always test locally or on a hosted URL.
