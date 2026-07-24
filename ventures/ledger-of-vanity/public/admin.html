@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ledger — Keeper’s Desk</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg:#0b0b0f; --raise:#131318; --ink:#ece7db; --dim:#969083; --faint:#8b8577; --gold:#c9a961; --green:#6b9a6b; --red:#c9695c; --rule:#211f26; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font:15px/1.5 -apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:52rem; margin:0 auto; padding:2rem 1.2rem 5rem; }
+  h1 { font-family:Georgia,serif; font-weight:500; font-size:1.6rem; margin-bottom:.3rem; }
+  .sub { color:var(--faint); font-size:.85rem; margin-bottom:1.8rem; }
+  .gate { display:flex; gap:.5rem; margin-bottom:2rem; }
+  input[type=password], input[type=text] { flex:1; background:var(--raise); border:1px solid var(--rule); color:var(--ink); border-radius:5px; padding:.6rem .8rem; font-size:.95rem; }
+  input:focus { outline:none; border-color:var(--gold); }
+  button { cursor:pointer; border:none; border-radius:5px; font-size:.85rem; padding:.55rem .9rem; }
+  .btn-gold { background:var(--gold); color:#171207; font-weight:600; }
+  .btn-approve { background:rgba(107,154,107,.18); color:var(--green); border:1px solid rgba(107,154,107,.5); }
+  .btn-reject, .btn-remove { background:rgba(201,105,92,.14); color:var(--red); border:1px solid rgba(201,105,92,.5); }
+  .btn-ghost { background:none; color:var(--dim); border:1px solid var(--rule); }
+  h2 { font-family:Georgia,serif; font-weight:500; font-size:1.1rem; margin:2rem 0 .8rem; color:var(--gold); display:flex; align-items:center; gap:.6rem; }
+  .badge { background:rgba(201,169,97,.15); color:var(--gold); border-radius:999px; font-size:.72rem; padding:.1rem .55rem; }
+  .card { display:grid; grid-template-columns:3rem 1fr auto; gap:.9rem; align-items:center; background:var(--raise); border:1px solid var(--rule); border-radius:7px; padding:.7rem .9rem; margin-bottom:.5rem; }
+  .card img, .card .mono { width:3rem; height:3rem; border-radius:50%; object-fit:cover; border:1px solid rgba(201,169,97,.35); }
+  .card .mono { display:flex; align-items:center; justify-content:center; font-family:Georgia,serif; color:var(--gold); background:#0d0d11; }
+  .card .name { font-family:Georgia,serif; font-size:1.15rem; overflow-wrap:anywhere; }
+  .card .motto { font-family:Georgia,serif; font-style:italic; color:var(--faint); font-size:.9rem; overflow-wrap:anywhere; }
+  .card .meta { font-size:.75rem; color:var(--faint); margin-top:.15rem; }
+  .card .acts { display:flex; gap:.4rem; flex-wrap:wrap; justify-content:flex-end; }
+  .muted { color:var(--faint); font-style:italic; padding:1rem 0; }
+  .err { color:var(--red); font-size:.85rem; margin:.6rem 0; min-height:1em; }
+  .tools { display:flex; gap:.5rem; margin-top:.6rem; flex-wrap:wrap; }
+  .note { color:var(--faint); font-size:.78rem; line-height:1.6; margin-top:.4rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The Keeper’s Desk</h1>
+  <p class="sub">Approve or reject tributes before they appear, and censor or remove what’s live. Your admin token is stored only in this browser.</p>
+
+  <div class="gate">
+    <input type="password" id="token" placeholder="Admin token" autocomplete="off">
+    <button class="btn-gold" id="unlock">Unlock</button>
+    <button class="btn-ghost" id="forget" hidden>Forget token</button>
+  </div>
+  <p class="err" id="err"></p>
+
+  <section id="panel" hidden>
+    <h2>Pending review <span class="badge" id="pendCount">0</span> <button class="btn-ghost" id="refresh" style="margin-left:auto">Refresh</button></h2>
+    <div id="pending"></div>
+
+    <h2>Moderate a live entry</h2>
+    <div class="gate">
+      <input type="text" id="modName" placeholder="Exact name as displayed">
+    </div>
+    <div class="tools">
+      <button class="btn-reject" id="doRemove">Remove entirely</button>
+      <button class="btn-ghost" id="doCensorImg">Strip image (keep rank)</button>
+      <button class="btn-ghost" id="doCensorMotto">Strip message (keep rank)</button>
+    </div>
+    <p class="note">Removal deletes all payments under that name. Censoring strips the image and/or message but keeps the paid rank, exactly as the terms reserve. All actions are logged and non-refunding by policy.</p>
+  </section>
+</div>
+
+<script src="/admin.js"></script>
+</body>
+</html>

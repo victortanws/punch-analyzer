@@ -1,0 +1,243 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vibe-coder-sim",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8985",
+        "--directory",
+        "/Users/victortan/vibe-coder-sim"
+      ],
+      "port": 8985
+    },
+    {
+      "name": "vibe-coder-sim-validator",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8992",
+        "--directory",
+        "/Users/victortan/vibe-coder-sim"
+      ],
+      "port": 8992
+    },
+    {
+      "name": "capsule-cafe",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8748",
+        "--directory",
+        "/Users/victortan/capsule-cafe"
+      ],
+      "port": 8748
+    },
+    {
+      "name": "punch-analyzer",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8734"
+      ],
+      "port": 8734
+    },
+    {
+      "name": "roundtimer-pro",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8737",
+        "--directory",
+        "ventures/roundtimer-pro"
+      ],
+      "port": 8737
+    },
+    {
+      "name": "invoiceforge",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8736",
+        "--directory",
+        "ventures/invoiceforge"
+      ],
+      "port": 8736
+    },
+    {
+      "name": "biolink-studio",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8738",
+        "--directory",
+        "ventures/biolink-studio"
+      ],
+      "port": 8738
+    },
+    {
+      "name": "qrmenu-studio",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8739",
+        "--directory",
+        "ventures/qrmenu-studio"
+      ],
+      "port": 8739
+    },
+    {
+      "name": "resumeatlas",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8740",
+        "--directory",
+        "ventures/resumeatlas"
+      ],
+      "port": 8740
+    },
+    {
+      "name": "launchpage-studio",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8741",
+        "--directory",
+        "ventures/launchpage-studio"
+      ],
+      "port": 8741
+    },
+    {
+      "name": "quotecalc-builder",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8742",
+        "--directory",
+        "ventures/quotecalc-builder"
+      ],
+      "port": 8742
+    },
+    {
+      "name": "macrocoach",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8743",
+        "--directory",
+        "ventures/macrocoach"
+      ],
+      "port": 8743
+    },
+    {
+      "name": "punchcard-loyalty",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8744",
+        "--directory",
+        "ventures/punchcard-loyalty"
+      ],
+      "port": 8744
+    },
+    {
+      "name": "certmaker",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8745",
+        "--directory",
+        "ventures/certmaker"
+      ],
+      "port": 8745
+    },
+    {
+      "name": "fable-arcade-standalone",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8747",
+        "--directory",
+        "/Users/victortan/fable-arcade"
+      ],
+      "port": 8747
+    },
+    {
+      "name": "creatorforge",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8746",
+        "--directory",
+        "ventures/creatorforge"
+      ],
+      "port": 8746
+    },
+    {
+      "name": "last-word",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "ventures/last-word/server.js"
+      ],
+      "port": 8750
+    },
+    {
+      "name": "ledger-of-vanity",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "ventures/ledger-of-vanity/server.js"
+      ],
+      "port": 8751
+    },
+    {
+      "name": "eternal-flame",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "ventures/eternal-flame/server.js"
+      ],
+      "port": 8752
+    },
+    {
+      "name": "one-million-words",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "ventures/one-million-words/server.js"
+      ],
+      "port": 8753
+    },
+    {
+      "name": "million-plots",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "ventures/million-plots/server.js"
+      ],
+      "port": 8754
+    },
+    {
+      "name": "rainbow-bridge",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "ventures/rainbow-bridge/server.js"
+      ],
+      "port": 8755
+    }
+  ]
+}

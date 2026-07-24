@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Million Words — the longest story ever told, one dollar at a time</title>
+<meta name="description" content="A single story written by strangers, one purchased word at a time. It ends at word one million. Then it becomes a book.">
+<meta property="og:title" content="One Million Words">
+<meta property="og:description" content="A single story written by strangers, one purchased word at a time. It ends at word one million. Then it becomes a book.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%23f6f1e6'/%3E%3Ctext x='50' y='74' font-size='68' text-anchor='middle' fill='%238c2f1e' font-family='Georgia'%3E%E2%9D%A6%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #f6f1e6;
+    --parchment-deep: #efe7d6;
+    --ink: #26221a;
+    --ink-soft: #57503f;
+    --ink-faint: #6f6754;
+    --accent: #8c2f1e;         /* sealing-wax red */
+    --accent-soft: #a8503f;
+    --rule: #ddd3bd;
+    --serif: "EB Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Inter", -apple-system, "Segoe UI", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--parchment); color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; }
+  body::before { /* aged edges */
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 110% 100% at 50% 40%, transparent 60%, rgba(140,110,60,.09));
+  }
+
+  .demo-banner {
+    text-align: center; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(140,47,30,.07); color: var(--accent); padding: .45rem 1rem;
+    border-bottom: 1px solid rgba(140,47,30,.15); font-family: var(--sans);
+  }
+
+  header { text-align: center; padding: 4.2rem 1.5rem 2.6rem; }
+  .ornament { color: var(--accent); letter-spacing: .5em; font-size: .85rem; margin-bottom: 1.4rem; }
+  h1 { font-weight: 600; font-size: clamp(2.2rem, 5.5vw, 3.6rem); letter-spacing: .04em; line-height: 1.1; }
+  .sub { margin-top: 1rem; font-style: italic; font-size: 1.2rem; color: var(--ink-soft); }
+
+  .progress-block { max-width: 34rem; margin: 2.6rem auto 0; padding: 0 1rem; }
+  .progress-track { height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0%; min-width: 2px; background: var(--accent); border-radius: 2px; transition: width 1s ease; }
+  .progress-label {
+    display: flex; justify-content: space-between; margin-top: .7rem;
+    font-family: var(--sans); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .progress-label b { color: var(--ink-soft); font-weight: 600; }
+
+  /* --composer-h is measured by JS so the fixed composer can never cover the story */
+  main { max-width: 44rem; margin: 0 auto; padding: 3rem 1.5rem calc(var(--composer-h, 10rem) + 4rem); }
+  .archive-note { text-align: center; font-style: italic; color: var(--ink-faint); font-size: .95rem; margin-bottom: 2rem; }
+
+  .story { font-size: 1.32rem; line-height: 2.05; text-align: justify; hyphens: auto; }
+  .story::first-letter {
+    font-size: 4.2em; float: left; line-height: .82; padding: .04em .12em 0 0; color: var(--accent); font-weight: 500;
+  }
+  .story .w { border-radius: 2px; transition: background .12s; position: relative; cursor: default; }
+  .story .w:hover { background: rgba(140,47,30,.1); }
+  .story .w.mine { background: rgba(140,47,30,.14); }
+  .story .redacted { color: var(--ink-faint); text-decoration: line-through; }
+  .story .caret {
+    display: inline-block; width: 2px; height: 1.1em; background: var(--accent); vertical-align: text-bottom;
+    margin-left: .3rem; animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .story-note { margin-top: 3rem; text-align: center; font-style: italic; color: var(--ink-faint); font-size: .98rem; line-height: 1.8; }
+
+  /* tooltip */
+  #tip {
+    position: fixed; z-index: 50; pointer-events: none; opacity: 0; transition: opacity .12s;
+    background: var(--ink); color: var(--parchment); font-family: var(--sans); font-size: .74rem;
+    padding: .5rem .75rem; border-radius: 4px; max-width: 16rem; box-shadow: 0 6px 24px rgba(38,34,26,.3);
+  }
+  #tip b { color: #e8c9a0; }
+
+  /* composer */
+  .composer {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+    background: color-mix(in srgb, var(--parchment-deep) 92%, transparent); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--rule); padding: 1.1rem 1.5rem calc(1.1rem + env(safe-area-inset-bottom));
+  }
+  .composer-inner { max-width: 44rem; margin: 0 auto; display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; }
+  .composer label { font-family: var(--sans); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); flex-basis: 100%; }
+  .composer input[type=text] {
+    background: var(--parchment); border: 1px solid var(--rule); border-radius: 4px; color: var(--ink);
+    font-family: var(--serif); font-size: 1.15rem; padding: .75rem .9rem;
+  }
+  #wordInput { flex: 1 1 10rem; min-width: 8rem; }
+  #authorInput { flex: 1 1 8rem; min-width: 7rem; font-size: 1rem; }
+  .composer input:focus { outline: none; border-color: var(--accent-soft); }
+  .btn-ink {
+    font-family: var(--sans); font-weight: 600; font-size: .82rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--parchment); background: var(--accent); border: none; border-radius: 4px;
+    padding: .95rem 1.6rem; cursor: pointer; transition: background .15s, transform .15s; white-space: nowrap;
+  }
+  .btn-ink:hover { background: #7a281a; transform: translateY(-1px); }
+  .btn-ink:disabled { opacity: .55; cursor: wait; }
+  .composer-error { flex-basis: 100%; font-style: italic; color: var(--accent); font-size: .88rem; min-height: 1.2em; }
+
+  .how {
+    display: flex; gap: 2.6rem; justify-content: center; flex-wrap: wrap;
+    max-width: 50rem; margin: 4.5rem auto 0; padding-top: 3rem; border-top: 1px solid var(--rule);
+    font-size: 1.02rem; line-height: 1.7; color: var(--ink-soft);
+  }
+  .how div { max-width: 13.5rem; }
+  .how .n { display: block; font-size: 1.6rem; color: var(--accent); margin-bottom: .3rem; }
+
+  footer {
+    text-align: center; padding: 0 1.5rem calc(var(--composer-h, 10rem) + 2rem); margin-top: 3.5rem;
+    font-size: .9rem; font-style: italic; color: var(--ink-faint); line-height: 2;
+  }
+  footer a { color: var(--ink-soft); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--composer-h, 10rem) + 1.5rem); transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--parchment); padding: 1rem 1.7rem; border-radius: 5px;
+    font-size: 1.02rem; opacity: 0; pointer-events: none; transition: all .4s ease;
+    box-shadow: 0 12px 40px rgba(38,34,26,.35); max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast b { color: #e8c9a0; }
+
+  @media (max-width: 560px) {
+    header { padding: 3rem 1.2rem 2rem; }
+    .story { font-size: 1.18rem; text-align: left; }
+    .how { gap: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner" id="demoBanner" hidden>Demo mode — payments are simulated. No card required.</div>
+
+<header>
+  <div class="ornament">❦</div>
+  <h1>One Million Words</h1>
+  <p class="sub">The longest story ever told, one dollar at a time.</p>
+  <div class="progress-block">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label">
+      <span>Word <b id="countLabel">—</b> of 1,000,000</span>
+      <span><b id="authorsLabel">—</b> authors</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <p class="archive-note" id="archiveNote" hidden></p>
+  <p class="story" id="story"></p>
+  <p class="story-note">Hover or tap any word to see who set it in ink.<br>When the story reaches word one million, it ends — and every author’s name goes in the book.</p>
+
+  <section class="how">
+    <div><span class="n">Ⅰ.</span>Pay one dollar, add one word. It appears in the story instantly and permanently.</div>
+    <div><span class="n">Ⅱ.</span>Nobody owns the plot. The story goes wherever the next dollar takes it.</div>
+    <div><span class="n">Ⅲ.</span>At word 1,000,000 the story ends and is printed as a book, crediting every author.</div>
+  </section>
+</main>
+
+<footer>
+  Words are final once inked — that is what “set in ink” means.<br>
+  Slurs and harassment are redacted without refund; the word number is never reused.<br>
+  Payments are handled by Stripe — we never see your card number, and we store only the
+  word and signature you submit. ·
+  <a href="/legal.html">Terms &amp; refunds</a> ·
+  <a href="mailto:hello@example.com" id="contactLink">Write to the publishers</a>
+</footer>
+
+<div class="composer">
+  <div class="composer-inner">
+    <label for="wordInput">Continue the story — one word, one dollar</label>
+    <input type="text" id="wordInput" maxlength="24" placeholder="the next word…" autocomplete="off">
+    <input type="text" id="authorInput" maxlength="24" placeholder="signed (optional)" autocomplete="off">
+    <button class="btn-ink" id="payBtn">Set it in ink — $1</button>
+    <div class="composer-error" id="composerError"></div>
+  </div>
+</div>
+
+<div id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  const fmtDate = ts => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  let state = null;
+  let mineNumber = 0;
+  let fingerprint = -1;
+
+  // Keep the fixed composer's real height in a CSS var so it can never cover the story.
+  const composerEl = document.querySelector('.composer');
+  function measureComposer() {
+    document.documentElement.style.setProperty('--composer-h', composerEl.offsetHeight + 'px');
+  }
+  new ResizeObserver(measureComposer).observe(composerEl);
+  measureComposer();
+
+  function render(s) {
+    state = s;
+    fingerprint = s.count;
+    $('demoBanner').hidden = !s.demo;
+    if (s.contact) $('contactLink').href = 'mailto:' + s.contact;
+    $('archiveNote').hidden = s.offset === 0;
+    if (s.offset > 0) {
+      $('archiveNote').textContent = 'Showing the latest ' + s.words.length.toLocaleString('en-US') +
+        ' words. Every earlier word is preserved for the book — nothing is ever lost.';
+    }
+    if (s.count >= s.target) {
+      composerEl.innerHTML = '<div class="composer-inner"><label>The story is complete. One million words. It is finished. ' +
+        'The book is being prepared, crediting every author.</label></div>';
+    }
+    $('countLabel').textContent = s.count.toLocaleString('en-US');
+    $('authorsLabel').textContent = s.authors.toLocaleString('en-US');
+    $('progressFill').style.width = Math.max(0.15, (s.count / s.target) * 100) + '%';
+    const story = $('story');
+    story.innerHTML = '';
+    s.words.forEach((word, i) => {
+      const n = s.offset + i + 1;
+      const span = document.createElement('span');
+      span.className = 'w' + (word.w === '[removed]' ? ' redacted' : '') + (n === mineNumber ? ' mine' : '');
+      span.textContent = word.w;
+      span.dataset.n = n;
+      span.dataset.author = word.author;
+      span.dataset.at = word.at;
+      story.appendChild(span);
+      story.appendChild(document.createTextNode(' '));
+    });
+    const caret = document.createElement('span');
+    caret.className = 'caret';
+    caret.setAttribute('aria-hidden', 'true');
+    story.appendChild(caret);
+  }
+
+  // attribution tip — hover on desktop, tap on touch
+  const tip = $('tip');
+  function fillTip(w) {
+    tip.innerHTML = 'word #' + Number(w.dataset.n).toLocaleString('en-US') +
+      ' — by <b>' + esc(w.dataset.author) + '</b><br>' + fmtDate(Number(w.dataset.at));
+  }
+  function placeTip(x, y) {
+    const pad = 14;
+    let tx = x + pad, ty = y + pad;
+    if (tx + tip.offsetWidth > innerWidth - 8) tx = x - tip.offsetWidth - pad;
+    if (ty + tip.offsetHeight > innerHeight - 8) ty = y - tip.offsetHeight - pad;
+    tip.style.left = Math.max(8, tx) + 'px'; tip.style.top = Math.max(8, ty) + 'px';
+  }
+  document.addEventListener('mouseover', e => {
+    const w = e.target.closest('.w');
+    if (!w) { tip.style.opacity = 0; return; }
+    fillTip(w);
+    tip.style.opacity = 1;
+  });
+  document.addEventListener('mousemove', e => {
+    if (tip.style.opacity !== '1') return;
+    placeTip(e.clientX, e.clientY);
+  });
+  document.addEventListener('click', e => {
+    const w = e.target.closest('.w');
+    if (!w) { tip.style.opacity = 0; return; }
+    fillTip(w);
+    tip.style.opacity = 1;
+    const r = w.getBoundingClientRect();
+    placeTip(r.left + r.width / 2, r.bottom);
+  });
+
+  async function refresh() {
+    try {
+      const s = await (await fetch('/api/state')).json();
+      if (s.count === fingerprint) return; // story unchanged — don't re-render (keeps selection)
+      render(s);
+    } catch (e) { /* transient */ }
+  }
+
+  async function submit() {
+    const payBtn = $('payBtn');
+    payBtn.disabled = true;
+    $('composerError').textContent = '';
+    try {
+      localStorage.setItem('omw-draft', JSON.stringify({ w: $('wordInput').value.trim(), author: $('authorInput').value }));
+      const r = await fetch('/api/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ w: $('wordInput').value.trim(), author: $('authorInput').value }),
+      });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body.error || 'Something went wrong.');
+      window.location.href = body.url;
+    } catch (err) {
+      $('composerError').textContent = err.message;
+      payBtn.disabled = false;
+    }
+  }
+  $('payBtn').addEventListener('click', submit);
+  $('wordInput').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+
+  let toastTimer;
+  function toast(html, ms) {
+    const t = $('toast');
+    t.innerHTML = html;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), ms || 7000);
+  }
+
+  const q = new URLSearchParams(location.search);
+  if (q.get('sid')) {
+    fetch('/api/confirm?sid=' + encodeURIComponent(q.get('sid')))
+      .then(r => r.json().then(b => ({ ok: r.ok, b })))
+      .then(({ ok, b }) => {
+        if (ok && b.ok) {
+          localStorage.removeItem('omw-draft');
+          mineNumber = b.wordNumber;
+          render(b.state);
+          const share = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(
+            'Word #' + b.wordNumber.toLocaleString('en-US') + ' of the longest story ever told is mine: “' +
+            b.w + '” ' + location.origin);
+          toast('Word #' + b.wordNumber.toLocaleString('en-US') + ' — <b>' + esc(b.w) +
+            '</b> — is yours, forever. <a href="' + share + '" target="_blank" rel="noopener" style="color:#e8c9a0">Tell someone →</a>', 12000);
+          const mine = document.querySelector('.w.mine');
+          if (mine) mine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          history.replaceState(null, '', '/');
+        } else {
+          toast('Your payment is still being confirmed. <a href="' + location.href +
+            '" style="color:#e8c9a0">Check again</a> — if you were charged, your word WILL be inked.', 20000);
+        }
+      })
+      .catch(() => toast('Your payment is still being confirmed. <a href="' + location.href +
+        '" style="color:#e8c9a0">Check again</a>.', 20000));
+  } else if (q.get('canceled')) {
+    const d = JSON.parse(localStorage.getItem('omw-draft') || 'null');
+    if (d && d.w) { $('wordInput').value = d.w; $('authorInput').value = d.author || ''; $('wordInput').focus(); }
+    toast('Nothing was charged. Your word is still here, waiting to be written.');
+    history.replaceState(null, '', '/');
+  }
+
+  refresh();
+  setInterval(refresh, 8000);
+})();
+</script>
+</body>
+</html>

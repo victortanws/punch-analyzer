@@ -1,0 +1,21 @@
+{
+  "name": "punch-analyzer",
+  "version": "1.0.0",
+  "description": "An AI-powered web app that analyzes and scores your punching technique in real-time!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/victortanws/punch-analyzer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/victortanws/punch-analyzer/issues"
+  },
+  "homepage": "https://github.com/victortanws/punch-analyzer#readme"
+}

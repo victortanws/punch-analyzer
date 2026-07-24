@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CreatorForge — Titles, Thumbnails & Scripts at Volume</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Fraunces:ital,opsz,wght@1,9..144,500..700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0f14; --bg2:#141822; --bg3:#1b2130; --line:#262e42; --line2:#33405e;
+    --txt:#e8ecf5; --dim:#8b95ad; --faint:#5a6378;
+    --acc:#ff6b35; --acc2:#ffb03a; --good:#3ddc84; --bad:#ff5470; --info:#4da3ff;
+    --r:12px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%}
+  body{
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--txt);
+  }
+  ::selection{background:rgba(255,107,53,.35)}
+  button{font:inherit; cursor:pointer; border:none; background:none; color:inherit}
+  input,textarea,select{
+    font:inherit; color:var(--txt); background:var(--bg3); border:1px solid var(--line);
+    border-radius:8px; padding:9px 12px; width:100%;
+  }
+  input:focus,textarea:focus,select:focus{outline:none; border-color:var(--acc)}
+  textarea{resize:vertical; min-height:110px}
+  a{color:var(--info)}
+
+  /* ---------- layout ---------- */
+  header{
+    display:flex; align-items:center; gap:14px; padding:10px 18px;
+    background:var(--bg2); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:50;
+  }
+  .logo{display:flex; align-items:center; gap:9px; font-weight:800; font-size:17px; letter-spacing:.2px}
+  .logo .flame{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--acc),var(--acc2));
+    display:flex;align-items:center;justify-content:center;font-size:15px}
+  .logo b{color:var(--acc)}
+  header .spacer{flex:1}
+  .usage-pill{font-size:12px; color:var(--dim); background:var(--bg3); border:1px solid var(--line);
+    border-radius:99px; padding:4px 12px; white-space:nowrap}
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:9px;
+    background:var(--bg3); border:1px solid var(--line2); color:var(--txt); font-weight:600; font-size:14px;
+    transition:filter .15s, transform .05s;
+  }
+  .btn:hover{filter:brightness(1.15)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(135deg,var(--acc),#ff8c42); border-color:transparent; color:#1a0d05}
+  .btn.small{padding:5px 11px; font-size:12.5px; border-radius:7px}
+  .btn.ghost{background:transparent; border-color:var(--line)}
+  .btn:disabled{opacity:.45; cursor:not-allowed; filter:none}
+  .btn.danger{border-color:#5c2233; color:var(--bad)}
+
+  .shell{display:flex; min-height:calc(100vh - 55px)}
+  nav.steps{
+    width:220px; flex-shrink:0; border-right:1px solid var(--line); padding:18px 12px;
+    background:var(--bg2); display:flex; flex-direction:column; gap:4px;
+  }
+  .step-link{
+    display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:9px;
+    color:var(--dim); font-weight:600; font-size:13.5px; text-align:left; width:100%;
+  }
+  .step-link .num{
+    width:24px;height:24px;border-radius:50%;background:var(--bg3);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;
+  }
+  .step-link:hover{background:var(--bg3)}
+  .step-link.active{color:var(--txt); background:var(--bg3)}
+  .step-link.active .num{background:var(--acc); border-color:var(--acc); color:#1a0d05}
+  .step-link.done .num{background:rgba(61,220,132,.15); border-color:var(--good); color:var(--good)}
+  nav .divider{height:1px;background:var(--line);margin:12px 4px}
+  .proj-label{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--faint); padding:4px 12px}
+  .proj-item{display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:8px; font-size:13px;
+    color:var(--dim); width:100%; text-align:left}
+  .proj-item.active{color:var(--txt); background:var(--bg3)}
+  .proj-item:hover{background:var(--bg3)}
+  .proj-item .dot{width:7px;height:7px;border-radius:50%;background:var(--acc);flex-shrink:0}
+  .proj-item span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+  main{flex:1; padding:26px 34px 90px; max-width:1120px}
+  h1{font-size:22px; margin-bottom:4px}
+  h2{font-size:17px; margin:22px 0 10px}
+  .sub{color:var(--dim); font-size:14px; margin-bottom:20px}
+  .hidden{display:none !important}
+
+  .card{background:var(--bg2); border:1px solid var(--line); border-radius:var(--r); padding:18px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  label.f{display:block; font-size:12.5px; font-weight:700; color:var(--dim); margin:14px 0 5px;
+    text-transform:uppercase; letter-spacing:.6px}
+  .hint{font-size:12px; color:var(--faint); margin-top:5px}
+
+  /* ---------- titles ---------- */
+  .title-toolbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px}
+  .title-toolbar .count{font-size:13px; color:var(--dim)}
+  .title-list{display:flex; flex-direction:column; gap:8px}
+  .t-card{
+    display:flex; align-items:flex-start; gap:12px; background:var(--bg2); border:1px solid var(--line);
+    border-radius:10px; padding:11px 14px; transition:border-color .15s;
+  }
+  .t-card:hover{border-color:var(--line2)}
+  .t-card.sel{border-color:var(--acc); background:linear-gradient(0deg, rgba(255,107,53,.06), rgba(255,107,53,.06)), var(--bg2)}
+  .t-card .pick{
+    width:22px;height:22px;border-radius:6px;border:2px solid var(--line2); flex-shrink:0; margin-top:2px;
+    display:flex;align-items:center;justify-content:center;font-size:13px; color:#1a0d05;
+  }
+  .t-card.sel .pick{background:var(--acc); border-color:var(--acc)}
+  .t-card .body{flex:1; min-width:0}
+  .t-card .tt{font-weight:700; font-size:15px}
+  .t-card .meta{display:flex; gap:8px; align-items:center; margin-top:4px; flex-wrap:wrap}
+  .chip{font-size:11px; padding:2px 9px; border-radius:99px; background:var(--bg3); border:1px solid var(--line); color:var(--dim)}
+  .t-card .why{font-size:12.5px; color:var(--dim); margin-top:4px}
+  .score{
+    font-weight:800; font-size:15px; width:44px; height:44px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; border:1px solid var(--line);
+  }
+  .score.hi{color:var(--good); border-color:rgba(61,220,132,.4); background:rgba(61,220,132,.07)}
+  .score.mid{color:var(--acc2); border-color:rgba(255,176,58,.4); background:rgba(255,176,58,.07)}
+  .score.lo{color:var(--dim)}
+
+  /* ---------- interview ---------- */
+  .q-card{background:var(--bg2); border:1px solid var(--line); border-radius:var(--r); padding:16px 18px; margin-bottom:12px}
+  .q-card .q{font-weight:700; font-size:15px}
+  .q-card .why{font-size:12.5px; color:var(--dim); margin:3px 0 10px}
+  .opts{display:flex; flex-wrap:wrap; gap:8px}
+  .opt{
+    padding:7px 14px; border-radius:99px; border:1px solid var(--line2); font-size:13.5px; color:var(--dim);
+  }
+  .opt:hover{border-color:var(--acc); color:var(--txt)}
+  .opt.on{background:var(--acc); border-color:var(--acc); color:#1a0d05; font-weight:700}
+  .q-card input{margin-top:10px}
+
+  /* ---------- production ---------- */
+  .pack{border:1px solid var(--line); border-radius:var(--r); background:var(--bg2); margin-bottom:22px; overflow:hidden}
+  .pack-head{padding:14px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px}
+  .pack-head .pt{font-weight:800; font-size:16px; flex:1}
+  .tabs{display:flex; gap:2px; padding:0 12px; border-bottom:1px solid var(--line); background:var(--bg2)}
+  .tab{padding:10px 16px; font-size:13.5px; font-weight:600; color:var(--dim); border-bottom:2px solid transparent}
+  .tab.on{color:var(--txt); border-bottom-color:var(--acc)}
+  .pane{padding:18px}
+  .empty-pane{text-align:center; padding:34px 20px; color:var(--dim)}
+  .empty-pane p{margin-bottom:14px; font-size:14px}
+
+  .md{font-size:14.5px; line-height:1.65}
+  .md h1{font-size:19px; margin:14px 0 8px}
+  .md h2{font-size:16px; margin:18px 0 8px; color:var(--acc2)}
+  .md h3{font-size:14.5px; margin:14px 0 6px}
+  .md p{margin:8px 0}
+  .md ul,.md ol{margin:8px 0 8px 22px}
+  .md code{background:var(--bg3); padding:1px 6px; border-radius:5px; font-size:13px}
+  .md .cue{display:block; background:rgba(77,163,255,.08); border-left:3px solid var(--info);
+    padding:4px 10px; border-radius:0 7px 7px 0; margin:6px 0; font-size:13px; color:#9ec8f5}
+  .md .cue.loop{border-left-color:var(--acc2); background:rgba(255,176,58,.08); color:#f5d49e}
+  .md .cue.quote{border-left-color:var(--good); background:rgba(61,220,132,.08); color:#a8ecc6}
+
+  .thumb-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px}
+  .thumb-cell canvas{width:100%; border-radius:9px; border:1px solid var(--line); display:block}
+  .thumb-cell .tc-meta{display:flex; align-items:center; gap:8px; margin-top:7px}
+  .thumb-cell .tc-name{flex:1; font-size:12.5px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+  .kv{margin-bottom:16px}
+  .kv .k{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--faint); margin-bottom:6px;
+    display:flex; align-items:center; gap:10px}
+  .kv .v{background:var(--bg3); border:1px solid var(--line); border-radius:9px; padding:12px 14px; font-size:13.5px;
+    white-space:pre-wrap; word-break:break-word}
+  .tagwrap{display:flex; flex-wrap:wrap; gap:6px}
+  .tagwrap .chip{font-size:12px}
+
+  .short-card{background:var(--bg3); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:12px}
+  .short-card .st{font-weight:700; margin-bottom:6px}
+  .short-card .sh{color:var(--acc2); font-size:13.5px; margin-bottom:8px}
+  .short-card .sb{font-size:13.5px; white-space:pre-wrap; color:var(--dim)}
+
+  /* ---------- progress / misc ---------- */
+  .gen-live{
+    background:var(--bg3); border:1px dashed var(--line2); border-radius:10px; padding:14px 16px;
+    font-size:13px; color:var(--dim); max-height:200px; overflow:auto; white-space:pre-wrap; margin-top:12px;
+  }
+  .spinner{width:15px;height:15px;border:2px solid var(--line2);border-top-color:var(--acc);border-radius:50%;
+    display:inline-block; animation:spin .7s linear infinite; vertical-align:-2px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .banner{
+    display:flex; gap:10px; align-items:center; background:rgba(255,176,58,.08); border:1px solid rgba(255,176,58,.35);
+    border-radius:10px; padding:10px 14px; font-size:13.5px; color:#f5d49e; margin-bottom:16px;
+  }
+  .banner.blue{background:rgba(77,163,255,.08); border-color:rgba(77,163,255,.35); color:#9ec8f5}
+
+  dialog{
+    background:var(--bg2); color:var(--txt); border:1px solid var(--line2); border-radius:14px;
+    padding:24px; width:min(560px, 92vw);
+  }
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog h3{margin-bottom:6px}
+
+  #toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:200;
+    background:var(--bg3); border:1px solid var(--line2); border-radius:10px; padding:10px 18px;
+    font-size:13.5px; opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  #toast.show{opacity:1}
+  .footer-note{color:var(--faint); font-size:12px; margin-top:26px}
+  @media(max-width:900px){
+    .shell{flex-direction:column}
+    nav.steps{width:100%; flex-direction:row; overflow-x:auto; border-right:none; border-bottom:1px solid var(--line)}
+    nav .divider,.proj-label{display:none}
+    .proj-item{display:none}
+    main{padding:18px 16px 80px}
+    .grid2,.grid3{grid-template-columns:1fr}
+  }
+</style>
+<style>
+  /* =================== design system v2 — "the studio" =================== */
+  :root{
+    --bg:#0f0d13; --bg2:#161219; --bg3:#1e1922; --line:#2b2434; --line2:#3d3349;
+    --txt:#f2edf3; --dim:#a89bb0; --faint:#6b5f76;
+    --display:"Bricolage Grotesque", -apple-system, "Segoe UI", sans-serif;
+    --serif:"Fraunces", Georgia, serif;
+  }
+  html{scroll-behavior:smooth}
+  body{position:relative}
+  /* warm studio ambience */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(900px 600px at 8% 110%, rgba(255,107,53,.10), transparent 60%),
+      radial-gradient(800px 500px at 100% -8%, rgba(120,80,255,.08), transparent 60%),
+      radial-gradient(600px 500px at 60% 50%, rgba(255,176,58,.03), transparent 70%);
+  }
+  body::after{ /* film grain */
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+  /* typography */
+  h1{font-family:var(--display); font-size:30px; font-weight:800; letter-spacing:-.6px; line-height:1.15}
+  h2{font-family:var(--display); font-weight:700}
+  h1 .ink{
+    font-family:var(--serif); font-style:italic; font-weight:600; letter-spacing:0;
+    background:linear-gradient(100deg, var(--acc), var(--acc2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    padding-right:.06em;
+  }
+  .sub{font-size:14.5px; max-width:760px}
+  .logo{font-family:var(--display); font-weight:800}
+  .logo .tagline{
+    font-family:var(--serif); font-style:italic; font-weight:500; font-size:12.5px;
+    color:var(--dim); margin-left:10px; letter-spacing:.1px;
+  }
+  .pack-head .pt{font-family:var(--display); font-weight:700}
+  .score{font-family:var(--display)}
+  .md h1,.md h2{font-family:var(--display)}
+
+  /* motion */
+  @keyframes fadeUp{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  @keyframes rise{from{opacity:0; transform:translateY(14px) scale(.99)} to{opacity:1; transform:none}}
+  @keyframes pop{from{opacity:0; transform:scale(.96)} to{opacity:1; transform:none}}
+  @keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,0)} 50%{box-shadow:0 0 26px 2px rgba(255,107,53,.35)}}
+  main > section{animation:fadeUp .38s cubic-bezier(.22,.9,.35,1) both}
+  .pane{animation:fadeUp .3s ease both}
+  .q-card{animation:rise .4s cubic-bezier(.22,.9,.35,1) both}
+  .q-card:nth-child(2){animation-delay:.05s}.q-card:nth-child(3){animation-delay:.1s}
+  .q-card:nth-child(4){animation-delay:.15s}.q-card:nth-child(5){animation-delay:.2s}.q-card:nth-child(6){animation-delay:.25s}
+  .title-list.fresh .t-card{animation:rise .45s cubic-bezier(.22,.9,.35,1) both}
+  .title-list.fresh .t-card:nth-child(1){animation-delay:.02s}.title-list.fresh .t-card:nth-child(2){animation-delay:.06s}
+  .title-list.fresh .t-card:nth-child(3){animation-delay:.1s}.title-list.fresh .t-card:nth-child(4){animation-delay:.14s}
+  .title-list.fresh .t-card:nth-child(5){animation-delay:.18s}.title-list.fresh .t-card:nth-child(6){animation-delay:.22s}
+  .title-list.fresh .t-card:nth-child(7){animation-delay:.26s}.title-list.fresh .t-card:nth-child(8){animation-delay:.3s}
+  .title-list.fresh .t-card:nth-child(9){animation-delay:.34s}.title-list.fresh .t-card:nth-child(10){animation-delay:.38s}
+  .t-card{transition:border-color .18s, transform .18s, box-shadow .18s}
+  .t-card:hover{transform:translateY(-2px); box-shadow:0 8px 26px rgba(0,0,0,.35)}
+  .thumb-cell canvas{transition:transform .2s ease, box-shadow .2s ease}
+  .thumb-cell:hover canvas{transform:translateY(-3px) scale(1.012); box-shadow:0 14px 34px rgba(0,0,0,.45)}
+  .tab{transition:color .15s, border-color .15s}
+  .opt{transition:background .15s, color .15s, border-color .15s, transform .12s}
+  .opt:active{transform:scale(.96)}
+  .btn{transition:filter .15s, transform .08s, box-shadow .2s}
+  .btn.primary.pulse{animation:breathe 2.6s ease-in-out infinite}
+  dialog[open]{animation:pop .25s cubic-bezier(.22,.9,.35,1)}
+  #toast{transition:opacity .25s, transform .25s; transform:translateX(-50%) translateY(8px)}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+
+  /* confetti */
+  .confetti{position:fixed; width:9px; height:14px; z-index:300; pointer-events:none; border-radius:2px;
+    animation:confettiFly 1.2s cubic-bezier(.22,.9,.35,1) forwards}
+  @keyframes confettiFly{
+    from{transform:translate(0,0) rotate(0); opacity:1}
+    to{transform:translate(var(--dx), calc(var(--dy) + 260px)) rotate(var(--rot)); opacity:0}
+  }
+
+  /* thinking-out-loud stream */
+  .gen-live{border-color:var(--line2)}
+  .gen-live::before{
+    content:"— your team, thinking out loud —"; display:block;
+    font-family:var(--serif); font-style:italic; font-size:12px; color:var(--faint);
+    margin-bottom:8px; letter-spacing:.4px;
+  }
+
+  /* spark chips (blank-page rescue) */
+  .spark-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px}
+  .spark-label{font-family:var(--serif); font-style:italic; font-size:13px; color:var(--dim)}
+  .spark{
+    font-size:12.5px; padding:6px 13px; border-radius:99px; border:1px dashed var(--line2);
+    color:var(--dim); transition:color .15s, border-color .15s, transform .12s;
+  }
+  .spark:hover{color:var(--acc2); border-color:var(--acc2); transform:translateY(-1px)}
+
+  /* accessibility */
+  :focus-visible{outline:2px solid var(--acc2); outline-offset:2px; border-radius:6px}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none !important; transition:none !important}
+    html{scroll-behavior:auto}
+  }
+  @media(max-width:900px){ .logo .tagline{display:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="flame">🔥</div>Creator<b>Forge</b><span class="tagline">your creative team, in one tab</span></div>
+  <div class="spacer"></div>
+  <div class="usage-pill" id="usagePill" title="Cumulative API token usage this session">tokens: 0 in / 0 out</div>
+  <button class="btn small ghost" id="btnNewProject">+ New project</button>
+  <button class="btn small" id="btnSettings">⚙ Settings</button>
+</header>
+
+<div class="shell">
+  <nav class="steps" id="stepNav">
+    <button class="step-link" data-step="brief"><span class="num">1</span>Brief</button>
+    <button class="step-link" data-step="titles"><span class="num">2</span>Titles</button>
+    <button class="step-link" data-step="interview"><span class="num">3</span>Interview</button>
+    <button class="step-link" data-step="pack"><span class="num">4</span>Production</button>
+    <button class="step-link" data-step="export"><span class="num">5</span>Export</button>
+    <div class="divider"></div>
+    <div class="proj-label">Projects</div>
+    <div id="projList"></div>
+  </nav>
+
+  <main>
+    <!-- ============ STEP 1 : BRIEF ============ -->
+    <section id="step-brief">
+      <h1>What are we making <em class="ink">today?</em></h1>
+      <p class="sub">Give your team the idea — a URL or a rough description is plenty. They'll come back with fifty ways to make people click. Got title ideas of your own? Drop them in; your strategist will study them and raise the bar.</p>
+      <div id="demoBanner" class="banner blue hidden">🧪 <b>You're in demo mode</b> — explore the whole workflow with sample data, free. When you're ready for the real thing, add your Anthropic API key in ⚙ Settings.</div>
+      <div class="card">
+        <label class="f" style="margin-top:0">Video idea — URL or description</label>
+        <textarea id="briefInput" placeholder="e.g. https://arxiv.org/abs/2401.12345  — or —  A deep-dive on why 90% of new boxers quit within 3 months, and the training plan that fixes it."></textarea>
+        <div class="hint">If you paste a URL, your researcher reads it with live web search before the team starts.</div>
+        <div class="spark-row">
+          <span class="spark-label">Need a spark?</span>
+          <button class="spark" data-spark="Why 90% of new runners quit within 3 months — and the science-backed plan that fixes it">the 90% quit curve</button>
+          <button class="spark" data-spark="I tested the 5 most viral productivity systems for 30 days each. Here's what actually survived contact with a real job.">productivity systems, tested</button>
+          <button class="spark" data-spark="https://en.wikipedia.org/wiki/Dunning%E2%80%93Kruger_effect — explain the Dunning–Kruger effect with real examples from sports, business and online arguments">explain a famous idea (URL)</button>
+        </div>
+
+        <label class="f">Your title ideas (optional)</label>
+        <div class="grid3">
+          <input id="seed1" placeholder="Title idea #1">
+          <input id="seed2" placeholder="Title idea #2">
+          <input id="seed3" placeholder="Title idea #3">
+        </div>
+
+        <div class="grid3">
+          <div>
+            <label class="f">Audience</label>
+            <input id="briefAudience" placeholder="e.g. beginner home cooks">
+          </div>
+          <div>
+            <label class="f">Tone</label>
+            <select id="briefTone">
+              <option>High-energy</option><option>Conversational</option><option selected>Authoritative but friendly</option>
+              <option>Documentary / cinematic</option><option>Comedic</option><option>Calm & educational</option>
+            </select>
+          </div>
+          <div>
+            <label class="f">Video length</label>
+            <select id="briefLength">
+              <option value="600">4–6 min (~900 words)</option>
+              <option value="1300" selected>8–10 min (~1,300 words)</option>
+              <option value="2200">12–15 min (~2,200 words)</option>
+              <option value="3200">18–22 min (~3,200 words)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:20px; display:flex; gap:10px; align-items:center">
+          <button class="btn primary" id="btnGenTitles">⚡ Put 50 titles on the board</button>
+          <span id="briefStatus" class="hint" role="status" aria-live="polite"></span>
+        </div>
+        <div id="briefLive" class="gen-live hidden"></div>
+      </div>
+      <p class="footer-note">Your brief, key and all generated content stay in this browser (localStorage). Nothing is stored on any server other than the API calls you make to Anthropic.</p>
+    </section>
+
+    <!-- ============ STEP 2 : TITLES ============ -->
+    <section id="step-titles" class="hidden">
+      <h1>Pick your <em class="ink">winners</em></h1>
+      <p class="sub">Your strategist put the angles on the board, each scored for click-through potential — honestly, not flatteringly. Select up to <b>3</b>; each earns a full production pack. Two minutes in the <b>Interview</b> (step 3) lets the team re-rank around what your video really is.</p>
+      <div class="title-toolbar">
+        <button class="btn small" id="btnSortScore">Sort: score ▾</button>
+        <select id="styleFilter" style="width:auto; padding:6px 10px; font-size:13px">
+          <option value="">All styles</option>
+        </select>
+        <button class="btn small ghost" id="btnMoreTitles">+ 15 more like my selection</button>
+        <span class="count" id="titleCount"></span>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn primary small" id="btnToPack">Build production packs →</button>
+      </div>
+      <div id="titleLive" class="gen-live hidden" style="margin-bottom:12px"></div>
+      <div class="title-list" id="titleList"></div>
+    </section>
+
+    <!-- ============ STEP 3 : INTERVIEW ============ -->
+    <section id="step-interview" class="hidden">
+      <h1>Your story producer has a few <em class="ink">questions</em></h1>
+      <p class="sub">Six questions chosen for <i>this</i> video — no forms, just taps. Your answers re-rank the titles and quietly steer every script, thumbnail and description downstream. This is the highest-leverage two minutes in the whole flow.</p>
+      <div id="qWrap"></div>
+      <div style="display:flex; gap:10px; align-items:center; margin-top:6px">
+        <button class="btn primary" id="btnRefine">↻ Refine & re-rank titles with my answers</button>
+        <button class="btn ghost" id="btnSkipInterview">Skip → keep current ranking</button>
+        <span class="hint" id="qStatus" role="status" aria-live="polite"></span>
+      </div>
+      <div id="qLive" class="gen-live hidden"></div>
+    </section>
+
+    <!-- ============ STEP 4 : PRODUCTION ============ -->
+    <section id="step-pack" class="hidden">
+      <h1>Your team goes to <em class="ink">work</em></h1>
+      <p class="sub">For each title you picked: your <b>scriptwriter</b> drafts a cited script with three hooks and retention cues, your <b>art director</b> sketches 10 thumbnails, your <b>growth editor</b> builds the SEO kit, and your <b>shorts producer</b> cuts 3 verticals. Hit ⚡ Generate all, or commission them one at a time.</p>
+      <div id="packWrap"></div>
+    </section>
+
+    <!-- ============ STEP 5 : EXPORT ============ -->
+    <section id="step-export" class="hidden">
+      <h1>Ship <em class="ink">it</em></h1>
+      <p class="sub">One clean production doc with everything your editor, thumbnail artist or VA needs to run with — plus a JSON backup so no idea is ever lost. Go make the thing.</p>
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn primary" id="btnExportMd">⬇ Download production doc (.md)</button>
+          <button class="btn" id="btnCopyMd">Copy markdown</button>
+          <button class="btn ghost" id="btnExportJson">⬇ Project backup (.json)</button>
+          <button class="btn ghost" id="btnImportJson">⬆ Import project (.json)</button>
+          <input type="file" id="importFile" accept=".json" class="hidden">
+        </div>
+      </div>
+      <div class="card"><div class="md" id="exportPreview" style="max-height:60vh; overflow:auto"></div></div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ SETTINGS ============ -->
+<dialog id="dlgSettings">
+  <h3>Settings</h3>
+  <p class="sub" style="margin-bottom:14px">Runs entirely in your browser against the Anthropic API.</p>
+  <label class="f" style="margin-top:0">Anthropic API key</label>
+  <input id="setKey" type="password" placeholder="sk-ant-…">
+  <div class="hint">Stored only in this browser's localStorage. Create one at console.anthropic.com.</div>
+  <label class="f">Model</label>
+  <select id="setModel">
+    <option value="claude-opus-4-8">Claude Opus 4.8 — best quality (default)</option>
+    <option value="claude-sonnet-5">Claude Sonnet 5 — fast & strong</option>
+    <option value="claude-haiku-4-5">Claude Haiku 4.5 — cheapest</option>
+  </select>
+  <label class="f">Live web research</label>
+  <select id="setResearch">
+    <option value="auto" selected>Auto — research when brief contains a URL</option>
+    <option value="always">Always — research every brief & cite in scripts</option>
+    <option value="never">Never — no web search (scripts still get source placeholders)</option>
+  </select>
+  <label class="f">Demo mode</label>
+  <select id="setDemo">
+    <option value="auto" selected>Auto — demo only when no API key</option>
+    <option value="on">Force on — sample data, zero API cost</option>
+  </select>
+  <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end">
+    <button class="btn ghost" id="btnCloseSettings">Close</button>
+    <button class="btn primary" id="btnSaveSettings">Save</button>
+  </div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   CreatorForge — single-file YouTube pre-production engine
+   brief → 50 scored titles → targeted interview → re-rank → select ≤3
+   → per title: cited script + 10 thumbnails + metadata kit + 3 shorts
+   ===================================================================== */
+
+/* ---------------- settings & storage ---------------- */
+const LS_SET = "cf_settings", LS_PROJ = "cf_projects", LS_ACTIVE = "cf_active";
+const PRICES = { // $/MTok [in, out]
+  "claude-opus-4-8":[5,25], "claude-sonnet-5":[3,15], "claude-haiku-4-5":[1,5]
+};
+let settings = Object.assign({key:"", model:"claude-opus-4-8", research:"auto", demo:"auto"},
+  JSON.parse(localStorage.getItem(LS_SET)||"{}"));
+
+function newProject(){
+  return {
+    id: "p"+Date.now().toString(36),
+    name: "Untitled video",
+    createdAt: Date.now(),
+    brief: {input:"", seeds:["","",""], audience:"", tone:"Authoritative but friendly", words:1300},
+    research: null,
+    titles: [],          // {id,text,style,score,rationale,selected}
+    questions: [],       // {question,why,options[],answer,custom}
+    refined: false,
+    packs: {},           // titleId -> {script, sources[], thumbs[], meta, shorts[]}
+    usage: {inTok:0, outTok:0}
+  };
+}
+let projects = JSON.parse(localStorage.getItem(LS_PROJ)||"[]");
+if(!projects.length) projects = [newProject()];
+let P = projects.find(p=>p.id===localStorage.getItem(LS_ACTIVE)) || projects[0];
+
+function save(){
+  localStorage.setItem(LS_PROJ, JSON.stringify(projects));
+  localStorage.setItem(LS_ACTIVE, P.id);
+}
+function saveSettings(){ localStorage.setItem(LS_SET, JSON.stringify(settings)); }
+
+/* ---------------- tiny helpers ---------------- */
+const $ = s=>document.querySelector(s);
+const $$ = s=>[...document.querySelectorAll(s)];
+const esc = s=>String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
+function copy(text, msg){ navigator.clipboard.writeText(text).then(()=>toast(msg||"Copied")); }
+function download(name, text, type){ const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([text],{type:type||"text/plain"})); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000); }
+const sleep = ms=>new Promise(r=>setTimeout(r,ms));
+function demoOn(){ return settings.demo==="on" || (settings.demo==="auto" && !settings.key); }
+function hasUrl(s){ return /https?:\/\/[^\s]+/i.test(s); }
+function researchWanted(){
+  if(demoOn()) return false;
+  if(settings.research==="never") return false;
+  if(settings.research==="always") return true;
+  return hasUrl(P.brief.input);
+}
+function usageAdd(u){
+  P.usage.inTok += u.input||0; P.usage.outTok += u.output||0; save(); renderUsage();
+}
+function renderUsage(){
+  const pr = PRICES[settings.model]||[0,0];
+  const cost = (P.usage.inTok*pr[0] + P.usage.outTok*pr[1])/1e6;
+  $("#usagePill").textContent = `tokens: ${P.usage.inTok.toLocaleString()} in / ${P.usage.outTok.toLocaleString()} out ≈ $${cost.toFixed(2)}`;
+}
+
+/* ---------------- the team: personas, cycling status, celebration ---------------- */
+const MSG_RESEARCH = ["🔎 Your researcher is reading the source…","🧠 Pulling key facts and receipts…","🗺 Checking how everyone else covered this…","🕳 Hunting for the gap nobody filled…"];
+const MSG_TITLES = ["🎯 Your strategist is mapping the angles…","🧲 Stress-testing every curiosity gap…","✂️ Cutting the hooks that wouldn't get clicked…","⚖️ Scoring honestly — no participation trophies…","🏁 Lining up the final board…"];
+const MSG_REFINE = ["🎙 Reading your answers back to the team…","🧭 Re-aiming every angle at the real video…","⚖️ Re-scoring the whole board…","🏁 Sharpening the top ten…"];
+const GEN_LABEL = {script:"✍️ Scriptwriter drafting…", thumbs:"🎨 Art director sketching…", meta:"📈 Growth editor optimizing…", shorts:"✂️ Shorts producer cutting…"};
+const GEN_CTA = {script:"✍️ Commission the script", thumbs:"🎨 Sketch 10 thumbnails", meta:"📈 Build the metadata kit", shorts:"✂️ Cut 3 Shorts"};
+
+function statusCycler(el, msgs){
+  let i = 0, stopped = false;
+  const paint = ()=>{ if(stopped||!el) return; el.innerHTML = `<span class="spinner"></span> ${esc(msgs[i%msgs.length])}`; i++; };
+  paint();
+  const h = setInterval(paint, 2300);
+  return ()=>{ stopped = true; clearInterval(h); if(el) el.textContent=""; };
+}
+function confetti(x, y){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const colors = ["#ff6b35","#ffb03a","#ffd60a","#3ddc84","#4da3ff"];
+  for(let i=0;i<26;i++){
+    const p = document.createElement("div");
+    p.className = "confetti";
+    const ang = Math.random()*Math.PI*2, v = 70+Math.random()*170;
+    p.style.left = x+"px"; p.style.top = y+"px";
+    p.style.background = colors[i%colors.length];
+    p.style.setProperty("--dx", Math.cos(ang)*v+"px");
+    p.style.setProperty("--dy", (Math.sin(ang)*v-160)+"px");
+    p.style.setProperty("--rot", (Math.random()*720-360)+"deg");
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 1300);
+  }
+}
+
+/* ---------------- Anthropic API (browser, streaming) ---------------- */
+const API_URL = "https://api.anthropic.com/v1/messages";
+class ApiError extends Error{ constructor(status,msg){ super(msg); this.status=status; } }
+
+function apiHeaders(){
+  return {
+    "content-type":"application/json",
+    "x-api-key": settings.key,
+    "anthropic-version":"2023-06-01",
+    "anthropic-dangerous-direct-browser-access":"true"
+  };
+}
+function webTools(){
+  const modern = /^(claude-opus-4-[678]|claude-sonnet-5|claude-sonnet-4-6)/.test(settings.model);
+  return [
+    {type: modern?"web_search_20260209":"web_search_20250305", name:"web_search", max_uses:6},
+    {type: modern?"web_fetch_20260209":"web_fetch_20250910", name:"web_fetch", max_uses:4}
+  ];
+}
+function friendly(e){
+  if(e.status===401) return "Invalid API key — check ⚙ Settings.";
+  if(e.status===429) return "Rate limited by the API. Wait a minute and retry.";
+  if(e.status===529 || e.status===500) return "Anthropic API is busy. Try again shortly.";
+  return e.message || "Request failed.";
+}
+
+/* stream one message; returns {content[], stopReason, usage} */
+async function streamOnce(body, onDelta){
+  const res = await fetch(API_URL, {method:"POST", headers:apiHeaders(),
+    body: JSON.stringify(Object.assign({}, body, {stream:true}))});
+  if(!res.ok){
+    let msg = res.statusText;
+    try{ const j = await res.json(); msg = j?.error?.message || msg; }catch{}
+    throw new ApiError(res.status, msg);
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = "", stopReason = null;
+  const usage = {input:0, output:0};
+  const content = [];
+  while(true){
+    const {done, value} = await reader.read();
+    if(done) break;
+    buf += dec.decode(value, {stream:true});
+    let i;
+    while((i = buf.indexOf("\n\n")) >= 0){
+      const chunk = buf.slice(0, i); buf = buf.slice(i+2);
+      const dl = chunk.split("\n").find(l=>l.startsWith("data:"));
+      if(!dl) continue;
+      let ev; try{ ev = JSON.parse(dl.slice(5)); }catch{ continue; }
+      if(ev.type==="message_start"){ usage.input += ev.message?.usage?.input_tokens||0; }
+      else if(ev.type==="content_block_start"){
+        const b = JSON.parse(JSON.stringify(ev.content_block));
+        if(b.type==="tool_use"||b.type==="server_tool_use") b._json="";
+        content[ev.index] = b;
+      }
+      else if(ev.type==="content_block_delta"){
+        const b = content[ev.index]; if(!b) continue;
+        const d = ev.delta;
+        if(d.type==="text_delta"){ b.text=(b.text||"")+d.text; onDelta && onDelta(d.text); }
+        else if(d.type==="input_json_delta"){ b._json += d.partial_json; }
+        else if(d.type==="thinking_delta"){ b.thinking=(b.thinking||"")+d.thinking; }
+        else if(d.type==="signature_delta"){ b.signature=(b.signature||"")+d.signature; }
+        else if(d.type==="citations_delta"){ (b.citations=b.citations||[]).push(d.citation); }
+      }
+      else if(ev.type==="content_block_stop"){
+        const b = content[ev.index];
+        if(b && b._json!==undefined){ try{ b.input = b._json?JSON.parse(b._json):{}; }catch{} delete b._json; }
+      }
+      else if(ev.type==="message_delta"){
+        if(ev.delta?.stop_reason) stopReason = ev.delta.stop_reason;
+        if(ev.usage?.output_tokens) usage.output = ev.usage.output_tokens;
+      }
+      else if(ev.type==="error"){ throw new ApiError(0, ev.error?.message||"stream error"); }
+    }
+  }
+  return {content: content.filter(Boolean), stopReason, usage};
+}
+
+/* full call: retries, pause_turn continuation, JSON schema output */
+async function callClaude({system, user, maxTokens=8000, tools=null, schema=null, thinking=false, onDelta=null}){
+  if(!settings.key) throw new ApiError(401, "No API key set.");
+  const body = {model: settings.model, max_tokens: maxTokens, system,
+    messages: [{role:"user", content:user}]};
+  if(tools) body.tools = tools;
+  if(schema) body.output_config = {format:{type:"json_schema", schema}};
+  if(thinking && /^(claude-opus-4-[78]|claude-sonnet-5|claude-fable)/.test(settings.model))
+    body.thinking = {type:"adaptive"};
+
+  const all = [];
+  for(let hop=0; hop<6; hop++){
+    let r, attempts = 0;
+    while(true){
+      try{ r = await streamOnce(body, onDelta); break; }
+      catch(e){
+        if((e.status===429||e.status===529||e.status===500) && attempts<2){
+          attempts++; toast("API busy — retrying…"); await sleep(12000*attempts); continue;
+        }
+        throw e;
+      }
+    }
+    usageAdd(r.usage);
+    all.push(...r.content);
+    if(r.stopReason==="pause_turn"){
+      body.messages = body.messages.concat([{role:"assistant", content:r.content}]);
+      continue;
+    }
+    if(r.stopReason==="refusal") throw new ApiError(0, "The model declined this request — rephrase the brief.");
+    break;
+  }
+  const text = all.filter(b=>b.type==="text").map(b=>b.text).join("");
+  return {text, content:all, sources: extractSources(all)};
+}
+
+function extractSources(content){
+  const out = [], seen = new Set();
+  for(const b of content){
+    const results = (b.type==="web_search_tool_result" && Array.isArray(b.content)) ? b.content : [];
+    for(const r of results){
+      if(r.type==="web_search_result" && r.url && !seen.has(r.url)){ seen.add(r.url); out.push({title:r.title||r.url, url:r.url}); }
+    }
+    if(b.type==="text" && Array.isArray(b.citations)){
+      for(const c of b.citations){ if(c.url && !seen.has(c.url)){ seen.add(c.url); out.push({title:c.title||c.url, url:c.url}); } }
+    }
+  }
+  return out;
+}
+
+function parseJson(text){
+  try{ return JSON.parse(text); }catch{}
+  const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if(m){ try{ return JSON.parse(m[1]); }catch{} }
+  const a = text.indexOf("{"), b = text.lastIndexOf("}");
+  if(a>=0 && b>a){ try{ return JSON.parse(text.slice(a,b+1)); }catch{} }
+  throw new Error("Could not parse model output as JSON.");
+}
+
+/* ---------------- schemas (structured outputs) ---------------- */
+const STYLES = ["curiosity","how_to","listicle","negative","comparison","challenge","story","question","authority"];
+const SCHEMA_TITLES = {
+  type:"object", additionalProperties:false, required:["titles"],
+  properties:{ titles:{ type:"array", items:{
+    type:"object", additionalProperties:false, required:["text","style","score","rationale"],
+    properties:{
+      text:{type:"string"},
+      style:{type:"string", enum:STYLES},
+      score:{type:"integer"},
+      rationale:{type:"string"}
+    }}}}
+};
+const SCHEMA_QUESTIONS = {
+  type:"object", additionalProperties:false, required:["questions"],
+  properties:{ questions:{ type:"array", items:{
+    type:"object", additionalProperties:false, required:["question","why","options"],
+    properties:{
+      question:{type:"string"}, why:{type:"string"},
+      options:{type:"array", items:{type:"string"}}
+    }}}}
+};
+const SCHEMA_THUMBS = {
+  type:"object", additionalProperties:false, required:["concepts"],
+  properties:{ concepts:{ type:"array", items:{
+    type:"object", additionalProperties:false,
+    required:["headline","subtext","layout","bgType","bgColors","accent","textColor","elements","expression","imagePrompt"],
+    properties:{
+      headline:{type:"string"}, subtext:{type:"string"},
+      layout:{type:"string", enum:["face_left","face_right","center_text","split_vs","object_focus"]},
+      bgType:{type:"string", enum:["solid","gradient","radial"]},
+      bgColors:{type:"array", items:{type:"string"}},
+      accent:{type:"string"}, textColor:{type:"string"},
+      elements:{type:"array", items:{type:"string", enum:["arrow","circle","burst","underline","glow","tape"]}},
+      expression:{type:"string"},
+      imagePrompt:{type:"string"}
+    }}}}
+};
+const SCHEMA_META = {
+  type:"object", additionalProperties:false,
+  required:["description","chapters","tags","hashtags","pinnedComment","communityPost","tweetThread"],
+  properties:{
+    description:{type:"string"},
+    chapters:{type:"array", items:{type:"object", additionalProperties:false, required:["time","label"],
+      properties:{time:{type:"string"}, label:{type:"string"}}}},
+    tags:{type:"array", items:{type:"string"}},
+    hashtags:{type:"array", items:{type:"string"}},
+    pinnedComment:{type:"string"},
+    communityPost:{type:"string"},
+    tweetThread:{type:"array", items:{type:"string"}}
+  }
+};
+const SCHEMA_SHORTS = {
+  type:"object", additionalProperties:false, required:["shorts"],
+  properties:{ shorts:{ type:"array", items:{
+    type:"object", additionalProperties:false, required:["title","hook","script","overlay"],
+    properties:{ title:{type:"string"}, hook:{type:"string"}, script:{type:"string"}, overlay:{type:"string"} }
+  }}}
+};
+
+/* ---------------- prompt builders ---------------- */
+const SYS_STRATEGIST = "You are CreatorForge, an elite YouTube strategist. You have studied millions of high-CTR titles and know exactly what makes viewers click without resorting to clickbait a video cannot pay off. You are direct, specific and never generic.";
+
+function briefBlock(){
+  const b = P.brief;
+  let s = `VIDEO BRIEF:\n${b.input}\n`;
+  const seeds = b.seeds.filter(x=>x.trim());
+  if(seeds.length) s += `\nCREATOR'S OWN TITLE IDEAS (study these, then beat them):\n${seeds.map(t=>"- "+t).join("\n")}\n`;
+  if(b.audience) s += `\nTARGET AUDIENCE: ${b.audience}`;
+  s += `\nTONE: ${b.tone}\nTARGET LENGTH: ~${b.words} spoken words`;
+  if(P.research) s += `\n\nRESEARCH BRIEF (from live web search):\n${P.research}`;
+  const answered = P.questions.filter(q=>q.answer||q.custom);
+  if(answered.length){
+    s += `\n\nCREATOR INTERVIEW — the creator answered targeted questions about this exact video:\n` +
+      answered.map(q=>`Q: ${q.question}\nA: ${q.custom||q.answer}`).join("\n");
+  }
+  return s;
+}
+
+/* ---------------- generation: research ---------------- */
+async function genResearch(status){
+  status("Researching topic with live web search…");
+  const r = await callClaude({
+    system: SYS_STRATEGIST,
+    user: `${briefBlock()}\n\nResearch this topic now. If the brief contains a URL, fetch it and read it. Then produce a RESEARCH BRIEF with exactly these sections:\n1. WHAT THIS IS — 3-sentence summary of the subject.\n2. KEY FACTS — 6-10 bullet facts, each ending with its source URL in parentheses.\n3. AUDIENCE ANGLE — what this audience actually cares about here.\n4. COMPETITIVE LANDSCAPE — how similar videos/articles frame this, and one gap nobody covers.\nKeep it under 450 words. Plain text, no markdown headers.`,
+    maxTokens: 6000, tools: webTools()
+  });
+  P.research = r.text.trim();
+  save();
+}
+
+/* ---------------- generation: titles ---------------- */
+async function genTitles({count=50, refine=false, moreLikeSelection=false, status, onDelta}){
+  if(demoOn()){
+    await sleep(900);
+    const kept = P.titles.filter(t=>t.selected);
+    P.titles = kept.concat(demoTitles().filter(n=>!kept.some(k=>k.text===n.text)));
+    save(); return;
+  }
+  let extra = "";
+  if(refine) extra = "\nThe interview answers above are the ground truth for what this video really is. Re-derive the strongest angles from them.";
+  if(moreLikeSelection){
+    const sel = P.titles.filter(t=>t.selected).map(t=>t.text);
+    extra = `\nThe creator loves these directions:\n${sel.map(t=>"- "+t).join("\n")}\nGenerate ${count} NEW titles in the same spirit — same promise/energy, fresh wording and angles. Do not repeat any existing title.`;
+  }
+  const r = await callClaude({
+    system: SYS_STRATEGIST,
+    user: `${briefBlock()}\n${extra}\n\nGenerate exactly ${count} distinct YouTube title candidates for this video.\nRules:\n- Cover a deliberate mix of styles: curiosity gap, how-to, listicle, negative/warning, comparison, challenge, story, question, authority.\n- Under 60 characters is ideal; 70 is the hard ceiling.\n- Front-load the keyword or hook; no colons-with-generic-intros like "Amazing Video:".\n- Score each 0-100 for click-through potential. Judge: curiosity gap, specificity (numbers, named entities), emotional charge, brevity, promise clarity, and whether the video described can actually pay it off.\n- rationale: one blunt sentence on why it would or wouldn't get clicked.\nBe honest with scores — a real spread from ~40 to ~95, not everything above 80.`,
+    maxTokens: 16000, schema: SCHEMA_TITLES, onDelta
+  });
+  const parsed = parseJson(r.text);
+  const mk = t=>({id:"t"+Math.random().toString(36).slice(2,9), text:t.text, style:t.style,
+    score:Math.max(0,Math.min(100,t.score|0)), rationale:t.rationale, selected:false});
+  if(moreLikeSelection){
+    P.titles = P.titles.concat(parsed.titles.map(mk));
+  }else{
+    const kept = P.titles.filter(t=>t.selected);
+    P.titles = kept.concat(parsed.titles.map(mk).filter(n=>!kept.some(k=>k.text===n.text)));
+  }
+  save();
+}
+
+/* ---------------- generation: interview ---------------- */
+async function genQuestions(status){
+  if(demoOn()){ await sleep(700); P.questions = demoQuestions(); save(); return; }
+  const top = P.titles.slice().sort((a,b)=>b.score-a.score).slice(0,10).map(t=>t.text);
+  const r = await callClaude({
+    system: SYS_STRATEGIST,
+    user: `${briefBlock()}\n\nTop title candidates so far:\n${top.map(t=>"- "+t).join("\n")}\n\nAsk the creator exactly 6 questions whose answers would most change which title/angle wins and how the script should be written. Target, in some order: (1) audience sophistication level, (2) the core promise/transformation of the video, (3) format/structure, (4) the emotional driver to lean on, (5) what makes this creator/video different from existing coverage, (6) proof, credibility or personal stake.\nEach question gets: "why" — one sentence on why the answer changes the output — and exactly 4 short concrete answer options (option text under 60 chars).`,
+    maxTokens: 4000, schema: SCHEMA_QUESTIONS
+  });
+  const parsed = parseJson(r.text);
+  P.questions = parsed.questions.map(q=>({question:q.question, why:q.why, options:q.options.slice(0,5), answer:"", custom:""}));
+  save();
+}
+
+/* ---------------- generation: production pack ---------------- */
+function packOf(id){ return P.packs[id] = P.packs[id] || {script:null, sources:[], thumbs:null, meta:null, shorts:null}; }
+
+async function genScript(title, onDelta){
+  if(demoOn()){ await sleep(1200); const pk=packOf(title.id); pk.script=demoScript(title.text); pk.sources=demoSources(); save(); return; }
+  const useWeb = settings.research!=="never";
+  const r = await callClaude({
+    system: SYS_STRATEGIST + " You also write spoken-word scripts that sound like a human talking, not an essay. Short sentences. Concrete words.",
+    user: `${briefBlock()}\n\nWrite the complete YouTube script for this exact title:\nTITLE: ${title.text}\n\nTarget ~${P.brief.words} spoken words. ${useWeb?"Use web search to verify facts. Every statistic or factual claim must carry an inline markdown link to its source right where the claim appears.":"Where a fact needs a source, add [SOURCE NEEDED: what to verify] so the creator can fill it in."}\n\nOutput in markdown, exactly this structure:\n# Script — ${title.text}\n## Hook options (0:00–0:20)\nThree alternative openings labeled **Hook A**, **Hook B**, **Hook C** — each ≤ 45 words, each a different psychological angle (fear of loss / curiosity / bold claim).\n## Intro (0:20–0:50)\nBridge from hook to the promise. End with an open loop.\n## Body\n3–5 sections with "### " headings. Inside the body, put production cues on their own lines using these exact markers: [B-ROLL: …], [ON-SCREEN TEXT: …], [PATTERN INTERRUPT: …] (one every ~90 seconds), [OPEN LOOP: …] (tease something coming later, at least twice).\nMark 2–3 lines that would work as standalone Shorts with [QUOTABLE] at the start of the line.\n## Outro & CTA\nPay off every open loop, then one single CTA.\n## Sources\nNumbered list of every source used, title + URL.`,
+    maxTokens: 16000, tools: useWeb?webTools():null, thinking:true, onDelta
+  });
+  const pk = packOf(title.id);
+  pk.script = r.text.trim(); pk.sources = r.sources;
+  save();
+}
+
+async function genThumbs(title){
+  if(demoOn()){ await sleep(900); packOf(title.id).thumbs = demoThumbs(); save(); return; }
+  const r = await callClaude({
+    system: SYS_STRATEGIST + " You are also a thumbnail art director who thinks in 1280x720 pixels viewed at 200px wide on a phone.",
+    user: `${briefBlock()}\n\nTITLE: ${title.text}\n\nDesign exactly 10 distinct thumbnail concepts for this video. Rules:\n- headline: the ON-IMAGE text, 2–4 punchy words max (this is NOT the title — it complements it; never duplicate the title verbatim).\n- subtext: optional smaller strap line, ≤ 5 words, or empty string.\n- Vary layout across the set: face_left, face_right, center_text, split_vs, object_focus.\n- bgColors: 1 hex for solid, 2 hexes for gradient/radial. High contrast, thumb-stopping. accent + textColor as hex.\n- elements: pick 1–3 of arrow, circle, burst, underline, glow, tape.\n- expression: one phrase directing the creator's face (e.g. "shocked, mouth open, leaning back").\n- imagePrompt: a complete standalone prompt for an AI image generator (Midjourney/Ideogram style) describing the entire thumbnail including composition, subject, lighting, colors and the rendered text.\nMake the 10 genuinely different strategies, not one idea in 10 palettes.`,
+    maxTokens: 8000, schema: SCHEMA_THUMBS
+  });
+  packOf(title.id).thumbs = parseJson(r.text).concepts.slice(0,10);
+  save();
+}
+
+async function genMeta(title){
+  if(demoOn()){ await sleep(700); packOf(title.id).meta = demoMeta(title.text); save(); return; }
+  const pk = packOf(title.id);
+  const scriptCtx = pk.script ? `\nTHE FINAL SCRIPT (align chapters to its sections):\n${pk.script.slice(0,6000)}` : "";
+  const r = await callClaude({
+    system: SYS_STRATEGIST,
+    user: `${briefBlock()}\n\nTITLE: ${title.text}${scriptCtx}\n\nProduce the full metadata kit:\n- description: 150–250 words. First 2 lines must work as the above-the-fold hook (they show before "…more"). Keywords early, natural voice, end with a subscribe line.\n- chapters: 6–10 timestamps for a ~${Math.round(P.brief.words/150)} minute video, starting at 0:00, labels ≤ 6 words.\n- tags: 25–30 search tags, mixing broad and long-tail.\n- hashtags: 3–5 (with #).\n- pinnedComment: a comment from the creator that provokes replies (ask a divisive or personal question).\n- communityPost: a YouTube community post to tease the video 24h before release.\n- tweetThread: 5–7 tweets repurposing the video's core insights; first tweet is a scroll-stopper, last links the video.`,
+    maxTokens: 6000, schema: SCHEMA_META
+  });
+  packOf(title.id).meta = parseJson(r.text);
+  save();
+}
+
+async function genShorts(title){
+  if(demoOn()){ await sleep(700); packOf(title.id).shorts = demoShorts(); save(); return; }
+  const pk = packOf(title.id);
+  const scriptCtx = pk.script ? `\nMAIN SCRIPT (mine it for QUOTABLE lines and strongest moments):\n${pk.script.slice(0,6000)}` : "";
+  const r = await callClaude({
+    system: SYS_STRATEGIST,
+    user: `${briefBlock()}\n\nTITLE: ${title.text}${scriptCtx}\n\nWrite exactly 3 vertical Shorts (≤60s, ~140 spoken words each) derived from this video, each standing alone AND funneling viewers to the full video. For each:\n- title: the Short's own title.\n- hook: the first 3 seconds, spoken line.\n- script: the full spoken script including a final line teasing the long-form video.\n- overlay: 3–5 on-screen text overlays separated by " | ".`,
+    maxTokens: 6000, schema: SCHEMA_SHORTS
+  });
+  packOf(title.id).shorts = parseJson(r.text).shorts.slice(0,3);
+  save();
+}
+
+/* =====================================================================
+   DEMO DATA — lets the whole workflow run with zero API key
+   ===================================================================== */
+function demoTitles(){
+  const base = [
+    ["Why 90% of Beginners Quit in 90 Days","negative",91,"Loss-framing + specific stat creates instant self-identification."],
+    ["The 3-Month Rule Nobody Warns You About","curiosity",88,"Open loop + implied insider knowledge."],
+    ["I Watched 100 Beginners Quit. Here's the Pattern.","story",86,"First-person authority plus a promised revelation."],
+    ["Stop Practicing Like This (It's Why You Quit)","negative",84,"Direct address + blame relief."],
+    ["How to Survive Your First 3 Months","how_to",78,"Clear promise, slightly generic phrasing."],
+    ["5 Signs You're About to Quit (and the Fix)","listicle",76,"Scannable, but listicles underperform in this niche."],
+    ["Beginner vs 1-Year: What Actually Changes","comparison",74,"Transformation curiosity, weaker emotional charge."],
+    ["The Day I Almost Quit Everything","story",71,"Personal but vague — needs specificity."],
+    ["What Coaches Never Tell New Students","curiosity",69,"Conspiracy angle, slightly overused."],
+    ["Is It Normal to Feel This Bad at the Start?","question",66,"Strong search intent, low click urgency."],
+    ["Your First 90 Days: A Complete Roadmap","authority",62,"Useful but bland; no tension."],
+    ["30 Days of Training — Honest Results","challenge",58,"Challenge format needs a bigger stake."]
+  ];
+  return base.map(([text,style,score,rationale])=>({id:"t"+Math.random().toString(36).slice(2,9), text, style, score, rationale, selected:false}));
+}
+function demoQuestions(){
+  return [
+    {question:"Who exactly is watching this?", why:"Sophistication changes vocabulary, pacing and which pain points land.", options:["Total beginners, week 1","3–6 months in, wobbling","Returning after quitting once","Coaches watching for students"], answer:"", custom:""},
+    {question:"What's the single transformation you promise?", why:"The title must make one promise the video pays off.", options:["They don't quit","They train smarter, not harder","They enjoy the grind","They pick the right gym/coach"], answer:"", custom:""},
+    {question:"What format is the video really?", why:"Story-led and tutorial-led videos need opposite titles.", options:["Personal story with lessons","Straight tutorial / roadmap","Data or research breakdown","Interviews / compilations"], answer:"", custom:""},
+    {question:"Which emotion should drive clicks?", why:"Fear, hope and curiosity attract different viewers to the same topic.", options:["Fear of wasting months","Hope / 'you can do this'","Curiosity about the pattern","Anger at bad advice"], answer:"", custom:""},
+    {question:"What makes YOUR take different?", why:"Differentiation decides whether we lean on authority or novelty.", options:["Personal experience (I quit once)","I coach beginners daily","I have data / receipts","Nobody covers the real reason"], answer:"", custom:""},
+    {question:"What proof can you show on screen?", why:"Provable claims unlock stronger, more specific titles.", options:["My own progress footage","Students' before/after","Screenshots, stats, studies","Mostly talking head"], answer:"", custom:""}
+  ];
+}
+function demoScript(title){
+  return `# Script — ${title}\n\n## Hook options (0:00–0:20)\n**Hook A** — Ninety percent of the people who started training the same month as you will be gone by summer. Not because they were weak. Because of one pattern nobody warned them about.\n\n**Hook B** — There's a day — usually around week nine — when almost everyone decides to quit. I can tell you the exact day yours is coming.\n\n**Hook C** — I kept a list of everyone who joined my gym for two years. The ones who stayed all did one thing differently — and it's not what you think.\n\n## Intro (0:20–0:50)\nHere's the deal: motivation is not your problem. [B-ROLL: montage of packed January gym, empty March gym] The data on beginner dropout is brutally consistent ([source](https://example.com/study)) — and the reason is structural, not personal. By the end of this video you'll know the three collapse points, and the stupidly simple system that carries you through all of them. [OPEN LOOP: the third collapse point is the one that gets the "committed" people.]\n\n## Body\n### Collapse point #1 — The novelty cliff (weeks 2–4)\nThe first two weeks run on pure novelty. [ON-SCREEN TEXT: Novelty ≠ Discipline] Then your brain re-prices the effort ([source](https://example.com/dopamine)).\n\n[QUOTABLE] Motivation gets you started. Identity keeps you coming back.\n\n[B-ROLL: calendar pages, alarm going off, shoes by the door]\n\n### Collapse point #2 — The invisible progress trap (weeks 5–8)\nProgress is happening — you just can't see it yet. [PATTERN INTERRUPT: hard cut, whisper to camera: "this is where I quit the first time."]\n\n### Collapse point #3 — The plateau lie (weeks 9–12)\n[OPEN LOOP paid off] This is the one that kills the committed people…\n\n[QUOTABLE] A plateau isn't a wall. It's a waiting room.\n\n## Outro & CTA\nSo: novelty cliff, invisible progress, plateau lie — and one system that beats all three. If you're in your first 90 days, comment which collapse point you're at right now. Subscribe if you want the follow-up on month four.\n\n## Sources\n1. Beginner dropout longitudinal study — https://example.com/study\n2. Dopamine and habit formation — https://example.com/dopamine`;
+}
+function demoSources(){ return [{title:"Beginner dropout longitudinal study", url:"https://example.com/study"},{title:"Dopamine and habit formation", url:"https://example.com/dopamine"}]; }
+function demoThumbs(){
+  return [
+    {headline:"90% QUIT", subtext:"don't be one", layout:"face_left", bgType:"gradient", bgColors:["#1a0b2e","#e63946"], accent:"#ffd60a", textColor:"#ffffff", elements:["arrow","glow"], expression:"dead serious, slight head shake", imagePrompt:"YouTube thumbnail, 1280x720, dramatic red-purple gradient, serious man on left third looking at camera, huge bold yellow-white text '90% QUIT' right side, yellow arrow pointing at him, cinematic rim light, high contrast"},
+    {headline:"DAY 63", subtext:"the quitting day", layout:"center_text", bgType:"radial", bgColors:["#0b132b","#1c2541"], accent:"#e63946", textColor:"#ffffff", elements:["circle","underline"], expression:"n/a — text-only concept", imagePrompt:"Minimal thumbnail, dark navy radial background, giant distressed white text 'DAY 63' centered, red circle scrawled around it, subtle calendar texture behind"},
+    {headline:"WHY YOU'LL QUIT", subtext:"", layout:"face_right", bgType:"solid", bgColors:["#101010"], accent:"#3ddc84", textColor:"#ffffff", elements:["burst"], expression:"pointing at viewer, eyebrow raised", imagePrompt:"Black background thumbnail, man on right pointing at camera, green starburst behind bold white condensed text 'WHY YOU'LL QUIT' on left"},
+    {headline:"ME vs ME", subtext:"90 days apart", layout:"split_vs", bgType:"gradient", bgColors:["#0d1b2a","#7f1d1d"], accent:"#ffd60a", textColor:"#ffffff", elements:["tape","underline"], expression:"left: exhausted / right: confident", imagePrompt:"Split-screen thumbnail, left side desaturated exhausted beginner, right side vibrant confident version, yellow 'VS' in center, tape strips top corners, text 'ME vs ME'"},
+    {headline:"THE PATTERN", subtext:"100 beginners", layout:"object_focus", bgType:"gradient", bgColors:["#132a13","#31572c"], accent:"#ff6b35", textColor:"#f8f9fa", elements:["circle","arrow"], expression:"n/a", imagePrompt:"Thumbnail with clipboard full of crossed-out names as hero object, orange circle around the last name standing, text 'THE PATTERN'"},
+    {headline:"DON'T START", subtext:"until you watch this", layout:"face_left", bgType:"solid", bgColors:["#1d1135"], accent:"#e63946", textColor:"#ffffff", elements:["underline","glow"], expression:"palm up, warning gesture", imagePrompt:"Purple-black thumbnail, creator with warning hand gesture left side, bold text 'DON'T START' with red underline swoosh"},
+    {headline:"WEEK 9", subtext:"everyone breaks", layout:"center_text", bgType:"gradient", bgColors:["#000000","#2b2d42"], accent:"#ffd60a", textColor:"#ffffff", elements:["burst","tape"], expression:"n/a", imagePrompt:"Gritty dark thumbnail, cracked concrete texture, giant yellow text 'WEEK 9', starburst behind, tape strips"},
+    {headline:"I ALMOST QUIT", subtext:"", layout:"face_right", bgType:"radial", bgColors:["#3a0ca3","#0d0f14"], accent:"#4cc9f0", textColor:"#ffffff", elements:["glow"], expression:"vulnerable, looking slightly off camera", imagePrompt:"Moody radial purple vignette, creator looking off-camera right side, soft blue glow, handwritten-style text 'I ALMOST QUIT'"},
+    {headline:"3 TRAPS", subtext:"90 days", layout:"object_focus", bgType:"solid", bgColors:["#0b090a"], accent:"#e5383b", textColor:"#ffffff", elements:["arrow","circle","underline"], expression:"n/a", imagePrompt:"Three bear traps on black floor lit dramatically, red arrows to each, bold text '3 TRAPS'"},
+    {headline:"STILL HERE", subtext:"day 365", layout:"face_left", bgType:"gradient", bgColors:["#03045e","#00b4d8"], accent:"#ffd60a", textColor:"#ffffff", elements:["burst","underline"], expression:"quiet proud smile, arms crossed", imagePrompt:"Uplifting blue gradient thumbnail, confident creator arms crossed left side, sunrise light, yellow burst behind text 'STILL HERE'"}
+  ];
+}
+function demoMeta(title){
+  return {
+    description:`${title} — but why does it actually happen?\nThe answer isn't motivation. It's a predictable 90-day pattern with three collapse points.\n\nIn this video I break down the novelty cliff, the invisible progress trap, and the plateau lie — plus the simple system that carries beginners through all three. Based on two years of tracking real beginners, with the research to back it.\n\nIf you're in your first 90 days of anything hard, this is your map.\n\nSubscribe for the month-four follow-up.`,
+    chapters:[{time:"0:00",label:"The 90% statistic"},{time:"0:50",label:"Collapse point 1: novelty cliff"},{time:"3:10",label:"Collapse point 2: invisible progress"},{time:"5:40",label:"Collapse point 3: the plateau lie"},{time:"7:50",label:"The system that works"},{time:"9:10",label:"Your next 90 days"}],
+    tags:["beginner mistakes","why beginners quit","how to stay consistent","90 day rule","habit formation","training motivation","beginner guide","discipline vs motivation","plateau","new gym members","first 3 months","quit gym","consistency tips","james clear atomic habits","novelty effect","progress tracking","beginner roadmap","how to not quit","gym dropout rate","training consistency","mindset for beginners","staying motivated","fitness journey","beginner tips 2026","long term progress"],
+    hashtags:["#beginners","#consistency","#discipline","#90daychallenge"],
+    pinnedComment:"Honest answers only: which collapse point are you at RIGHT NOW — week 2, week 6, or week 9? 👇",
+    communityPost:"Tomorrow's video took me 2 years of quietly keeping a list to make. If you've ever quit something at the 2-month mark, it's going to sting — then fix it. 90% of you have hit collapse point #2 without knowing it had a name.",
+    tweetThread:["90% of beginners quit within 90 days.\n\nI tracked 100 of them for 2 years to find out exactly when — and why.\n\nIt's not motivation. It's 3 predictable collapse points: 🧵","Collapse point #1: The novelty cliff (weeks 2–4).\n\nYour brain re-prices the effort once the newness wears off. Everyone feels it. Few name it.","Collapse point #2: The invisible progress trap (weeks 5–8).\n\nYou ARE improving — below the threshold you can perceive. Most people quit while it's working.","Collapse point #3: The plateau lie (weeks 9–12).\n\nThis one gets the committed people. A plateau isn't a wall — it's a waiting room.","The fix isn't 'more discipline.' It's identity + visible tracking + a pre-decided response to each collapse point.","Full breakdown, with the research and the receipts, in the video: [link]"]
+  };
+}
+function demoShorts(){
+  return [
+    {title:"The Day Everyone Quits", hook:"There's an exact day most beginners quit — and yours is already scheduled.", script:"There's an exact day most beginners quit — and yours is already scheduled. It's around day 63. Week nine. The plateau week. Your progress goes invisible, your brain calls it a wall, and you walk. But a plateau isn't a wall — it's a waiting room. The people who make it aren't more disciplined. They just knew day 63 was coming and pre-decided what to do. I broke down all three collapse points — and the system that beats them — in the full video.", overlay:"DAY 63 | week nine | plateau ≠ wall | pre-decide | full video ⬆"},
+    {title:"Motivation Is Not Your Problem", hook:"Stop trying to fix your motivation. It was never the problem.", script:"Stop trying to fix your motivation. It was never the problem. Motivation is a starting fuel — it burns out in about two weeks, for everyone, every time. What carries you after that is identity. Not 'I'm trying to train' — 'I'm someone who trains.' The sentence you use decides whether week three ends you. Motivation gets you started. Identity keeps you coming back. The full 90-day map is on my channel.", overlay:"motivation = starter fuel | 2 weeks | identity > motivation | full map ⬆"},
+    {title:"You're Improving. You Just Can't See It.", hook:"You're getting better right now — you just literally cannot see it.", script:"You're getting better right now — you just literally cannot see it. Between weeks five and eight, your gains are real but below the threshold you can perceive. It's called the invisible progress trap, and it's where most people quit — while the thing is working. The fix: track one number, weekly, somewhere you can't ignore. Make invisible progress visible and quitting gets 10x harder. Full breakdown in the long video.", overlay:"weeks 5–8 | invisible progress | track ONE number | it's working ⬆"}
+  ];
+}
+
+/* =====================================================================
+   THUMBNAIL CANVAS RENDERER (1280×720)
+   ===================================================================== */
+function renderThumb(canvas, c){
+  const W=1280, H=720;
+  canvas.width=W; canvas.height=H;
+  const x = canvas.getContext("2d");
+  const bg = (c.bgColors&&c.bgColors.length?c.bgColors:["#111"]).map(v=>safeColor(v));
+  // background
+  if(c.bgType==="gradient" && bg.length>1){
+    const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,bg[0]); g.addColorStop(1,bg[1]); x.fillStyle=g;
+  }else if(c.bgType==="radial" && bg.length>1){
+    const g=x.createRadialGradient(W/2,H/2,80,W/2,H/2,W*0.75); g.addColorStop(0,bg[0]); g.addColorStop(1,bg[1]); x.fillStyle=g;
+  }else{ x.fillStyle=bg[0]; }
+  x.fillRect(0,0,W,H);
+  // subtle vignette
+  const vg=x.createRadialGradient(W/2,H/2,H*0.4,W/2,H/2,W*0.72);
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,0.45)");
+  x.fillStyle=vg; x.fillRect(0,0,W,H);
+
+  const accent = safeColor(c.accent||"#ffd60a"), textColor = safeColor(c.textColor||"#fff");
+  const layout = c.layout||"center_text";
+  let textZone = {x:70, y:110, w:W-140}; // default center
+  if(c.elements?.includes("glow")) drawGlow(x, layout, accent, W, H);
+
+  if(layout==="face_left"){ drawSilhouette(x, 250, 430, 1.15, "YOUR FACE"); textZone={x:520, y:130, w:W-590}; }
+  else if(layout==="face_right"){ drawSilhouette(x, W-250, 430, 1.15, "YOUR FACE"); textZone={x:70, y:130, w:W-590}; }
+  else if(layout==="split_vs"){ drawSplitVs(x, W, H, accent); textZone={x:90, y:70, w:W-180}; }
+  else if(layout==="object_focus"){ drawObjectPlaceholder(x, W-330, 430, accent); textZone={x:70, y:130, w:W-560}; }
+
+  if(c.elements?.includes("tape")) drawTape(x, W, accent);
+  if(c.elements?.includes("burst")) drawBurst(x, textZone.x+textZone.w/2, layout==="split_vs"?170:270, accent);
+
+  // headline
+  const headline = (c.headline||"").toUpperCase();
+  const lines = fitLines(x, headline, textZone.w, 190, 96);
+  let y = layout==="center_text" ? (H - lines.totalH)/2 + lines.size*0.85 : textZone.y + lines.size*0.9;
+  x.textAlign = layout==="center_text"||layout==="split_vs" ? "center" : "left";
+  const tx = x.textAlign==="center" ? textZone.x+textZone.w/2 : textZone.x;
+  x.lineJoin="round";
+  lines.arr.forEach((ln,i)=>{
+    x.font = `900 ${lines.size}px Impact, 'Arial Black', sans-serif`;
+    x.shadowColor="rgba(0,0,0,.85)"; x.shadowBlur=18; x.shadowOffsetY=8;
+    x.strokeStyle="rgba(0,0,0,.9)"; x.lineWidth=lines.size*0.12;
+    x.strokeText(ln, tx, y);
+    x.shadowBlur=0; x.shadowOffsetY=0;
+    x.fillStyle = i===lines.arr.length-1 && lines.arr.length>1 ? accent : textColor;
+    x.fillText(ln, tx, y);
+    if(i===0 && c.elements?.includes("underline")) drawUnderline(x, tx, y+14, x.measureText(ln).width, accent, x.textAlign==="center");
+    y += lines.size*1.06;
+  });
+
+  // subtext
+  if(c.subtext){
+    x.font = `700 44px 'Arial Narrow', Arial, sans-serif`;
+    const sw = x.measureText(c.subtext.toUpperCase()).width + 44;
+    const sx = x.textAlign==="center" ? tx - sw/2 : textZone.x;
+    const sy = y - lines.size*0.45;
+    x.fillStyle = accent;
+    x.fillRect(sx, sy, sw, 62);
+    x.fillStyle = "#111";
+    const prevAlign = x.textAlign; x.textAlign="left";
+    x.fillText(c.subtext.toUpperCase(), sx+22, sy+46);
+    x.textAlign = prevAlign;
+  }
+  if(c.elements?.includes("arrow")){
+    const toFace = layout==="face_left" ? {fx:textZone.x+40, fy:520, txx:420, tyy:460}
+      : layout==="face_right"||layout==="object_focus" ? {fx:textZone.x+textZone.w-60, fy:520, txx:W-420, tyy:460}
+      : {fx:W/2-180, fy:H-150, txx:W/2+120, tyy:H-110};
+    drawArrow(x, toFace.fx, toFace.fy, toFace.txx, toFace.tyy, accent);
+  }
+  if(c.elements?.includes("circle")){
+    x.strokeStyle=accent; x.lineWidth=14; x.setLineDash([]);
+    x.beginPath();
+    const cx = x.textAlign==="center" ? W/2 : textZone.x + Math.min(textZone.w,600)/2;
+    x.ellipse(cx, layout==="center_text"?H/2:textZone.y+lines.size*0.6, Math.min(textZone.w,620)/2+30, lines.size*0.9, -0.05, 0, Math.PI*2);
+    x.stroke();
+  }
+}
+function safeColor(v){ return /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(String(v||"").trim()) ? v.trim() : "#222222"; }
+function fitLines(x, text, maxW, startSize, minSize){
+  let size = startSize;
+  while(size > minSize){
+    x.font = `900 ${size}px Impact, 'Arial Black', sans-serif`;
+    const words = text.split(/\s+/).filter(Boolean);
+    const arr=[]; let cur="";
+    for(const w of words){
+      const t = cur?cur+" "+w:w;
+      if(x.measureText(t).width <= maxW) cur=t;
+      else{ if(cur) arr.push(cur); cur=w; }
+    }
+    if(cur) arr.push(cur);
+    if(arr.length<=3 && arr.every(l=>x.measureText(l).width<=maxW))
+      return {arr, size, totalH: arr.length*size*1.06};
+    size -= 10;
+  }
+  x.font = `900 ${minSize}px Impact, 'Arial Black', sans-serif`;
+  return {arr:[text], size:minSize, totalH:minSize*1.06};
+}
+function drawSilhouette(x, cx, cy, scale, label){
+  x.save();
+  x.translate(cx, cy); x.scale(scale, scale);
+  x.fillStyle="rgba(255,255,255,.10)";
+  x.strokeStyle="rgba(255,255,255,.35)"; x.lineWidth=4; x.setLineDash([12,10]);
+  // head
+  x.beginPath(); x.arc(0,-95,95,0,Math.PI*2); x.fill(); x.stroke();
+  // shoulders
+  x.beginPath();
+  x.moveTo(-190,240); x.quadraticCurveTo(-185,40,-95,15);
+  x.quadraticCurveTo(0,-15,95,15); x.quadraticCurveTo(185,40,190,240);
+  x.closePath(); x.fill(); x.stroke();
+  x.setLineDash([]);
+  x.fillStyle="rgba(255,255,255,.55)";
+  x.font="700 26px Arial, sans-serif"; x.textAlign="center";
+  x.fillText(label, 0, 90);
+  x.restore();
+}
+function drawObjectPlaceholder(x, cx, cy, accent){
+  x.save();
+  x.strokeStyle="rgba(255,255,255,.4)"; x.setLineDash([14,10]); x.lineWidth=5;
+  x.fillStyle="rgba(255,255,255,.07)";
+  x.beginPath(); x.roundRect(cx-190, cy-200, 380, 400, 26); x.fill(); x.stroke();
+  x.setLineDash([]);
+  x.fillStyle="rgba(255,255,255,.55)"; x.font="700 26px Arial, sans-serif"; x.textAlign="center";
+  x.fillText("KEY OBJECT /", cx, cy-8);
+  x.fillText("PRODUCT SHOT", cx, cy+28);
+  x.restore();
+}
+function drawSplitVs(x, W, H, accent){
+  x.save();
+  x.fillStyle="rgba(0,0,0,.28)"; x.fillRect(0,H*0.36,W/2-6,H);
+  x.fillStyle="rgba(255,255,255,.06)"; x.fillRect(W/2+6,H*0.36,W/2,H);
+  drawSilhouette(x, W*0.25, 520, 0.85, "BEFORE / A");
+  drawSilhouette(x, W*0.75, 520, 0.85, "AFTER / B");
+  x.translate(W/2, H*0.62);
+  x.rotate(-0.06);
+  x.fillStyle=accent;
+  x.beginPath();
+  for(let i=0;i<16;i++){
+    const r1=105, r2=78, a1=i/16*Math.PI*2, a2=(i+0.5)/16*Math.PI*2;
+    x.lineTo(Math.cos(a1)*r1, Math.sin(a1)*r1);
+    x.lineTo(Math.cos(a2)*r2, Math.sin(a2)*r2);
+  }
+  x.closePath(); x.fill();
+  x.fillStyle="#111"; x.font="900 72px Impact, sans-serif"; x.textAlign="center";
+  x.fillText("VS", 0, 26);
+  x.restore();
+}
+function drawArrow(x, fx, fy, tx, ty, color){
+  const ang = Math.atan2(ty-fy, tx-fx);
+  x.save();
+  x.strokeStyle=color; x.fillStyle=color; x.lineWidth=22; x.lineCap="round";
+  x.shadowColor="rgba(0,0,0,.6)"; x.shadowBlur=10;
+  const mx=(fx+tx)/2, my=(fy+ty)/2 - 60;
+  x.beginPath(); x.moveTo(fx,fy); x.quadraticCurveTo(mx,my,tx,ty); x.stroke();
+  x.translate(tx,ty); x.rotate(ang+0.25);
+  x.beginPath(); x.moveTo(0,0); x.lineTo(-58,-30); x.lineTo(-58,30); x.closePath(); x.fill();
+  x.restore();
+}
+function drawBurst(x, cx, cy, color){
+  x.save(); x.globalAlpha=0.28; x.fillStyle=color;
+  x.translate(cx,cy);
+  x.beginPath();
+  for(let i=0;i<24;i++){
+    const r1=330, r2=200, a1=i/24*Math.PI*2, a2=(i+0.5)/24*Math.PI*2;
+    x.lineTo(Math.cos(a1)*r1, Math.sin(a1)*r1*0.62);
+    x.lineTo(Math.cos(a2)*r2, Math.sin(a2)*r2*0.62);
+  }
+  x.closePath(); x.fill(); x.restore();
+}
+function drawUnderline(x, tx, y, w, color, centered){
+  x.save();
+  x.strokeStyle=color; x.lineWidth=16; x.lineCap="round";
+  const x0 = centered ? tx-w/2 : tx;
+  x.beginPath(); x.moveTo(x0, y+16); x.quadraticCurveTo(x0+w/2, y+42, x0+w, y+12); x.stroke();
+  x.restore();
+}
+function drawGlow(x, layout, color, W, H){
+  const cx = layout==="face_left"?250 : layout==="face_right"?W-250 : W/2;
+  const g = x.createRadialGradient(cx, 400, 40, cx, 400, 460);
+  g.addColorStop(0, hexA(color,0.5)); g.addColorStop(1, "rgba(0,0,0,0)");
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+}
+function drawTape(x, W, color){
+  x.save(); x.globalAlpha=0.85; x.fillStyle=hexA(color,0.9);
+  x.translate(120,64); x.rotate(-0.32); x.fillRect(-90,-22,180,44); x.rotate(0.32); x.translate(-120,-64);
+  x.translate(W-120,64); x.rotate(0.32); x.fillRect(-90,-22,180,44);
+  x.restore();
+}
+function hexA(hex, a){
+  const h = safeColor(hex).replace("#","");
+  const n = h.length===3 ? h.split("").map(c=>c+c).join("") : h.slice(0,6);
+  const r=parseInt(n.slice(0,2),16), g=parseInt(n.slice(2,4),16), b=parseInt(n.slice(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+/* =====================================================================
+   MARKDOWN RENDER (tiny, safe) — for scripts & export preview
+   ===================================================================== */
+function mdToHtml(md){
+  const lines = String(md||"").split("\n");
+  let html = "", inList = false;
+  const inline = s=>{
+    s = esc(s);
+    s = s.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\*([^*]+)\*/g, "<i>$1</i>");
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    return s;
+  };
+  for(let raw of lines){
+    const l = raw.trimEnd();
+    const cue = l.match(/^\[(B-ROLL|ON-SCREEN TEXT|PATTERN INTERRUPT|OPEN LOOP|SOURCE NEEDED)([^\]]*)\]\s*(.*)$/i);
+    const quot = l.match(/^\[QUOTABLE\]\s*(.*)$/i);
+    if(inList && !/^\s*[-*]|\d+\./.test(l)){ html+="</ul>"; inList=false; }
+    if(!l){ continue; }
+    if(quot){ html += `<span class="cue quote">💬 QUOTABLE — ${inline(quot[1])}</span>`; }
+    else if(cue){
+      const kind = /OPEN LOOP|PATTERN/i.test(cue[1]) ? "cue loop" : "cue";
+      html += `<span class="${kind}">🎬 ${esc(cue[1].toUpperCase())}${inline(cue[2])} ${inline(cue[3])}</span>`;
+    }
+    else if(l.startsWith("### ")) html += `<h3>${inline(l.slice(4))}</h3>`;
+    else if(l.startsWith("## ")) html += `<h2>${inline(l.slice(3))}</h2>`;
+    else if(l.startsWith("# ")) html += `<h1>${inline(l.slice(2))}</h1>`;
+    else if(/^\s*[-*]\s+/.test(l)){ if(!inList){ html+="<ul>"; inList=true; } html += `<li>${inline(l.replace(/^\s*[-*]\s+/,""))}</li>`; }
+    else if(/^\s*\d+\.\s+/.test(l)){ if(!inList){ html+="<ul>"; inList=true; } html += `<li>${inline(l.replace(/^\s*\d+\.\s+/,""))}</li>`; }
+    else html += `<p>${inline(l)}</p>`;
+  }
+  if(inList) html+="</ul>";
+  return html;
+}
+
+/* =====================================================================
+   UI — steps, rendering, events
+   ===================================================================== */
+let activeStep = "brief";
+function go(step){
+  activeStep = step;
+  $$("#stepNav .step-link").forEach(b=>b.classList.toggle("active", b.dataset.step===step));
+  ["brief","titles","interview","pack","export"].forEach(s=>{
+    $("#step-"+s).classList.toggle("hidden", s!==step);
+  });
+  if(step==="titles") renderTitles();
+  if(step==="interview") renderInterview();
+  if(step==="pack") renderPacks();
+  if(step==="export") renderExport();
+  markDone();
+  window.scrollTo({top:0});
+}
+function markDone(){
+  const done = {
+    brief: !!P.titles.length,
+    titles: P.titles.some(t=>t.selected),
+    interview: P.questions.some(q=>q.answer||q.custom),
+    pack: Object.values(P.packs).some(p=>p.script),
+    export: false
+  };
+  $$("#stepNav .step-link").forEach(b=>b.classList.toggle("done", !!done[b.dataset.step] && b.dataset.step!==activeStep));
+}
+
+/* ---------- projects sidebar ---------- */
+function renderProjects(){
+  $("#projList").innerHTML = projects.map(p=>`
+    <button class="proj-item ${p.id===P.id?"active":""}" data-id="${p.id}">
+      <span class="dot" style="${p.id===P.id?"":"background:var(--line2)"}"></span>
+      <span>${esc(p.name)}</span>
+    </button>`).join("");
+  $$("#projList .proj-item").forEach(el=>el.onclick=()=>{
+    P = projects.find(p=>p.id===el.dataset.id); save(); loadBriefForm(); renderProjects(); renderUsage(); go("brief");
+  });
+}
+
+/* ---------- step 1: brief ---------- */
+function loadBriefForm(){
+  $("#briefInput").value = P.brief.input;
+  ["seed1","seed2","seed3"].forEach((id,i)=>$("#"+id).value = P.brief.seeds[i]||"");
+  $("#briefAudience").value = P.brief.audience;
+  $("#briefTone").value = P.brief.tone;
+  $("#briefLength").value = String(P.brief.words);
+  $("#demoBanner").classList.toggle("hidden", !demoOn());
+}
+function readBriefForm(){
+  P.brief.input = $("#briefInput").value.trim();
+  P.brief.seeds = ["seed1","seed2","seed3"].map(id=>$("#"+id).value.trim());
+  P.brief.audience = $("#briefAudience").value.trim();
+  P.brief.tone = $("#briefTone").value;
+  P.brief.words = parseInt($("#briefLength").value,10)||1300;
+  if(P.name==="Untitled video" && P.brief.input)
+    P.name = P.brief.input.replace(/https?:\/\/\S+/g,"").trim().slice(0,42) || "Untitled video";
+  save(); renderProjects();
+}
+
+$("#btnGenTitles").onclick = async ()=>{
+  readBriefForm();
+  if(!P.brief.input){ toast("Give the team something to work with — a URL or a sentence is enough."); $("#briefInput").focus(); return; }
+  const btn = $("#btnGenTitles"), st = $("#briefStatus"), live = $("#briefLive");
+  btn.disabled = true; live.classList.add("hidden"); live.textContent="";
+  let stop = ()=>{};
+  try{
+    if(researchWanted()){
+      stop = statusCycler(st, MSG_RESEARCH);
+      await genResearch(()=>{});
+      stop();
+    }
+    stop = statusCycler(st, MSG_TITLES);
+    live.classList.remove("hidden");
+    await genTitles({count:50, onDelta:d=>{ live.textContent = (live.textContent+d).slice(-1500); live.scrollTop=live.scrollHeight; }});
+    stop(); live.classList.add("hidden");
+    // fire interview generation in the background so step 3 is instant
+    genQuestions(()=>{}).catch(()=>{});
+    titlesFresh = true;
+    toast("🔥 The board is up — pick the ones you'd click.");
+    go("titles");
+  }catch(e){ stop(); live.classList.add("hidden"); toast(friendly(e)); }
+  btn.disabled = false;
+};
+
+/* ---------- step 2: titles ---------- */
+let sortMode = "score";
+let titlesFresh = false;
+function renderTitles(){
+  const styles = [...new Set(P.titles.map(t=>t.style))];
+  const sf = $("#styleFilter");
+  const cur = sf.value;
+  sf.innerHTML = `<option value="">All styles</option>` + styles.map(s=>`<option ${s===cur?"selected":""}>${esc(s)}</option>`).join("");
+  let list = P.titles.slice();
+  if(sf.value) list = list.filter(t=>t.style===sf.value);
+  if(sortMode==="score") list.sort((a,b)=>(b.selected-a.selected)||(b.score-a.score));
+  const selCount = P.titles.filter(t=>t.selected).length;
+  $("#titleCount").textContent = `${P.titles.length} titles · ${selCount}/3 selected` + (P.refined?" · re-ranked ✓":"");
+  $("#btnToPack").disabled = !selCount;
+  $("#btnToPack").classList.toggle("pulse", selCount>0);
+  $("#titleList").classList.toggle("fresh", titlesFresh);
+  titlesFresh = false;
+  $("#titleList").innerHTML = list.map(t=>`
+    <div class="t-card ${t.selected?"sel":""}" data-id="${t.id}">
+      <div class="pick">${t.selected?"✓":""}</div>
+      <div class="body">
+        <div class="tt">${esc(t.text)}</div>
+        <div class="meta">
+          <span class="chip">${esc(t.style.replace("_"," "))}</span>
+          <span class="chip">${t.text.length} chars</span>
+          <button class="btn small ghost" data-copy="${esc(t.text)}">copy</button>
+        </div>
+        <div class="why">${esc(t.rationale)}</div>
+      </div>
+      <div class="score ${t.score>=80?"hi":t.score>=65?"mid":"lo"}">${t.score}</div>
+    </div>`).join("") || `<div class="empty-pane"><p>No titles yet — start from the Brief.</p></div>`;
+  $$("#titleList .t-card").forEach(el=>{
+    el.onclick = ev=>{
+      if(ev.target.dataset.copy!==undefined && ev.target.dataset.copy!==""){ copy(ev.target.dataset.copy, "Title copied"); ev.stopPropagation(); return; }
+      const t = P.titles.find(x=>x.id===el.dataset.id);
+      if(!t.selected && P.titles.filter(x=>x.selected).length>=3){ toast("Max 3 titles — deselect one first."); return; }
+      t.selected = !t.selected; save(); renderTitles(); markDone();
+    };
+  });
+}
+$("#btnSortScore").onclick = ()=>{ sortMode="score"; renderTitles(); };
+$("#styleFilter").onchange = renderTitles;
+$("#btnToPack").onclick = ()=>go("pack");
+$("#btnMoreTitles").onclick = async ()=>{
+  if(!P.titles.some(t=>t.selected)){ toast("Select at least one title first — I'll riff on it."); return; }
+  const live = $("#titleLive"); live.classList.remove("hidden"); live.textContent="Generating variations…";
+  $("#btnMoreTitles").disabled = true;
+  try{
+    if(demoOn()){ await sleep(800); P.titles = P.titles.concat(demoTitles().slice(0,5)); save(); }
+    else await genTitles({count:15, moreLikeSelection:true, onDelta:d=>{ live.textContent=(live.textContent+d).slice(-1200); live.scrollTop=live.scrollHeight; }});
+    live.classList.add("hidden"); renderTitles();
+  }catch(e){ live.classList.add("hidden"); toast(friendly(e)); }
+  $("#btnMoreTitles").disabled = false;
+};
+
+/* ---------- step 3: interview ---------- */
+function renderInterview(){
+  const w = $("#qWrap");
+  if(!P.questions.length){
+    w.innerHTML = `<div class="empty-pane card"><p>Your story producer writes these fresh from your brief and title board — no generic questionnaires.</p>
+      <button class="btn primary" id="btnGenQ">🎙 Start the interview</button></div>`;
+    $("#btnGenQ").onclick = async ()=>{
+      $("#btnGenQ").disabled=true; $("#btnGenQ").innerHTML=`<span class="spinner"></span> 🎙 Story producer preparing questions…`;
+      try{ await genQuestions(()=>{}); renderInterview(); }
+      catch(e){ toast(friendly(e)); renderInterview(); }
+    };
+    return;
+  }
+  w.innerHTML = P.questions.map((q,qi)=>`
+    <div class="q-card">
+      <div class="q">${qi+1}. ${esc(q.question)}</div>
+      <div class="why">${esc(q.why)}</div>
+      <div class="opts">${q.options.map(o=>`
+        <button class="opt ${q.answer===o?"on":""}" data-q="${qi}" data-o="${esc(o)}">${esc(o)}</button>`).join("")}
+      </div>
+      <input placeholder="…or type your own answer" data-qc="${qi}" value="${esc(q.custom)}">
+    </div>`).join("");
+  $$(".opt").forEach(b=>b.onclick=()=>{
+    const q = P.questions[+b.dataset.q];
+    q.answer = q.answer===b.dataset.o ? "" : b.dataset.o;
+    save(); renderInterview();
+  });
+  $$("input[data-qc]").forEach(inp=>inp.onchange=()=>{
+    P.questions[+inp.dataset.qc].custom = inp.value.trim(); save();
+  });
+}
+$("#btnSkipInterview").onclick = ()=>go("titles");
+$("#btnRefine").onclick = async ()=>{
+  if(!P.questions.some(q=>q.answer||q.custom)){ toast("Answer at least one question first — even one helps the team aim."); return; }
+  const st=$("#qStatus"), live=$("#qLive");
+  $("#btnRefine").disabled = true;
+  const stop = statusCycler(st, MSG_REFINE);
+  live.classList.remove("hidden"); live.textContent="";
+  try{
+    await genTitles({count:50, refine:true, onDelta:d=>{ live.textContent=(live.textContent+d).slice(-1500); live.scrollTop=live.scrollHeight; }});
+    P.refined = true; save();
+    stop(); live.classList.add("hidden");
+    titlesFresh = true;
+    toast("✨ Re-ranked around your answers — the board just got sharper."); go("titles");
+  }catch(e){ stop(); live.classList.add("hidden"); toast(friendly(e)); }
+  $("#btnRefine").disabled = false;
+};
+
+/* ---------- step 4: production packs ---------- */
+const TABS = [["script","📜 Script"],["thumbs","🖼 Thumbnails"],["meta","🏷 Metadata"],["shorts","📱 Shorts"]];
+const tabState = {}; // titleId -> tab
+
+function renderPacks(){
+  const sel = P.titles.filter(t=>t.selected);
+  const w = $("#packWrap");
+  if(!sel.length){
+    w.innerHTML = `<div class="empty-pane card"><p>No titles selected. Pick up to 3 in the Titles step.</p>
+      <button class="btn" onclick="go('titles')">← Back to titles</button></div>`;
+    return;
+  }
+  w.innerHTML = sel.map(t=>{
+    const pk = packOf(t.id);
+    const tab = tabState[t.id] || "script";
+    return `<div class="pack" data-tid="${t.id}">
+      <div class="pack-head">
+        <div class="pt">${esc(t.text)}</div>
+        <span class="chip">score ${t.score}</span>
+        <button class="btn small primary" data-genall="${t.id}">⚡ Generate all</button>
+      </div>
+      <div class="tabs">${TABS.map(([k,l])=>`
+        <button class="tab ${tab===k?"on":""}" data-tab="${k}" data-tid="${t.id}">${l}${pk[k==="thumbs"?"thumbs":k]?" ✓":""}</button>`).join("")}
+      </div>
+      <div class="pane" id="pane-${t.id}">${paneHtml(t, tab)}</div>
+    </div>`;
+  }).join("");
+  $$(".tab").forEach(b=>b.onclick=()=>{ tabState[b.dataset.tid]=b.dataset.tab; renderPacks(); });
+  $$("[data-genall]").forEach(b=>b.onclick=()=>genAll(b.dataset.genall));
+  bindPaneEvents();
+  drawAllThumbs();
+}
+
+function paneHtml(t, tab){
+  const pk = packOf(t.id);
+  if(tab==="script"){
+    if(!pk.script) return emptyPane(t.id, "script", "Your scriptwriter is warmed up: a full spoken-word script with three alternative hooks, retention cues, B-roll callouts and inline source citations you can quote on camera.");
+    return `
+      <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+        <button class="btn small" data-copyscript="${t.id}">Copy script</button>
+        <button class="btn small ghost" data-regen="script" data-tid="${t.id}">↻ Regenerate</button>
+        ${pk.sources?.length?`<span class="chip">${pk.sources.length} sources cited</span>`:""}
+      </div>
+      <div class="md">${mdToHtml(pk.script)}</div>`;
+  }
+  if(tab==="thumbs"){
+    if(!pk.thumbs) return emptyPane(t.id, "thumbs", "Your art director has ten directions in mind — each rendered live as a downloadable 1280×720 mockup, with a ready-to-paste AI-image prompt for the finished version.");
+    return `
+      <div style="display:flex; gap:8px; margin-bottom:12px">
+        <button class="btn small ghost" data-regen="thumbs" data-tid="${t.id}">↻ Regenerate concepts</button>
+        <span class="chip">click ⬇ to save any mockup as PNG (1280×720)</span>
+      </div>
+      <div class="thumb-grid">${pk.thumbs.map((c,i)=>`
+        <div class="thumb-cell">
+          <canvas data-thumb="${t.id}:${i}"></canvas>
+          <div class="tc-meta">
+            <div class="tc-name">${esc(c.layout)} · ${esc(c.headline)}${c.expression && c.expression.toLowerCase()!=="n/a"?` · <i>face: ${esc(c.expression)}</i>`:""}</div>
+            <button class="btn small" data-dl="${t.id}:${i}">⬇ PNG</button>
+            <button class="btn small ghost" data-prompt="${t.id}:${i}">AI prompt</button>
+          </div>
+        </div>`).join("")}
+      </div>`;
+  }
+  if(tab==="meta"){
+    if(!pk.meta) return emptyPane(t.id, "meta", "Your growth editor handles the unglamorous wins: SEO description with chapters, 25–30 tags, hashtags, a pinned comment that starts arguments, a community post and a tweet thread.");
+    const m = pk.meta;
+    return `
+      <div style="display:flex; gap:8px; margin-bottom:12px">
+        <button class="btn small ghost" data-regen="meta" data-tid="${t.id}">↻ Regenerate</button>
+      </div>
+      <div class="kv"><div class="k">Description <button class="btn small ghost" data-copytext="${esc(m.description)}">copy</button></div><div class="v">${esc(m.description)}</div></div>
+      <div class="kv"><div class="k">Chapters <button class="btn small ghost" data-copytext="${esc(m.chapters.map(c=>c.time+" "+c.label).join("\n"))}">copy</button></div>
+        <div class="v">${m.chapters.map(c=>`${esc(c.time)}  ${esc(c.label)}`).join("\n")}</div></div>
+      <div class="kv"><div class="k">Tags (${m.tags.length}) <button class="btn small ghost" data-copytext="${esc(m.tags.join(", "))}">copy</button></div>
+        <div class="v"><div class="tagwrap">${m.tags.map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</div></div></div>
+      <div class="kv"><div class="k">Hashtags</div><div class="v">${esc(m.hashtags.join(" "))}</div></div>
+      <div class="kv"><div class="k">Pinned comment <button class="btn small ghost" data-copytext="${esc(m.pinnedComment)}">copy</button></div><div class="v">${esc(m.pinnedComment)}</div></div>
+      <div class="kv"><div class="k">Community post <button class="btn small ghost" data-copytext="${esc(m.communityPost)}">copy</button></div><div class="v">${esc(m.communityPost)}</div></div>
+      <div class="kv"><div class="k">Tweet / X thread <button class="btn small ghost" data-copytext="${esc(m.tweetThread.join("\n\n"))}">copy</button></div>
+        <div class="v">${m.tweetThread.map((tw,i)=>`${i+1}/ ${esc(tw)}`).join("\n\n")}</div></div>`;
+  }
+  if(tab==="shorts"){
+    if(!pk.shorts) return emptyPane(t.id, "shorts", "Your shorts producer mines the main script for its three strongest moments — each cut as a standalone vertical with hook, script and on-screen overlays, all funneling back to the long-form.");
+    return `
+      <div style="display:flex; gap:8px; margin-bottom:12px">
+        <button class="btn small ghost" data-regen="shorts" data-tid="${t.id}">↻ Regenerate</button>
+      </div>
+      ${pk.shorts.map((s,i)=>`
+        <div class="short-card">
+          <div class="st">SHORT ${i+1} — ${esc(s.title)} <button class="btn small ghost" data-copytext="${esc(s.hook+"\n\n"+s.script+"\n\nOverlays: "+s.overlay)}">copy</button></div>
+          <div class="sh">🎣 ${esc(s.hook)}</div>
+          <div class="sb">${esc(s.script)}</div>
+          <div class="meta" style="margin-top:8px"><span class="chip">overlays: ${esc(s.overlay)}</span></div>
+        </div>`).join("")}`;
+  }
+  return "";
+}
+function emptyPane(tid, kind, desc){
+  return `<div class="empty-pane"><p>${esc(desc)}</p>
+    <button class="btn primary" data-gen="${kind}" data-tid="${tid}">${esc(GEN_CTA[kind]||"Generate")}</button>
+    <div class="gen-live hidden" id="live-${tid}-${kind}" style="text-align:left"></div></div>`;
+}
+
+async function runGen(kind, tid, btn){
+  const t = P.titles.find(x=>x.id===tid);
+  if(btn){ btn.disabled=true; btn.innerHTML=`<span class="spinner"></span> ${esc(GEN_LABEL[kind]||"Generating…")}`; }
+  const live = $(`#live-${tid}-${kind}`);
+  const onDelta = live ? d=>{ live.classList.remove("hidden"); live.textContent=(live.textContent+d).slice(-1600); live.scrollTop=live.scrollHeight; } : null;
+  try{
+    if(kind==="script") await genScript(t, onDelta);
+    else if(kind==="thumbs") await genThumbs(t);
+    else if(kind==="meta") await genMeta(t);
+    else if(kind==="shorts") await genShorts(t);
+    tabState[tid]=kind; renderPacks(); markDone();
+  }catch(e){ toast(friendly(e)); renderPacks(); }
+}
+async function genAll(tid){
+  const t = P.titles.find(x=>x.id===tid);
+  const pk = packOf(tid);
+  toast("🚀 The whole team is on it — scriptwriter first, then art, growth and shorts…");
+  try{
+    if(!pk.script){ tabState[tid]="script"; renderPacks(); toast("✍️ Scriptwriter drafting…"); await genScript(t, null); renderPacks(); }
+    if(!pk.thumbs){ toast("🎨 Art director sketching 10 directions…"); await genThumbs(t); renderPacks(); }
+    if(!pk.meta){ toast("📈 Growth editor building the metadata kit…"); await genMeta(t); renderPacks(); }
+    if(!pk.shorts){ toast("✂️ Shorts producer cutting three verticals…"); await genShorts(t); renderPacks(); }
+    toast("🎉 Pack complete — your team delivered."); markDone();
+    const b = document.querySelector(`[data-genall="${tid}"]`);
+    const r = b?.getBoundingClientRect();
+    confetti(r ? r.left + r.width/2 : innerWidth/2, r ? r.top + 10 : 140);
+  }catch(e){ toast(friendly(e)); renderPacks(); }
+}
+function bindPaneEvents(){
+  $$("[data-gen]").forEach(b=>b.onclick=()=>runGen(b.dataset.gen, b.dataset.tid, b));
+  $$("[data-regen]").forEach(b=>b.onclick=()=>{
+    const pk = packOf(b.dataset.tid);
+    pk[b.dataset.regen==="thumbs"?"thumbs":b.dataset.regen] = null;
+    if(b.dataset.regen==="script") pk.sources=[];
+    save(); runGen(b.dataset.regen, b.dataset.tid, null);
+  });
+  $$("[data-copyscript]").forEach(b=>b.onclick=()=>copy(packOf(b.dataset.copyscript).script, "Script copied"));
+  $$("[data-copytext]").forEach(b=>b.onclick=()=>copy(b.dataset.copytext));
+  $$("[data-dl]").forEach(b=>b.onclick=()=>{
+    const [tid,i] = b.dataset.dl.split(":");
+    const cv = document.querySelector(`canvas[data-thumb="${tid}:${i}"]`);
+    cv.toBlob(bl=>{
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(bl); a.download=`thumbnail-${+i+1}.png`; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    },"image/png");
+  });
+  $$("[data-prompt]").forEach(b=>b.onclick=()=>{
+    const [tid,i] = b.dataset.prompt.split(":");
+    copy(packOf(tid).thumbs[+i].imagePrompt, "AI image prompt copied — paste into Midjourney/Ideogram/etc.");
+  });
+}
+function drawAllThumbs(){
+  $$("canvas[data-thumb]").forEach(cv=>{
+    const [tid,i] = cv.dataset.thumb.split(":");
+    const c = packOf(tid).thumbs?.[+i];
+    if(c) renderThumb(cv, c);
+  });
+}
+
+/* ---------- step 5: export ---------- */
+function buildMarkdown(){
+  let md = `# CreatorForge — ${P.name}\n\n**Brief:** ${P.brief.input}\n**Audience:** ${P.brief.audience||"—"} · **Tone:** ${P.brief.tone} · **Length:** ~${P.brief.words} words\n\n`;
+  if(P.research) md += `## Research brief\n${P.research}\n\n`;
+  const answered = P.questions.filter(q=>q.answer||q.custom);
+  if(answered.length) md += `## Interview answers\n${answered.map(q=>`- **${q.question}** → ${q.custom||q.answer}`).join("\n")}\n\n`;
+  md += `## Title shortlist\n${P.titles.filter(t=>t.selected).map(t=>`- **${t.text}** (score ${t.score}, ${t.style})`).join("\n") || "_none selected_"}\n\n`;
+  md += `## All titles (top 20 by score)\n${P.titles.slice().sort((a,b)=>b.score-a.score).slice(0,20).map((t,i)=>`${i+1}. ${t.text} — ${t.score}`).join("\n")}\n\n`;
+  for(const t of P.titles.filter(t=>t.selected)){
+    const pk = P.packs[t.id]; if(!pk) continue;
+    md += `\n---\n\n# PACK — ${t.text}\n\n`;
+    if(pk.script) md += `${pk.script}\n\n`;
+    if(pk.thumbs){
+      md += `## Thumbnail concepts\n` + pk.thumbs.map((c,i)=>
+        `${i+1}. **${c.headline}**${c.subtext?` / ${c.subtext}`:""} — layout: ${c.layout}, bg: ${(c.bgColors||[]).join("→")}, accent: ${c.accent}, elements: ${(c.elements||[]).join("+")||"none"}${c.expression&&c.expression.toLowerCase()!=="n/a"?`, face: ${c.expression}`:""}\n   AI prompt: ${c.imagePrompt}`).join("\n") + "\n\n";
+    }
+    if(pk.meta){
+      const m = pk.meta;
+      md += `## Metadata\n### Description\n${m.description}\n\n### Chapters\n${m.chapters.map(c=>`${c.time} ${c.label}`).join("\n")}\n\n### Tags\n${m.tags.join(", ")}\n\n### Hashtags\n${m.hashtags.join(" ")}\n\n### Pinned comment\n${m.pinnedComment}\n\n### Community post\n${m.communityPost}\n\n### Tweet thread\n${m.tweetThread.map((tw,i)=>`${i+1}/ ${tw}`).join("\n\n")}\n\n`;
+    }
+    if(pk.shorts){
+      md += `## Shorts\n` + pk.shorts.map((s,i)=>`### Short ${i+1} — ${s.title}\nHOOK: ${s.hook}\n\n${s.script}\n\nOverlays: ${s.overlay}`).join("\n\n") + "\n";
+    }
+  }
+  return md;
+}
+function renderExport(){
+  $("#exportPreview").innerHTML = mdToHtml(buildMarkdown());
+}
+$("#btnExportMd").onclick = ()=>download(P.name.replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-").toLowerCase()+"-production.md", buildMarkdown(), "text/markdown");
+$("#btnCopyMd").onclick = ()=>copy(buildMarkdown(), "Production doc copied");
+$("#btnExportJson").onclick = ()=>download("creatorforge-project.json", JSON.stringify(P, null, 2), "application/json");
+$("#btnImportJson").onclick = ()=>$("#importFile").click();
+$("#importFile").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const p = JSON.parse(r.result);
+      if(!p.brief || !Array.isArray(p.titles)) throw 0;
+      p.id = "p"+Date.now().toString(36);
+      projects.push(p); P = p; save();
+      loadBriefForm(); renderProjects(); renderUsage(); go("titles");
+      toast("Project imported");
+    }catch{ toast("Not a valid CreatorForge project file."); }
+  };
+  r.readAsText(f);
+  e.target.value = "";
+};
+
+/* ---------- settings & header ---------- */
+$("#btnSettings").onclick = ()=>{
+  $("#setKey").value = settings.key;
+  $("#setModel").value = settings.model;
+  $("#setResearch").value = settings.research;
+  $("#setDemo").value = settings.demo;
+  $("#dlgSettings").showModal();
+};
+$("#btnCloseSettings").onclick = ()=>$("#dlgSettings").close();
+$("#btnSaveSettings").onclick = ()=>{
+  settings.key = $("#setKey").value.trim();
+  settings.model = $("#setModel").value;
+  settings.research = $("#setResearch").value;
+  settings.demo = $("#setDemo").value;
+  saveSettings(); $("#dlgSettings").close();
+  $("#demoBanner").classList.toggle("hidden", !demoOn());
+  renderUsage(); toast("Settings saved");
+};
+$("#btnNewProject").onclick = ()=>{
+  readBriefFormSafe();
+  P = newProject(); projects.unshift(P); save();
+  loadBriefForm(); renderProjects(); renderUsage(); go("brief");
+};
+function readBriefFormSafe(){ try{ readBriefForm(); }catch{} }
+
+$$("#stepNav .step-link").forEach(b=>b.onclick=()=>{ readBriefFormSafe(); go(b.dataset.step); });
+
+/* ---------- init ---------- */
+$$(".spark").forEach(b=>b.onclick=()=>{
+  $("#briefInput").value = b.dataset.spark;
+  $("#briefInput").focus();
+  toast("Idea loaded — make it yours, then send it to the team.");
+});
+loadBriefForm(); renderProjects(); renderUsage(); go(P.titles.length?"titles":"brief");
+</script>
+</body>
+</html>

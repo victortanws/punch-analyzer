@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Million Plots — Terms, Privacy &amp; Refunds</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg:#0b0f14; --ink:#e6e2d7; --dim:#9aa0a6; --faint:#6b7178; --warm:#e8b23f; --rule:#20272f; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font:16px/1.75 -apple-system,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:44rem; margin:0 auto; padding:3.5rem 1.5rem 6rem; }
+  a { color:var(--warm); }
+  .back { display:inline-block; margin-bottom:2.5rem; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; text-decoration:none; color:var(--dim); }
+  .back:hover { color:var(--warm); }
+  h1 { font-family:"EB Garamond",Georgia,serif; font-weight:500; font-size:2rem; margin-bottom:.4rem; }
+  .updated { color:var(--faint); font-size:.85rem; margin-bottom:2.5rem; }
+  h2 { font-size:1.15rem; margin:2.6rem 0 .8rem; color:var(--warm); }
+  p, li { color:#cfcabf; margin-bottom:1rem; }
+  ul { padding-left:1.3rem; }
+  .note { border:1px solid var(--rule); border-radius:6px; padding:1rem 1.2rem; color:var(--dim); font-size:.9rem; margin:2rem 0; }
+  .placeholder { color:var(--warm); }
+  footer { border-top:1px solid var(--rule); margin-top:3rem; padding-top:1.5rem; color:var(--faint); font-size:.85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← Back to the cemetery</a>
+  <h1>Terms, Privacy &amp; Refunds</h1>
+  <p class="updated">Last updated: <span id="today"></span></p>
+
+  <div class="note">
+    Operator: <span class="placeholder">[Your legal name or business entity]</span>, governed by the laws of
+    <span class="placeholder">[your state/country]</span>. This is a plain-language starting point — have it reviewed
+    by a lawyer and replace the bracketed placeholders before taking live payments.
+  </div>
+
+  <h2>1. What a plot is</h2>
+  <p>A Million Plots is a virtual cemetery of one million numbered plots arranged on a 1,000 × 1,000 grid. Each plot
+  is a single point on that grid. Winning a plot grants you the right to display one memorial there — a name, optional
+  dates, an optional epitaph, and a colour — for as long as this site exists. It is a commemorative display, not real
+  property, real estate, burial rights, or any interest in physical land.</p>
+
+  <h2>2. How plots are won — the auction</h2>
+  <p>Unclaimed plots are allocated by ascending auction. The first qualifying bid opens an auction with a countdown;
+  further bids must exceed the current high bid by the stated minimum. A bid placed near the end extends the countdown
+  briefly to discourage last-second sniping. When the countdown ends, the highest bidder wins the right to claim the
+  plot by paying their winning bid within the stated claim window and submitting a memorial. Bidding is a genuine
+  commitment to buy at your bid price if you win.</p>
+
+  <h2>3. If a winner does not pay</h2>
+  <p>If a winner does not complete payment within the claim window, they forfeit the plot and it is offered to the
+  next-highest bidder; if no bidder remains, the plot returns to unclaimed and may be auctioned again. A claimed and
+  paid plot is permanent and is never re-auctioned.</p>
+
+  <h2>4. Payments</h2>
+  <p>Payments are processed by <a href="https://stripe.com" target="_blank" rel="noopener">Stripe</a>. We never
+  receive, see, or store your full card number. You are charged only when you claim a plot you have won, for the
+  amount of your winning bid.</p>
+
+  <h2>5. Refunds</h2>
+  <p>A plot is delivered the moment your payment clears, so <strong>completed purchases are final.</strong> Two
+  exceptions: (a) a genuine technical failure in which you paid but no plot was assigned — we will assign it or refund
+  you; and (b) the rare case where the same plot was assigned to another buyer before your payment settled — we will
+  refund you in full. We aim to resolve either within 5 business days. Placing or losing a bid never results in a
+  charge, so there is nothing to refund for bidding.</p>
+
+  <h2>6. What a memorial may not contain</h2>
+  <ul>
+    <li>Slurs, hate speech, or content that harasses, threatens, or defames.</li>
+    <li>Impersonation, or another living person’s private information.</li>
+    <li>Advertising, links, or spam.</li>
+  </ul>
+  <p>We may remove or redact a memorial that violates these rules <strong>without refund</strong>, at our discretion.
+  If a memorial names or depicts you or someone you represent and should not, contact us and we will address it.</p>
+
+  <h2>7. Licence to display</h2>
+  <p>By claiming a plot you grant us a non-exclusive, worldwide, royalty-free licence to store and display the
+  memorial you submit on this site and in related promotional material. You keep whatever rights you had in the words
+  and details themselves.</p>
+
+  <h2>8. Privacy</h2>
+  <p>We store only what the service needs: the memorial you submit, an anonymous bidder identifier your browser
+  generates, and the transaction reference Stripe returns. Card details are handled entirely by Stripe under
+  <a href="https://stripe.com/privacy" target="_blank" rel="noopener">their privacy policy</a>. We keep basic server
+  logs (including IP addresses) for security and abuse prevention, do not sell your data, and will remove a memorial
+  and associated data on request.</p>
+
+  <h2>9. No warranty; limitation of liability</h2>
+  <p>The service is provided “as is,” without warranty of any kind. To the fullest extent permitted by law, our total
+  liability for any claim relating to the service is limited to the amount you paid us in the preceding 30 days.</p>
+
+  <h2>10. Changes &amp; contact</h2>
+  <p>We may update these terms; the “last updated” date reflects the current version. Questions, refund claims, or
+  removal requests: <a id="contact" href="mailto:hello@example.com">hello@example.com</a>.</p>
+
+  <footer>A Million Plots · these terms are a template pending your review.</footer>
+</div>
+<script>
+  document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  fetch('/api/state').then(r=>r.json()).then(s=>{ if(s.contact){ const a=document.getElementById('contact'); a.href='mailto:'+s.contact; a.textContent=s.contact; } }).catch(()=>{});
+</script>
+</body>
+</html>

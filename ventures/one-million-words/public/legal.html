@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Million Words — Terms, Privacy &amp; Refunds</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg:#f6f1e6; --ink:#26221a; --soft:#57503f; --faint:#6f6754; --accent:#8c2f1e; --rule:#ddd3bd; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font:16px/1.8 "EB Garamond",Georgia,serif; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:42rem; margin:0 auto; padding:4rem 1.5rem 6rem; }
+  a { color:var(--accent); }
+  .back { display:inline-block; margin-bottom:2.5rem; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; text-decoration:none; color:var(--faint); font-family:"Inter",system-ui,sans-serif; }
+  .back:hover { color:var(--accent); }
+  h1 { font-weight:600; font-size:2rem; margin-bottom:.4rem; }
+  .updated { color:var(--faint); font-size:.9rem; margin-bottom:2.5rem; font-style:italic; }
+  h2 { font-weight:600; font-size:1.2rem; margin:2.6rem 0 .7rem; color:var(--accent); }
+  p, li { color:#3a3428; margin-bottom:1rem; }
+  ul { padding-left:1.3rem; }
+  .note { border:1px solid var(--rule); border-radius:6px; padding:1rem 1.2rem; color:var(--soft); font-size:.95rem; margin:2rem 0; font-style:italic; }
+  .placeholder { color:var(--accent); font-style:normal; }
+  footer { border-top:1px solid var(--rule); margin-top:3rem; padding-top:1.5rem; color:var(--faint); font-size:.9rem; font-style:italic; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← Back to the story</a>
+  <h1>Terms, Privacy &amp; Refunds</h1>
+  <p class="updated">Last updated: <span id="today"></span></p>
+
+  <div class="note">
+    Operator: <span class="placeholder">[Your legal name or business entity]</span>, governed by the laws of
+    <span class="placeholder">[your state/country]</span>. This is a plain-language starting point — have it reviewed
+    by a lawyer and replace the bracketed placeholders before taking live payments.
+  </div>
+
+  <h2>1. What one dollar buys</h2>
+  <p>One dollar adds one word of your choosing to the end of a single, ongoing, collaborative story, permanently
+  attributed to the signature you provide. The word appears in sequence the instant your payment clears and is
+  assigned a fixed word number that is never reused.</p>
+
+  <h2>2. The ending, and the book</h2>
+  <p>The story concludes when it reaches its one-millionth word. We intend to publish the completed story as a
+  printed book that credits every contributor by their chosen signature. This intention is genuine but is not a
+  guaranteed deliverable of your one-dollar purchase: your purchase buys the word and its attribution on this site.
+  If a book is produced, contributors will be told how to obtain one; it is not included in the price of a word.</p>
+
+  <h2>3. Payments</h2>
+  <p>Payments are processed by <a href="https://stripe.com" target="_blank" rel="noopener">Stripe</a>. We never
+  receive, see, or store your full card number.</p>
+
+  <h2>4. Refunds</h2>
+  <p>A word is set in ink the instant payment clears, so <strong>purchases are final.</strong> The exception is a
+  genuine technical failure in which your paid word never appeared; contact us and we will add it or refund you,
+  typically within 5 business days.</p>
+
+  <h2>5. Words you may not submit</h2>
+  <ul>
+    <li>Slurs and hate speech.</li>
+    <li>Harassment, threats, or another person’s private information.</li>
+    <li>Signatures used to advertise, link, or impersonate.</li>
+  </ul>
+  <p>Violating words are <strong>redacted</strong> — replaced with a “[removed]” marker — rather than deleted, so the
+  numbering of every other author’s word is never disturbed. Redactions for rule violations are made without refund.</p>
+
+  <h2>6. Licence to display and publish</h2>
+  <p>By submitting a word you grant us a non-exclusive, worldwide, royalty-free, perpetual licence to store, display,
+  reproduce, and publish that word as part of the collective story — on this site and in any printed or digital
+  edition of the completed work — alongside your chosen signature. Individual words are not copyrightable, but this
+  licence removes all doubt about the finished compilation.</p>
+
+  <h2>7. Privacy</h2>
+  <p>We collect only the word and signature you submit and the transaction reference Stripe returns. Card details are
+  handled entirely by Stripe under <a href="https://stripe.com/privacy" target="_blank" rel="noopener">their privacy
+  policy</a>. We keep basic server logs (including IP addresses) for security and abuse prevention, do not sell your
+  data, and will redact your word and remove associated data on request.</p>
+
+  <h2>8. No warranty; limitation of liability</h2>
+  <p>The service is provided “as is.” To the fullest extent permitted by law, our total liability for any claim
+  relating to the service is limited to the amount you paid us in the preceding 30 days.</p>
+
+  <h2>9. Changes</h2>
+  <p>We may update these terms; the “last updated” date reflects the current version.</p>
+
+  <h2>10. Contact</h2>
+  <p>Questions, redaction requests, or refund claims: <a id="contact" href="mailto:hello@example.com">hello@example.com</a>.</p>
+
+  <footer>One Million Words · these terms are a template pending your review.</footer>
+</div>
+<script>
+  document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  fetch('/api/state').then(r=>r.json()).then(s=>{ if(s.contact){ const a=document.getElementById('contact'); a.href='mailto:'+s.contact; a.textContent=s.contact; } }).catch(()=>{});
+</script>
+</body>
+</html>

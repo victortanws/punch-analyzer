@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Menu Studio &mdash; Build a Digital Menu in Minutes</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#161923;
+    --panel-2:#1d2130;
+    --border:#2a2f42;
+    --text:#eef0f6;
+    --text-dim:#9aa0b4;
+    --accent:#e8b74d;
+    --accent-2:#7c6bff;
+    --danger:#e5586b;
+    --success:#48c78e;
+    --radius:14px;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:linear-gradient(160deg,#0b0d12,#12141c 40%,#0b0d12);
+    color:var(--text);
+    font-family:'Segoe UI',Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  ::selection{background:var(--accent);color:#1a1a1a;}
+  a{color:var(--accent);}
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  input,textarea,select{
+    font-family:inherit;
+  }
+  /* ---------- App Shell ---------- */
+  .app-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 24px;
+    background:rgba(10,11,16,.7);
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    z-index:50;
+    backdrop-filter:blur(10px);
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:1.15rem;
+    letter-spacing:.2px;
+  }
+  .brand .logo-mark{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.05rem;
+  }
+  .brand small{
+    display:block;
+    color:var(--text-dim);
+    font-weight:400;
+    font-size:.72rem;
+    letter-spacing:.3px;
+  }
+  .header-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .tabs{
+    display:flex;
+    gap:6px;
+    padding:10px 24px 0;
+    border-bottom:1px solid var(--border);
+    overflow-x:auto;
+    background:rgba(10,11,16,.4);
+  }
+  .tab-btn{
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    padding:10px 18px;
+    border-radius:10px 10px 0 0;
+    font-size:.92rem;
+    font-weight:600;
+    white-space:nowrap;
+    transition:all .15s ease;
+    border-bottom:2px solid transparent;
+  }
+  .tab-btn:hover{color:var(--text);background:rgba(255,255,255,.04);}
+  .tab-btn.active{
+    color:var(--accent);
+    border-bottom:2px solid var(--accent);
+    background:rgba(232,183,77,.08);
+  }
+  .tab-btn:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline:2px solid var(--accent-2);
+    outline-offset:2px;
+  }
+  main{
+    max-width:1400px;
+    margin:0 auto;
+    padding:24px;
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text);
+    font-size:.9rem;
+    font-weight:600;
+    transition:all .15s ease;
+  }
+  .btn:hover{background:#262b3f;transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{
+    background:linear-gradient(135deg,var(--accent),#d19b2e);
+    border-color:transparent;
+    color:#1a1406;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-accent2{
+    background:linear-gradient(135deg,var(--accent-2),#5b4bd6);
+    border-color:transparent;
+    color:#fff;
+  }
+  .btn-danger{
+    background:rgba(229,88,107,.12);
+    border-color:rgba(229,88,107,.4);
+    color:#ff8a97;
+  }
+  .btn-danger:hover{background:rgba(229,88,107,.22);}
+  .btn-ghost{
+    background:transparent;
+  }
+  .btn-sm{padding:6px 10px;font-size:.78rem;border-radius:8px;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .icon-btn{
+    width:32px;height:32px;
+    display:inline-flex;align-items:center;justify-content:center;
+    border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--text-dim);
+    font-size:.85rem;
+    transition:all .15s ease;
+    flex:0 0 auto;
+  }
+  .icon-btn:hover{color:var(--text);background:#262b3f;}
+
+  /* ---------- Layout: builder ---------- */
+  .builder-grid{
+    display:grid;
+    grid-template-columns:1fr 420px;
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width:1100px){
+    .builder-grid{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:var(--shadow);
+    margin-bottom:20px;
+  }
+  .panel h2{
+    margin:0 0 4px;
+    font-size:1.05rem;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel .sub{
+    color:var(--text-dim);
+    font-size:.82rem;
+    margin:0 0 16px;
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:.78rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+  }
+  .field input[type=text],
+  .field input[type=number],
+  .field input[type=url],
+  .field textarea,
+  .field select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:9px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text);
+    font-size:.9rem;
+    transition:border-color .15s ease;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{
+    border-color:var(--accent-2);
+    outline:none;
+  }
+  .field textarea{resize:vertical;min-height:56px;}
+  .row{display:flex;gap:12px;}
+  .row > .field{flex:1;min-width:0;}
+
+  .logo-upload{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .logo-preview{
+    width:56px;height:56px;border-radius:12px;
+    background:var(--panel-2);
+    border:1px dashed var(--border);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    flex:0 0 auto;
+    font-size:1.3rem;
+    color:var(--text-dim);
+  }
+  .logo-preview img{width:100%;height:100%;object-fit:cover;}
+
+  /* Theme swatches */
+  .theme-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .theme-card{
+    border:2px solid var(--border);
+    border-radius:12px;
+    padding:12px 10px;
+    text-align:center;
+    background:var(--panel-2);
+    transition:all .15s ease;
+    position:relative;
+  }
+  .theme-card:hover{border-color:var(--accent-2);}
+  .theme-card.selected{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(232,183,77,.18);
+  }
+  .theme-card .swatch{
+    height:34px;
+    border-radius:8px;
+    margin-bottom:8px;
+  }
+  .theme-card .name{font-size:.76rem;font-weight:700;}
+  .theme-card .check{
+    position:absolute;top:6px;right:6px;
+    width:16px;height:16px;border-radius:50%;
+    background:var(--accent);color:#1a1406;
+    font-size:.6rem;display:flex;align-items:center;justify-content:center;
+    font-weight:900;
+  }
+  .accent-picker{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 12px;
+  }
+  .accent-picker input[type=color]{
+    width:40px;height:40px;border:none;border-radius:8px;background:none;padding:0;cursor:pointer;
+  }
+  .accent-swatches{display:flex;gap:6px;flex-wrap:wrap;}
+  .accent-swatch{
+    width:24px;height:24px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.15);
+    cursor:pointer;
+    transition:transform .1s ease;
+  }
+  .accent-swatch:hover{transform:scale(1.15);}
+
+  /* Sections & items */
+  .section-block{
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--panel-2);
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .section-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 14px;
+    background:rgba(255,255,255,.02);
+    border-bottom:1px solid var(--border);
+  }
+  .section-header input{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--text);
+    font-size:1rem;
+    font-weight:700;
+    padding:4px 2px;
+    border-bottom:1px dashed transparent;
+  }
+  .section-header input:focus{outline:none;border-bottom:1px dashed var(--accent);}
+  .section-controls{display:flex;gap:6px;flex:0 0 auto;}
+  .items-list{padding:10px 14px;}
+  .item-row{
+    display:grid;
+    grid-template-columns:1fr auto auto;
+    gap:10px;
+    align-items:start;
+    padding:12px 10px;
+    border-radius:10px;
+    margin-bottom:8px;
+    background:var(--panel);
+    border:1px solid var(--border);
+  }
+  .item-main .row{margin-bottom:8px;}
+  .item-main .row:last-child{margin-bottom:0;}
+  .item-name-price{display:flex;gap:8px;}
+  .item-name-price input[type=text]{flex:1;}
+  .item-name-price input[type=number]{width:90px;}
+  .tag-row{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .tag-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:4px 9px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    font-size:.72rem;
+    color:var(--text-dim);
+    transition:all .15s ease;
+  }
+  .tag-chip input{margin:0;accent-color:var(--accent);}
+  .tag-chip.on{
+    color:var(--text);
+    border-color:var(--accent);
+    background:rgba(232,183,77,.12);
+  }
+  .item-actions{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .item-move{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .empty-state{
+    text-align:center;
+    padding:36px 20px;
+    color:var(--text-dim);
+    border:1px dashed var(--border);
+    border-radius:12px;
+    background:var(--panel-2);
+  }
+  .empty-state .big{font-size:2rem;margin-bottom:8px;}
+  .add-item-btn{width:100%;margin-top:4px;}
+  .add-section-btn{width:100%;}
+
+  /* ---------- Phone preview ---------- */
+  .preview-wrap{position:sticky;top:96px;}
+  .phone-frame{
+    width:340px;
+    max-width:100%;
+    margin:0 auto;
+    background:#0a0a0c;
+    border-radius:42px;
+    padding:14px;
+    box-shadow:0 20px 50px rgba(0,0,0,.5), inset 0 0 0 2px #1c1c22;
+    position:relative;
+  }
+  .phone-notch{
+    position:absolute;
+    top:14px;left:50%;
+    transform:translateX(-50%);
+    width:120px;height:22px;
+    background:#0a0a0c;
+    border-radius:0 0 16px 16px;
+    z-index:5;
+  }
+  .phone-screen{
+    background:#fff;
+    border-radius:30px;
+    overflow-y:auto;
+    height:620px;
+    position:relative;
+  }
+  .phone-screen::-webkit-scrollbar{width:5px;}
+  .phone-screen::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:10px;}
+
+  /* menu content (rendered inside preview + exported file share these class names) */
+  .menu-doc{min-height:100%;}
+  .menu-hero{
+    padding:34px 22px 22px;
+    text-align:center;
+  }
+  .menu-hero .menu-logo{
+    width:64px;height:64px;
+    border-radius:16px;
+    margin:0 auto 12px;
+    object-fit:cover;
+    display:block;
+  }
+  .menu-hero .menu-logo.placeholder{
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.6rem;font-weight:800;
+  }
+  .menu-hero h1{
+    margin:0 0 6px;
+    font-size:1.5rem;
+    letter-spacing:.2px;
+  }
+  .menu-hero p.tagline{
+    margin:0;
+    font-size:.85rem;
+    opacity:.75;
+  }
+  .menu-body{padding:6px 18px 34px;}
+  .menu-section-title{
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:1.6px;
+    font-weight:800;
+    margin:26px 0 12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .menu-section-title::after{
+    content:'';
+    flex:1;
+    height:1px;
+    opacity:.25;
+    background:currentColor;
+  }
+  .menu-item{
+    padding:12px 0;
+    border-bottom:1px solid rgba(0,0,0,.06);
+  }
+  .menu-item:last-child{border-bottom:none;}
+  .menu-item-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+  }
+  .menu-item-name{font-weight:700;font-size:.98rem;}
+  .menu-item-price{font-weight:800;font-size:.98rem;white-space:nowrap;}
+  .menu-item-desc{
+    font-size:.82rem;
+    opacity:.7;
+    margin:4px 0 0;
+    line-height:1.4;
+  }
+  .menu-item-tags{
+    display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;
+  }
+  .menu-tag{
+    font-size:.62rem;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:999px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+  }
+  .menu-footer{
+    text-align:center;
+    padding:18px;
+    font-size:.68rem;
+    opacity:.5;
+  }
+  .menu-empty{
+    text-align:center;
+    padding:60px 20px;
+    opacity:.5;
+    font-size:.85rem;
+  }
+
+  /* Theme presets applied via data-theme on menu-doc */
+  .menu-doc[data-theme="elegant-dark"]{background:#181615;color:#f1ece2;}
+  .menu-doc[data-theme="elegant-dark"] .menu-hero{background:linear-gradient(180deg,#221f1c,#181615);}
+  .menu-doc[data-theme="elegant-dark"] .menu-item{border-bottom-color:rgba(255,255,255,.08);}
+  .menu-doc[data-theme="elegant-dark"] .menu-item-desc{opacity:.55;}
+  .menu-doc[data-theme="elegant-dark"] .menu-logo.placeholder{background:rgba(255,255,255,.08);}
+
+  .menu-doc[data-theme="warm-bistro"]{background:#fdf6ec;color:#3d2b1f;}
+  .menu-doc[data-theme="warm-bistro"] .menu-hero{background:linear-gradient(180deg,#f6e6cd,#fdf6ec);}
+  .menu-doc[data-theme="warm-bistro"] .menu-logo.placeholder{background:rgba(61,43,31,.1);}
+
+  .menu-doc[data-theme="minimal-light"]{background:#ffffff;color:#191919;}
+  .menu-doc[data-theme="minimal-light"] .menu-hero{background:#fafafa;border-bottom:1px solid #eee;}
+  .menu-doc[data-theme="minimal-light"] .menu-logo.placeholder{background:#f0f0f0;}
+
+  /* ---------- QR / Print tab ---------- */
+  .qr-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+  }
+  @media (max-width:900px){.qr-grid{grid-template-columns:1fr;}}
+  #qrcodeCanvas{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    border-radius:12px;
+    padding:20px;
+    min-height:220px;
+  }
+  #qrcodeCanvas img, #qrcodeCanvas canvas{border-radius:4px;}
+  .qr-fallback{
+    text-align:center;
+    color:#333;
+    font-size:.85rem;
+    padding:10px;
+  }
+  .qr-fallback code{
+    display:block;
+    margin-top:8px;
+    background:#f2f2f2;
+    padding:8px;
+    border-radius:6px;
+    word-break:break-all;
+    font-size:.75rem;
+  }
+  .notice{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    padding:12px 14px;
+    border-radius:10px;
+    background:rgba(232,183,77,.1);
+    border:1px solid rgba(232,183,77,.35);
+    font-size:.82rem;
+    color:#f0d9a0;
+    margin-bottom:14px;
+  }
+  .notice.success{
+    background:rgba(72,199,142,.1);
+    border-color:rgba(72,199,142,.35);
+    color:#8fe3bd;
+  }
+  .table-cards-preview{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-top:16px;
+  }
+  .table-card{
+    border:2px dashed var(--border);
+    border-radius:14px;
+    padding:20px 14px;
+    text-align:center;
+    background:#fff;
+    color:#111;
+  }
+  .table-card .tc-name{font-weight:800;font-size:.95rem;margin-bottom:10px;}
+  .table-card .tc-scan{font-size:.68rem;color:#666;margin-top:10px;letter-spacing:.4px;text-transform:uppercase;}
+  .table-card canvas, .table-card img{max-width:100%;height:auto;}
+
+  footer.app-footer{
+    text-align:center;
+    padding:30px;
+    color:var(--text-dim);
+    font-size:.78rem;
+  }
+
+  /* toast */
+  #toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:#1d2130;
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:12px 20px;
+    border-radius:10px;
+    box-shadow:var(--shadow);
+    font-size:.85rem;
+    opacity:0;
+    pointer-events:none;
+    transition:all .25s ease;
+    z-index:200;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  #toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+  #toast.err{border-color:rgba(229,88,107,.5);}
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:300;
+    padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    max-width:420px;
+    width:100%;
+    box-shadow:var(--shadow);
+  }
+  .modal h3{margin-top:0;}
+  .modal .modal-actions{
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    margin-top:20px;
+  }
+
+  /* ---------- Print styles ---------- */
+  @media print{
+    body *{visibility:hidden;}
+    .app-header,.tabs{display:none !important;}
+    #printArea, #printArea *,
+    #printCardsArea, #printCardsArea *{visibility:visible;}
+    #printArea, #printCardsArea{
+      position:absolute;top:0;left:0;width:100%;
+      margin:0;padding:0;
+    }
+    .print-sheet{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:0;
+      width:100%;
+    }
+    .print-card{
+      border:1px dashed #999;
+      padding:26px 16px;
+      text-align:center;
+      page-break-inside:avoid;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      min-height:340px;
+    }
+    .print-card .tc-name{font-weight:800;font-size:1.1rem;margin-bottom:14px;color:#000;}
+    .print-card .tc-scan{font-size:.7rem;color:#444;margin-top:14px;letter-spacing:.5px;text-transform:uppercase;}
+    @page{margin:14mm;}
+  }
+
+  @media (max-width:640px){
+    .app-header{padding:12px 14px;}
+    main{padding:14px;}
+    .tabs{padding:8px 14px 0;}
+    .item-row{grid-template-columns:1fr;}
+    .item-actions{flex-direction:row;justify-content:flex-end;}
+    .qr-grid{gap:16px;}
+    .theme-grid{grid-template-columns:repeat(3,1fr);}
+    .row{flex-direction:column;}
+  }
+  @media (max-width:400px){
+    .brand span.title{font-size:1rem;}
+    .phone-frame{width:100%;padding:10px;border-radius:28px;}
+    .phone-screen{height:520px;border-radius:20px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="logo-mark">&#127859;</div>
+    <div>
+      <span class="title">QR Menu Studio</span>
+      <small>Build &middot; Preview &middot; Export &middot; Print</small>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-sm" id="resetSampleBtn" title="Reload the sample bistro menu">&#8635; Load sample</button>
+    <button class="btn btn-danger btn-sm" id="clearAllBtn" title="Erase everything and start blank">&#128465; Clear all</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-view="builder">1. Builder</button>
+  <button class="tab-btn" data-view="export">2. Export</button>
+  <button class="tab-btn" data-view="qr">3. QR &amp; Print Cards</button>
+</nav>
+
+<main>
+
+  <!-- ===================== BUILDER VIEW ===================== -->
+  <section class="view active" id="view-builder">
+    <div class="builder-grid">
+
+      <div class="builder-left">
+
+        <div class="panel">
+          <h2>&#127974; Restaurant details</h2>
+          <p class="sub">This appears at the top of your menu and on your table cards.</p>
+          <div class="field">
+            <label for="restName">Restaurant / cafe name</label>
+            <input type="text" id="restName" placeholder="e.g. The Copper Fig">
+          </div>
+          <div class="field">
+            <label for="restTagline">Tagline (optional)</label>
+            <input type="text" id="restTagline" placeholder="e.g. Seasonal plates, slow mornings">
+          </div>
+          <div class="field">
+            <label>Logo</label>
+            <div class="logo-upload">
+              <div class="logo-preview" id="logoPreview">&#127860;</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <input type="file" id="logoInput" accept="image/*" style="display:none;">
+                <button class="btn btn-sm" id="logoUploadBtn">Upload image</button>
+                <button class="btn btn-sm btn-ghost" id="logoRemoveBtn">Remove logo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>&#127912; Theme</h2>
+          <p class="sub">Pick a polished preset, then fine-tune the accent color.</p>
+          <div class="theme-grid" id="themeGrid"></div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Custom accent color</label>
+            <div class="accent-picker">
+              <input type="color" id="accentColorInput" value="#c98a3b">
+              <div class="accent-swatches" id="accentSwatches"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>&#128220; Menu structure</h2>
+          <p class="sub">Add sections, then items inside each section. Use the arrows to reorder.</p>
+          <div id="sectionsContainer"></div>
+          <button class="btn btn-primary add-section-btn" id="addSectionBtn">+ Add section</button>
+        </div>
+
+      </div>
+
+      <div class="builder-right">
+        <div class="preview-wrap">
+          <div class="panel" style="margin-bottom:12px;">
+            <h2 style="margin-bottom:2px;">&#128241; Live preview</h2>
+            <p class="sub" style="margin-bottom:0;">What guests will see when they scan your QR code.</p>
+          </div>
+          <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="menu-doc" id="previewDoc" data-theme="warm-bistro"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== EXPORT VIEW ===================== -->
+  <section class="view" id="view-export">
+    <div class="panel">
+      <h2>&#11015;&#65039; Download your standalone menu</h2>
+      <p class="sub">This generates one self-contained <code>menu.html</code> file &mdash; no server, no dependencies. Upload it to Netlify, GitHub Pages, or any static host, then use that URL in the QR &amp; Print tab.</p>
+      <div class="notice" id="exportNotice">
+        Your exported file bakes in the current restaurant name, theme, and menu items. Re-download any time you make changes.
+      </div>
+      <button class="btn btn-primary" id="downloadMenuBtn">&#11015;&#65039; Download menu.html</button>
+      <button class="btn" id="printMenuPreviewBtn" style="margin-left:10px;">&#128424;&#65039; Print this menu directly</button>
+    </div>
+
+    <div class="panel">
+      <h2>Where to host it (free)</h2>
+      <p class="sub" style="margin-bottom:10px;">Pick whichever is easiest for your client:</p>
+      <ol style="color:var(--text-dim);font-size:.88rem;line-height:1.9;padding-left:20px;margin:0;">
+        <li><strong>Netlify Drop</strong> &mdash; go to app.netlify.com/drop and drag in <code>menu.html</code>. You get a live URL in seconds.</li>
+        <li><strong>GitHub Pages</strong> &mdash; create a repo, upload the file as <code>index.html</code>, enable Pages in settings.</li>
+        <li><strong>Any cheap hosting / their existing website</strong> &mdash; upload via FTP as <code>menu.html</code> and link to it.</li>
+      </ol>
+    </div>
+
+    <div id="printArea" style="display:none;">
+      <div class="menu-doc" id="printDoc" data-theme="warm-bistro"></div>
+    </div>
+  </section>
+
+  <!-- ===================== QR VIEW ===================== -->
+  <section class="view" id="view-qr">
+    <div class="qr-grid">
+      <div class="panel">
+        <h2>&#128241; Generate QR code</h2>
+        <p class="sub">Paste the live URL of your hosted <code>menu.html</code> (from Netlify, GitHub Pages, etc.).</p>
+        <div class="field">
+          <label for="menuUrlInput">Hosted menu URL</label>
+          <input type="url" id="menuUrlInput" placeholder="https://your-restaurant-menu.netlify.app">
+        </div>
+        <button class="btn btn-primary" id="generateQrBtn">Generate QR code</button>
+        <div id="qrStatus" style="margin-top:12px;"></div>
+        <div id="qrcodeCanvas" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="panel">
+        <h2>&#128424;&#65039; Print table cards</h2>
+        <p class="sub">Produces a printable sheet of table-tent cards with your QR code and restaurant name. Generate a QR code first.</p>
+        <button class="btn btn-accent2" id="printCardsBtn">Print table cards</button>
+        <p class="sub" style="margin-top:10px;">Tip: print on cardstock, fold in half, tape at the seam &mdash; instant table tent.</p>
+        <div class="table-cards-preview" id="cardsPreview"></div>
+      </div>
+    </div>
+
+    <div id="printCardsArea" style="display:none;">
+      <div class="print-sheet" id="printCardsSheet"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  QR Menu Studio &mdash; everything you build is saved automatically in this browser (localStorage). No account, no server, no data leaves your device.
+</footer>
+
+<div id="toast"></div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="confirmModalTitle">Are you sure?</h3>
+    <p id="confirmModalBody" style="color:var(--text-dim);font-size:.88rem;"></p>
+    <div class="modal-actions">
+      <button class="btn" id="confirmModalCancel">Cancel</button>
+      <button class="btn btn-danger" id="confirmModalOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     CONSTANTS
+  ========================================================= */
+  var STORAGE_KEY = "qrMenuStudio.v1";
+  var DIET_TAGS = [
+    { key:"veg",  label:"Vegetarian",  color:"#5a9e5a" },
+    { key:"vegan",label:"Vegan",       color:"#3f8f6b" },
+    { key:"spicy",label:"Spicy",       color:"#d1553a" },
+    { key:"gf",   label:"Gluten-Free", color:"#8a6dbd" },
+    { key:"new",  label:"New",         color:"#c98a3b" }
+  ];
+  var THEMES = [
+    { key:"elegant-dark",  name:"Elegant Dark",  swatch:"linear-gradient(135deg,#181615,#3a3330)", defaultAccent:"#d4af37" },
+    { key:"warm-bistro",   name:"Warm Bistro",   swatch:"linear-gradient(135deg,#fdf6ec,#e8c48a)", defaultAccent:"#c98a3b" },
+    { key:"minimal-light", name:"Minimal Light", swatch:"linear-gradient(135deg,#ffffff,#dedede)", defaultAccent:"#2b6cb0" }
+  ];
+  var ACCENT_PRESETS = ["#c98a3b","#d4af37","#2b6cb0","#3f8f6b","#8a6dbd","#d1553a","#e05d8a","#4a90d9"];
+
+  /* =========================================================
+     SAMPLE DATA
+  ========================================================= */
+  function sampleData(){
+    return {
+      restName: "The Copper Fig",
+      tagline: "Seasonal plates, slow mornings",
+      logo: "",
+      theme: "warm-bistro",
+      accent: "#c98a3b",
+      menuUrl: "",
+      sections: [
+        {
+          id: uid(), name: "Starters",
+          items: [
+            { id: uid(), name:"Whipped Ricotta Toast", desc:"Charred sourdough, local honey, chili flake", price:"9", tags:["veg"] },
+            { id: uid(), name:"Charred Shishito Peppers", desc:"Flash-fried, lemon, flaky salt", price:"8", tags:["vegan","spicy","gf"] },
+            { id: uid(), name:"Soup of the Day", desc:"Ask your server — changes with the market", price:"7", tags:["gf"] },
+            { id: uid(), name:"Burrata & Heirloom Tomato", desc:"Basil oil, aged balsamic, sea salt", price:"12", tags:["veg","new"] }
+          ]
+        },
+        {
+          id: uid(), name: "Mains",
+          items: [
+            { id: uid(), name:"Copper Fig Burger", desc:"Dry-aged beef, fig jam, gruyere, brioche", price:"17", tags:[] },
+            { id: uid(), name:"Wild Mushroom Risotto", desc:"Arborio rice, parmesan, truffle oil", price:"18", tags:["veg","gf"] },
+            { id: uid(), name:"Roasted Half Chicken", desc:"Herb butter, charred lemon, jus", price:"22", tags:["gf"] },
+            { id: uid(), name:"Spicy Miso Ramen", desc:"House broth, soft egg, scallion, chili oil", price:"16", tags:["spicy","new"] },
+            { id: uid(), name:"Grilled Cauliflower Steak", desc:"Romesco, toasted almonds, herbs", price:"15", tags:["vegan","gf"] }
+          ]
+        },
+        {
+          id: uid(), name: "Desserts",
+          items: [
+            { id: uid(), name:"Basque Cheesecake", desc:"Burnt top, vanilla bean, berry compote", price:"9", tags:["veg"] },
+            { id: uid(), name:"Flourless Chocolate Torte", desc:"Dark cocoa, sea salt, whipped cream", price:"10", tags:["veg","gf","new"] }
+          ]
+        }
+      ]
+    };
+  }
+
+  function uid(){
+    return "id_" + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+  }
+
+  /* =========================================================
+     STATE
+  ========================================================= */
+  var state = null;
+
+  /* Defensively coerce a loaded/parsed state object into a well-formed shape so a
+     hand-edited or partially-corrupted localStorage value can never crash the app.
+     Any field with the wrong type is replaced with a safe default instead of thrown. */
+  function normalizeState(parsed){
+    var base = sampleData();
+    if(!parsed || typeof parsed !== "object") return base;
+
+    var out = {
+      restName: typeof parsed.restName === "string" ? parsed.restName : "",
+      tagline: typeof parsed.tagline === "string" ? parsed.tagline : "",
+      logo: typeof parsed.logo === "string" ? parsed.logo : "",
+      theme: typeof parsed.theme === "string" ? parsed.theme : "warm-bistro",
+      accent: typeof parsed.accent === "string" ? parsed.accent : "#c98a3b",
+      menuUrl: typeof parsed.menuUrl === "string" ? parsed.menuUrl : "",
+      sections: []
+    };
+
+    if(!THEMES.some(function(t){ return t.key === out.theme; })){ out.theme = "warm-bistro"; }
+    if(!/^#[0-9a-fA-F]{3,8}$/.test(out.accent)){ out.accent = "#c98a3b"; }
+
+    if(Array.isArray(parsed.sections)){
+      out.sections = parsed.sections.map(function(section){
+        var s = (section && typeof section === "object") ? section : {};
+        return {
+          id: typeof s.id === "string" ? s.id : uid(),
+          name: typeof s.name === "string" ? s.name : "",
+          items: Array.isArray(s.items) ? s.items.map(function(item){
+            var it = (item && typeof item === "object") ? item : {};
+            return {
+              id: typeof it.id === "string" ? it.id : uid(),
+              name: typeof it.name === "string" ? it.name : "",
+              desc: typeof it.desc === "string" ? it.desc : "",
+              price: (typeof it.price === "string" || typeof it.price === "number") ? it.price : "",
+              tags: Array.isArray(it.tags) ? it.tags.filter(function(t){ return typeof t === "string"; }) : []
+            };
+          }) : []
+        };
+      });
+    }
+
+    return out;
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && parsed.sections){ return normalizeState(parsed); }
+      }
+    }catch(e){ /* corrupted storage, fall through to sample */ }
+    return sampleData();
+  }
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){
+      showToast("Could not save (storage full or blocked).", true);
+    }
+  }
+
+  /* =========================================================
+     TOAST
+  ========================================================= */
+  var toastTimer = null;
+  function showToast(msg, isErr){
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.className = isErr ? "show err" : "show";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.className = ""; }, 2600);
+  }
+
+  /* =========================================================
+     TABS
+  ========================================================= */
+  function initTabs(){
+    var tabs = document.querySelectorAll(".tab-btn");
+    tabs.forEach(function(btn){
+      btn.addEventListener("click", function(){
+        tabs.forEach(function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+        document.getElementById("view-" + btn.dataset.view).classList.add("active");
+        if(btn.dataset.view === "export"){ renderExportPreviewNotice(); }
+      });
+    });
+  }
+
+  /* =========================================================
+     RESTAURANT DETAIL FIELDS
+  ========================================================= */
+  function initDetailFields(){
+    var nameEl = document.getElementById("restName");
+    var tagEl = document.getElementById("restTagline");
+
+    nameEl.value = state.restName || "";
+    tagEl.value = state.tagline || "";
+
+    nameEl.addEventListener("input", function(){
+      state.restName = nameEl.value;
+      saveState(); renderPreview();
+    });
+    tagEl.addEventListener("input", function(){
+      state.tagline = tagEl.value;
+      saveState(); renderPreview();
+    });
+
+    renderLogoPreview();
+
+    document.getElementById("logoUploadBtn").addEventListener("click", function(){
+      document.getElementById("logoInput").click();
+    });
+    document.getElementById("logoInput").addEventListener("change", function(e){
+      var file = e.target.files && e.target.files[0];
+      if(!file) return;
+      if(file.size > 3 * 1024 * 1024){
+        showToast("Image too large (max 3MB).", true);
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        state.logo = ev.target.result;
+        saveState();
+        renderLogoPreview();
+        renderPreview();
+        showToast("Logo updated.");
+      };
+      reader.onerror = function(){
+        showToast("Could not read that image.", true);
+      };
+      reader.readAsDataURL(file);
+    });
+    document.getElementById("logoRemoveBtn").addEventListener("click", function(){
+      state.logo = "";
+      saveState();
+      renderLogoPreview();
+      renderPreview();
+      document.getElementById("logoInput").value = "";
+    });
+  }
+
+  function renderLogoPreview(){
+    var el = document.getElementById("logoPreview");
+    if(state.logo){
+      el.innerHTML = '<img src="' + state.logo + '" alt="Logo preview">';
+    }else{
+      el.innerHTML = "&#127860;";
+    }
+  }
+
+  /* =========================================================
+     THEME + ACCENT
+  ========================================================= */
+  function initThemePicker(){
+    var grid = document.getElementById("themeGrid");
+    grid.innerHTML = "";
+    THEMES.forEach(function(t){
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "theme-card" + (state.theme === t.key ? " selected" : "");
+      card.innerHTML =
+        '<div class="swatch" style="background:' + t.swatch + '"></div>' +
+        '<div class="name">' + t.name + "</div>" +
+        (state.theme === t.key ? '<div class="check">&#10003;</div>' : "");
+      card.addEventListener("click", function(){
+        state.theme = t.key;
+        saveState();
+        initThemePicker();
+        renderPreview();
+      });
+      grid.appendChild(card);
+    });
+
+    var accentInput = document.getElementById("accentColorInput");
+    accentInput.value = state.accent || "#c98a3b";
+    accentInput.oninput = function(){
+      state.accent = accentInput.value;
+      saveState();
+      renderPreview();
+    };
+
+    var swatchWrap = document.getElementById("accentSwatches");
+    swatchWrap.innerHTML = "";
+    ACCENT_PRESETS.forEach(function(c){
+      var sw = document.createElement("button");
+      sw.type = "button";
+      sw.className = "accent-swatch";
+      sw.style.background = c;
+      sw.title = c;
+      sw.addEventListener("click", function(){
+        state.accent = c;
+        accentInput.value = c;
+        saveState();
+        renderPreview();
+      });
+      swatchWrap.appendChild(sw);
+    });
+  }
+
+  /* =========================================================
+     SECTIONS / ITEMS EDITOR
+  ========================================================= */
+  function initSectionsEditor(){
+    document.getElementById("addSectionBtn").addEventListener("click", function(){
+      state.sections.push({ id: uid(), name: "New Section", items: [] });
+      saveState();
+      renderSectionsEditor();
+      renderPreview();
+    });
+    renderSectionsEditor();
+  }
+
+  function renderSectionsEditor(){
+    var container = document.getElementById("sectionsContainer");
+    container.innerHTML = "";
+
+    if(!state.sections.length){
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.innerHTML = '<div class="big">&#128221;</div><div>No sections yet. Add your first one below (e.g. "Starters").</div>';
+      container.appendChild(empty);
+      return;
+    }
+
+    state.sections.forEach(function(section, sIdx){
+      var block = document.createElement("div");
+      block.className = "section-block";
+
+      var header = document.createElement("div");
+      header.className = "section-header";
+
+      var nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = section.name;
+      nameInput.setAttribute("aria-label", "Section name");
+      nameInput.addEventListener("input", function(){
+        section.name = nameInput.value;
+        saveState();
+        renderPreview();
+      });
+      header.appendChild(nameInput);
+
+      var controls = document.createElement("div");
+      controls.className = "section-controls";
+
+      var upBtn = iconButton("&#8593;", "Move section up", function(){
+        if(sIdx > 0){
+          swap(state.sections, sIdx, sIdx - 1);
+          saveState(); renderSectionsEditor(); renderPreview();
+        }
+      });
+      if(sIdx === 0) upBtn.disabled = true;
+
+      var downBtn = iconButton("&#8595;", "Move section down", function(){
+        if(sIdx < state.sections.length - 1){
+          swap(state.sections, sIdx, sIdx + 1);
+          saveState(); renderSectionsEditor(); renderPreview();
+        }
+      });
+      if(sIdx === state.sections.length - 1) downBtn.disabled = true;
+
+      var delBtn = iconButton("&#128465;", "Delete section", function(){
+        confirmAction(
+          "Delete \"" + (section.name || "this section") + "\"?",
+          "This removes the section and all " + section.items.length + " item(s) inside it.",
+          function(){
+            state.sections.splice(sIdx, 1);
+            saveState(); renderSectionsEditor(); renderPreview();
+          }
+        );
+      });
+      delBtn.classList.add("btn-danger");
+
+      controls.appendChild(upBtn);
+      controls.appendChild(downBtn);
+      controls.appendChild(delBtn);
+      header.appendChild(controls);
+      block.appendChild(header);
+
+      var itemsList = document.createElement("div");
+      itemsList.className = "items-list";
+
+      if(!section.items.length){
+        var emptyItems = document.createElement("div");
+        emptyItems.className = "empty-state";
+        emptyItems.style.padding = "18px";
+        emptyItems.innerHTML = "No items in this section yet.";
+        itemsList.appendChild(emptyItems);
+      }
+
+      section.items.forEach(function(item, iIdx){
+        itemsList.appendChild(renderItemRow(section, item, iIdx));
+      });
+
+      var addItemBtn = document.createElement("button");
+      addItemBtn.className = "btn btn-sm add-item-btn";
+      addItemBtn.textContent = "+ Add item";
+      addItemBtn.addEventListener("click", function(){
+        section.items.push({ id: uid(), name:"", desc:"", price:"", tags:[] });
+        saveState();
+        renderSectionsEditor();
+        renderPreview();
+      });
+      itemsList.appendChild(addItemBtn);
+
+      block.appendChild(itemsList);
+      container.appendChild(block);
+    });
+  }
+
+  function renderItemRow(section, item, iIdx){
+    var row = document.createElement("div");
+    row.className = "item-row";
+
+    var main = document.createElement("div");
+    main.className = "item-main";
+
+    var np = document.createElement("div");
+    np.className = "item-name-price";
+
+    var nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "Item name";
+    nameInput.value = item.name;
+    nameInput.setAttribute("aria-label", "Item name");
+    nameInput.addEventListener("input", function(){
+      item.name = nameInput.value;
+      saveState(); renderPreview();
+    });
+
+    var priceInput = document.createElement("input");
+    priceInput.type = "number";
+    priceInput.step = "0.01";
+    priceInput.min = "0";
+    priceInput.placeholder = "Price";
+    priceInput.value = item.price;
+    priceInput.setAttribute("aria-label", "Item price");
+    priceInput.addEventListener("input", function(){
+      item.price = priceInput.value;
+      saveState(); renderPreview();
+    });
+
+    np.appendChild(nameInput);
+    np.appendChild(priceInput);
+    main.appendChild(np);
+
+    var descRow = document.createElement("div");
+    descRow.className = "row";
+    var descField = document.createElement("div");
+    descField.className = "field";
+    descField.style.marginBottom = "0";
+    var descInput = document.createElement("textarea");
+    descInput.rows = 1;
+    descInput.placeholder = "Short description";
+    descInput.value = item.desc;
+    descInput.setAttribute("aria-label", "Item description");
+    descInput.addEventListener("input", function(){
+      item.desc = descInput.value;
+      saveState(); renderPreview();
+    });
+    descField.appendChild(descInput);
+    descRow.appendChild(descField);
+    main.appendChild(descRow);
+
+    var tagRow = document.createElement("div");
+    tagRow.className = "tag-row";
+    DIET_TAGS.forEach(function(tag){
+      var chip = document.createElement("label");
+      var isOn = item.tags.indexOf(tag.key) !== -1;
+      chip.className = "tag-chip" + (isOn ? " on" : "");
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = isOn;
+      cb.addEventListener("change", function(){
+        var idx = item.tags.indexOf(tag.key);
+        if(cb.checked && idx === -1){ item.tags.push(tag.key); }
+        if(!cb.checked && idx !== -1){ item.tags.splice(idx, 1); }
+        saveState(); renderSectionsEditor(); renderPreview();
+      });
+      chip.appendChild(cb);
+      chip.appendChild(document.createTextNode(" " + tag.label));
+      tagRow.appendChild(chip);
+    });
+    main.appendChild(tagRow);
+
+    row.appendChild(main);
+
+    var moveCol = document.createElement("div");
+    moveCol.className = "item-move";
+    var upBtn = iconButton("&#8593;", "Move item up", function(){
+      if(iIdx > 0){
+        swap(section.items, iIdx, iIdx - 1);
+        saveState(); renderSectionsEditor(); renderPreview();
+      }
+    });
+    if(iIdx === 0) upBtn.disabled = true;
+    var downBtn = iconButton("&#8595;", "Move item down", function(){
+      if(iIdx < section.items.length - 1){
+        swap(section.items, iIdx, iIdx + 1);
+        saveState(); renderSectionsEditor(); renderPreview();
+      }
+    });
+    if(iIdx === section.items.length - 1) downBtn.disabled = true;
+    moveCol.appendChild(upBtn);
+    moveCol.appendChild(downBtn);
+    row.appendChild(moveCol);
+
+    var actionsCol = document.createElement("div");
+    actionsCol.className = "item-actions";
+    var delBtn = iconButton("&#128465;", "Delete item", function(){
+      confirmAction(
+        "Delete \"" + (item.name || "this item") + "\"?",
+        "This cannot be undone.",
+        function(){
+          section.items.splice(iIdx, 1);
+          saveState(); renderSectionsEditor(); renderPreview();
+        }
+      );
+    });
+    delBtn.classList.add("btn-danger");
+    actionsCol.appendChild(delBtn);
+    row.appendChild(actionsCol);
+
+    return row;
+  }
+
+  function iconButton(html, title, onClick){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "icon-btn";
+    b.innerHTML = html;
+    b.title = title;
+    b.setAttribute("aria-label", title);
+    b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function swap(arr, i, j){
+    var tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+
+  /* =========================================================
+     CONFIRM MODAL (generic, reused for destructive actions)
+  ========================================================= */
+  var pendingConfirmAction = null;
+  function confirmAction(title, body, onConfirm){
+    document.getElementById("confirmModalTitle").textContent = title;
+    document.getElementById("confirmModalBody").textContent = body;
+    pendingConfirmAction = onConfirm;
+    document.getElementById("confirmModal").classList.add("show");
+  }
+  function initConfirmModal(){
+    document.getElementById("confirmModalCancel").addEventListener("click", function(){
+      document.getElementById("confirmModal").classList.remove("show");
+      pendingConfirmAction = null;
+    });
+    document.getElementById("confirmModalOk").addEventListener("click", function(){
+      var fn = pendingConfirmAction;
+      document.getElementById("confirmModal").classList.remove("show");
+      pendingConfirmAction = null;
+      if(fn) fn();
+    });
+    document.getElementById("confirmModal").addEventListener("click", function(e){
+      if(e.target.id === "confirmModal"){
+        document.getElementById("confirmModal").classList.remove("show");
+        pendingConfirmAction = null;
+      }
+    });
+  }
+
+  /* =========================================================
+     MENU RENDERING (shared by live preview + export + print)
+  ========================================================= */
+  function escapeHtml(str){
+    if(str == null) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function formatPrice(p){
+    if(p === "" || p == null || isNaN(parseFloat(p))) return "";
+    return "$" + parseFloat(p).toFixed(2);
+  }
+
+  function tagMeta(key){
+    for(var i=0;i<DIET_TAGS.length;i++){ if(DIET_TAGS[i].key === key) return DIET_TAGS[i]; }
+    return null;
+  }
+
+  function buildMenuInnerHtml(data, accentColor){
+    var hasContent = data.sections.some(function(s){ return s.items.length > 0; }) || data.sections.length > 0;
+    var logoHtml;
+    if(data.logo){
+      logoHtml = '<img class="menu-logo" src="' + data.logo + '" alt="' + escapeHtml(data.restName || "Logo") + '">';
+    }else{
+      var initial = (data.restName || "R").trim().charAt(0).toUpperCase() || "R";
+      logoHtml = '<div class="menu-logo placeholder" style="color:' + accentColor + ';border:2px solid ' + accentColor + '55;">' + escapeHtml(initial) + "</div>";
+    }
+
+    var html = '<div class="menu-hero">' + logoHtml +
+      "<h1>" + escapeHtml(data.restName || "Your Restaurant Name") + "</h1>" +
+      (data.tagline ? '<p class="tagline">' + escapeHtml(data.tagline) + "</p>" : "") +
+      "</div>";
+
+    html += '<div class="menu-body">';
+
+    if(!hasContent || data.sections.every(function(s){ return s.items.length === 0; })){
+      html += '<div class="menu-empty">Your menu items will appear here as you add them.</div>';
+    }else{
+      data.sections.forEach(function(section){
+        if(!section.items.length) return;
+        html += '<div class="menu-section-title" style="color:' + accentColor + ';">' + escapeHtml(section.name || "Section") + "</div>";
+        section.items.forEach(function(item){
+          if(!item.name && !item.desc && !item.price) return;
+          html += '<div class="menu-item">' +
+            '<div class="menu-item-top"><div class="menu-item-name">' + escapeHtml(item.name || "Untitled item") + '</div>' +
+            '<div class="menu-item-price" style="color:' + accentColor + ';">' + formatPrice(item.price) + "</div></div>";
+          if(item.desc){
+            html += '<p class="menu-item-desc">' + escapeHtml(item.desc) + "</p>";
+          }
+          if(item.tags && item.tags.length){
+            html += '<div class="menu-item-tags">';
+            item.tags.forEach(function(tk){
+              var meta = tagMeta(tk);
+              if(!meta) return;
+              html += '<span class="menu-tag" style="background:' + meta.color + '22;color:' + meta.color + ';">' + escapeHtml(meta.label) + "</span>";
+            });
+            html += "</div>";
+          }
+          html += "</div>";
+        });
+      });
+    }
+
+    html += "</div>";
+    html += '<div class="menu-footer">Made with QR Menu Studio</div>';
+    return html;
+  }
+
+  function renderPreview(){
+    var doc = document.getElementById("previewDoc");
+    doc.setAttribute("data-theme", state.theme);
+    doc.innerHTML = buildMenuInnerHtml(state, state.accent || "#c98a3b");
+  }
+
+  function renderExportPreviewNotice(){
+    var printDoc = document.getElementById("printDoc");
+    printDoc.setAttribute("data-theme", state.theme);
+    printDoc.innerHTML = buildMenuInnerHtml(state, state.accent || "#c98a3b");
+  }
+
+  /* =========================================================
+     EXPORT (standalone menu.html)
+  ========================================================= */
+  function buildStandaloneMenuHtml(){
+    var accent = state.accent || "#c98a3b";
+    var bodyHtml = buildMenuInnerHtml(state, accent);
+    var title = escapeHtml(state.restName || "Menu");
+
+    return "<!DOCTYPE html>\n" +
+"<html lang=\"en\">\n" +
+"<head>\n" +
+"<meta charset=\"UTF-8\">\n" +
+"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+"<title>" + title + " &mdash; Menu</title>\n" +
+"<style>\n" + EXPORT_CSS + "\n</style>\n" +
+"</head>\n" +
+"<body>\n" +
+'<div class="menu-doc" data-theme="' + state.theme + '">\n' + bodyHtml + "\n</div>\n" +
+"</body>\n</html>";
+  }
+
+  var EXPORT_CSS =
+"*{box-sizing:border-box;}" +
+"body{margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:#eee;}" +
+".menu-doc{max-width:520px;margin:0 auto;min-height:100vh;}" +
+".menu-hero{padding:44px 22px 26px;text-align:center;}" +
+".menu-hero .menu-logo{width:76px;height:76px;border-radius:18px;margin:0 auto 14px;object-fit:cover;display:block;}" +
+".menu-hero .menu-logo.placeholder{display:flex;align-items:center;justify-content:center;font-size:1.9rem;font-weight:800;}" +
+".menu-hero h1{margin:0 0 8px;font-size:1.9rem;letter-spacing:.2px;}" +
+".menu-hero p.tagline{margin:0;font-size:1rem;opacity:.75;}" +
+".menu-body{padding:6px 22px 50px;}" +
+".menu-section-title{font-size:.82rem;text-transform:uppercase;letter-spacing:1.8px;font-weight:800;margin:34px 0 14px;display:flex;align-items:center;gap:12px;}" +
+".menu-section-title::after{content:'';flex:1;height:1px;opacity:.25;background:currentColor;}" +
+".menu-item{padding:16px 0;border-bottom:1px solid rgba(0,0,0,.06);}" +
+".menu-item:last-child{border-bottom:none;}" +
+".menu-item-top{display:flex;justify-content:space-between;align-items:baseline;gap:14px;}" +
+".menu-item-name{font-weight:700;font-size:1.08rem;}" +
+".menu-item-price{font-weight:800;font-size:1.08rem;white-space:nowrap;}" +
+".menu-item-desc{font-size:.92rem;opacity:.7;margin:6px 0 0;line-height:1.5;}" +
+".menu-item-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}" +
+".menu-tag{font-size:.68rem;font-weight:700;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px;}" +
+".menu-footer{text-align:center;padding:26px;font-size:.72rem;opacity:.5;}" +
+".menu-empty{text-align:center;padding:80px 20px;opacity:.5;}" +
+".menu-doc[data-theme=\"elegant-dark\"]{background:#181615;color:#f1ece2;}" +
+".menu-doc[data-theme=\"elegant-dark\"] .menu-hero{background:linear-gradient(180deg,#221f1c,#181615);}" +
+".menu-doc[data-theme=\"elegant-dark\"] .menu-item{border-bottom-color:rgba(255,255,255,.08);}" +
+".menu-doc[data-theme=\"elegant-dark\"] .menu-item-desc{opacity:.55;}" +
+".menu-doc[data-theme=\"elegant-dark\"] .menu-logo.placeholder{background:rgba(255,255,255,.08);}" +
+".menu-doc[data-theme=\"warm-bistro\"]{background:#fdf6ec;color:#3d2b1f;}" +
+".menu-doc[data-theme=\"warm-bistro\"] .menu-hero{background:linear-gradient(180deg,#f6e6cd,#fdf6ec);}" +
+".menu-doc[data-theme=\"warm-bistro\"] .menu-logo.placeholder{background:rgba(61,43,31,.1);}" +
+".menu-doc[data-theme=\"minimal-light\"]{background:#ffffff;color:#191919;}" +
+".menu-doc[data-theme=\"minimal-light\"] .menu-hero{background:#fafafa;border-bottom:1px solid #eee;}" +
+".menu-doc[data-theme=\"minimal-light\"] .menu-logo.placeholder{background:#f0f0f0;}" +
+"@media print{body{background:#fff;}.menu-doc{max-width:100%;}}";
+
+  function initExportView(){
+    document.getElementById("downloadMenuBtn").addEventListener("click", function(){
+      if(!state.restName){
+        showToast("Add a restaurant name first (Builder tab).", true);
+        return;
+      }
+      var html = buildStandaloneMenuHtml();
+      var blob = new Blob([html], { type: "text/html" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      var filename = (state.restName || "menu").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "menu";
+      a.href = url;
+      a.download = filename + "-menu.html";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      showToast("menu.html downloaded. Upload it to your host of choice.");
+    });
+
+    document.getElementById("printMenuPreviewBtn").addEventListener("click", function(){
+      renderExportPreviewNotice();
+      document.getElementById("printArea").style.display = "block";
+      window.print();
+      setTimeout(function(){ document.getElementById("printArea").style.display = "none"; }, 500);
+    });
+  }
+
+  /* =========================================================
+     QR CODE
+  ========================================================= */
+  var qrLibAvailable = typeof window.QRCode === "function";
+
+  function initQrView(){
+    var urlInput = document.getElementById("menuUrlInput");
+    urlInput.value = state.menuUrl || "";
+
+    urlInput.addEventListener("input", function(){
+      state.menuUrl = urlInput.value;
+      saveState();
+    });
+
+    document.getElementById("generateQrBtn").addEventListener("click", function(){
+      var url = urlInput.value.trim();
+      if(!url){
+        showToast("Paste your hosted menu URL first.", true);
+        return;
+      }
+      if(!/^https?:\/\//i.test(url)){
+        showToast("URL should start with http:// or https://", true);
+        return;
+      }
+      state.menuUrl = url;
+      saveState();
+      renderQrCode(url);
+      renderCardsPreview(url);
+    });
+
+    // If a URL was already saved, render it immediately for convenience.
+    if(state.menuUrl){
+      renderQrCode(state.menuUrl);
+      renderCardsPreview(state.menuUrl);
+    }
+
+    document.getElementById("printCardsBtn").addEventListener("click", function(){
+      var url = (state.menuUrl || "").trim();
+      if(!url){
+        showToast("Generate a QR code first.", true);
+        return;
+      }
+      buildPrintCardsSheet(url);
+      document.getElementById("printCardsArea").style.display = "block";
+      window.print();
+      setTimeout(function(){ document.getElementById("printCardsArea").style.display = "none"; }, 500);
+    });
+  }
+
+  function renderQrCode(url){
+    var container = document.getElementById("qrcodeCanvas");
+    var statusEl = document.getElementById("qrStatus");
+    container.innerHTML = "";
+
+    if(!qrLibAvailable){
+      statusEl.innerHTML = '<div class="notice">QR library unavailable offline &mdash; showing your link as text instead. Connect to the internet once to enable live QR rendering.</div>';
+      container.innerHTML = '<div class="qr-fallback">Share this link:<code>' + escapeHtml(url) + "</code></div>";
+      return;
+    }
+
+    try{
+      new QRCode(container, {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      statusEl.innerHTML = '<div class="notice success">QR code ready. It links to: <strong>' + escapeHtml(url) + "</strong></div>";
+    }catch(e){
+      statusEl.innerHTML = '<div class="notice">Could not render QR code &mdash; showing your link as text instead.</div>';
+      container.innerHTML = '<div class="qr-fallback">Share this link:<code>' + escapeHtml(url) + "</code></div>";
+    }
+  }
+
+  function renderCardsPreview(url){
+    var wrap = document.getElementById("cardsPreview");
+    wrap.innerHTML = "";
+    for(var i=0;i<2;i++){
+      var card = document.createElement("div");
+      card.className = "table-card";
+      var qrHolder = document.createElement("div");
+      card.innerHTML = '<div class="tc-name">' + escapeHtml(state.restName || "Your Restaurant") + "</div>";
+      card.appendChild(qrHolder);
+      var scan = document.createElement("div");
+      scan.className = "tc-scan";
+      scan.textContent = "Scan for menu";
+      card.appendChild(scan);
+      wrap.appendChild(card);
+
+      if(qrLibAvailable){
+        try{
+          new QRCode(qrHolder, { text: url, width: 120, height: 120, correctLevel: QRCode.CorrectLevel.M });
+        }catch(e){
+          qrHolder.innerHTML = '<div class="qr-fallback">' + escapeHtml(url) + "</div>";
+        }
+      }else{
+        qrHolder.innerHTML = '<div class="qr-fallback">' + escapeHtml(url) + "</div>";
+      }
+    }
+  }
+
+  function buildPrintCardsSheet(url){
+    var sheet = document.getElementById("printCardsSheet");
+    sheet.innerHTML = "";
+    var count = 6; // half a letter/A4 sheet worth of table tents
+    for(var i=0;i<count;i++){
+      var card = document.createElement("div");
+      card.className = "print-card";
+      var name = document.createElement("div");
+      name.className = "tc-name";
+      name.textContent = state.restName || "Your Restaurant";
+      var qrHolder = document.createElement("div");
+      var scan = document.createElement("div");
+      scan.className = "tc-scan";
+      scan.textContent = "Scan for menu";
+
+      card.appendChild(name);
+      card.appendChild(qrHolder);
+      card.appendChild(scan);
+      sheet.appendChild(card);
+
+      if(qrLibAvailable){
+        try{
+          new QRCode(qrHolder, { text: url, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
+        }catch(e){
+          qrHolder.innerHTML = '<div class="qr-fallback">' + escapeHtml(url) + "</div>";
+        }
+      }else{
+        qrHolder.innerHTML = '<div class="qr-fallback">' + escapeHtml(url) + "</div>";
+      }
+    }
+  }
+
+  /* =========================================================
+     RESET / CLEAR
+  ========================================================= */
+  function initTopActions(){
+    document.getElementById("resetSampleBtn").addEventListener("click", function(){
+      confirmAction(
+        "Load the sample bistro menu?",
+        "This replaces your current menu, theme, and details with the demo data.",
+        function(){
+          state = sampleData();
+          saveState();
+          rerenderAll();
+          showToast("Sample menu loaded.");
+        }
+      );
+    });
+
+    document.getElementById("clearAllBtn").addEventListener("click", function(){
+      confirmAction(
+        "Clear everything?",
+        "This erases all sections, items, and settings. This cannot be undone.",
+        function(){
+          state = {
+            restName: "", tagline: "", logo: "", theme: "warm-bistro",
+            accent: "#c98a3b", menuUrl: "", sections: []
+          };
+          saveState();
+          rerenderAll();
+          showToast("Everything cleared. Start fresh whenever you're ready.");
+        }
+      );
+    });
+  }
+
+  function rerenderAll(){
+    document.getElementById("restName").value = state.restName || "";
+    document.getElementById("restTagline").value = state.tagline || "";
+    document.getElementById("menuUrlInput").value = state.menuUrl || "";
+    renderLogoPreview();
+    initThemePicker();
+    renderSectionsEditor();
+    renderPreview();
+    document.getElementById("qrcodeCanvas").innerHTML = "";
+    document.getElementById("qrStatus").innerHTML = "";
+    document.getElementById("cardsPreview").innerHTML = "";
+  }
+
+  /* =========================================================
+     INIT
+  ========================================================= */
+  function init(){
+    state = loadState();
+    initTabs();
+    initDetailFields();
+    initThemePicker();
+    initSectionsEditor();
+    initConfirmModal();
+    initExportView();
+    initQrView();
+    initTopActions();
+    renderPreview();
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  }else{
+    init();
+  }
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rainbow Bridge — Groundskeeper's Desk</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg:#0e1330; --raise:#151a3a; --ink:#f0ece2; --dim:#b9b3a6; --faint:#8a8578; --gold:#e8c98a; --green:#8fce9f; --red:#e39a8f; --rule:rgba(240,236,226,.1); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font:15px/1.5 -apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:50rem; margin:0 auto; padding:2rem 1.2rem 5rem; }
+  h1 { font-family:Georgia,serif; font-weight:500; font-size:1.55rem; margin-bottom:.3rem; }
+  .sub { color:var(--faint); font-size:.85rem; margin-bottom:1.8rem; }
+  .gate { display:flex; gap:.5rem; margin-bottom:1.5rem; }
+  input[type=password], input[type=text] { flex:1; background:var(--raise); border:1px solid var(--rule); color:var(--ink); border-radius:8px; padding:.6rem .8rem; font-size:.95rem; }
+  input:focus { outline:none; border-color:var(--gold); }
+  button { cursor:pointer; border:none; border-radius:8px; font-size:.85rem; padding:.55rem .9rem; }
+  .btn-gold { background:var(--gold); color:#22190a; font-weight:600; }
+  .btn-approve { background:rgba(143,206,159,.16); color:var(--green); border:1px solid rgba(143,206,159,.5); }
+  .btn-reject { background:rgba(227,154,143,.14); color:var(--red); border:1px solid rgba(227,154,143,.5); }
+  .btn-ghost { background:none; color:var(--dim); border:1px solid var(--rule); }
+  h2 { font-family:Georgia,serif; font-weight:500; font-size:1.1rem; margin:2rem 0 .8rem; color:var(--gold); display:flex; align-items:center; gap:.6rem; }
+  .badge { background:rgba(232,201,138,.15); color:var(--gold); border-radius:999px; font-size:.72rem; padding:.1rem .55rem; }
+  .card { display:grid; grid-template-columns:4rem 1fr auto; gap:1rem; align-items:center; background:var(--raise); border:1px solid var(--rule); border-radius:10px; padding:.8rem 1rem; margin-bottom:.6rem; }
+  .card .pic, .card .medal { width:4rem; height:4rem; border-radius:50%; object-fit:cover; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:1.8rem; background:#0c1026; }
+  .card .name { font-family:Georgia,serif; font-size:1.25rem; overflow-wrap:anywhere; }
+  .card .yrs { color:var(--faint); font-size:.8rem; }
+  .card .words { font-family:Georgia,serif; font-style:italic; color:var(--dim); font-size:.92rem; margin-top:.25rem; overflow-wrap:anywhere; }
+  .card .meta { color:var(--faint); font-size:.75rem; margin-top:.25rem; }
+  .card .acts { display:flex; gap:.4rem; flex-direction:column; }
+  .muted { color:var(--faint); font-style:italic; padding:1rem 0; }
+  .err { color:var(--red); font-size:.85rem; margin:.6rem 0; min-height:1em; }
+  .tools { display:flex; gap:.5rem; margin-top:.6rem; }
+  .note { color:var(--faint); font-size:.78rem; line-height:1.6; margin-top:.5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The Groundskeeper's Desk</h1>
+  <p class="sub">Review each memorial with care before it joins the meadow. Your token is kept only in this browser.</p>
+  <div class="gate">
+    <input type="password" id="token" placeholder="Admin token" autocomplete="off">
+    <button class="btn-gold" id="unlock">Unlock</button>
+    <button class="btn-ghost" id="forget" hidden>Forget token</button>
+  </div>
+  <p class="err" id="err"></p>
+  <section id="panel" hidden>
+    <h2>Awaiting review <span class="badge" id="pendCount">0</span> <button class="btn-ghost" id="refresh" style="margin-left:auto">Refresh</button></h2>
+    <div id="pending"></div>
+    <h2>Remove a memorial that's already live</h2>
+    <div class="gate"><input type="text" id="removeId" placeholder="Memorial id (e.g. m42)"></div>
+    <div class="tools"><button class="btn-reject" id="doRemove">Remove by id</button></div>
+    <p class="note">Approving places the memorial in the meadow permanently. Rejecting deletes the submission and its photo (use the note in the message to the family if you refund). Removal is for anything that later needs taking down. Every action is logged.</p>
+  </section>
+</div>
+<script src="/admin.js"></script>
+</body>
+</html>

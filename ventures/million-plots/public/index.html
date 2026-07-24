@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>A Million Plots — the virtual cemetery</title>
+<meta name="description" content="A cemetery of one million plots. Each plot is a single pixel, claimed forever at auction, and marked with a memorial.">
+<meta property="og:title" content="A Million Plots — the virtual cemetery">
+<meta property="og:description" content="One million plots. Each is a single pixel, won at auction and kept forever. Claim a place in the ground.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230f1720'/%3E%3Cpath d='M35 78 V52 a15 15 0 0 1 30 0 V78 Z' fill='%23c7c2b4'/%3E%3Crect x='47' y='40' width='6' height='30' fill='%23c7c2b4'/%3E%3Crect x='40' y='47' width='20' height='6' fill='%23c7c2b4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0b0f14; --panel:#121821; --panel-2:#0e141c; --ink:#e6e2d7; --dim:#9aa0a6; --faint:#6b7178;
+    --line:#20272f; --warm:#e8b23f; --warm-dim:#8a6a2a; --green:#6b7d6a; --danger:#c9695c;
+    --serif:"EB Garamond",Georgia,serif; --sans:"Inter",-apple-system,"Segoe UI",sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; overflow:hidden; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  .app { display:grid; grid-template-columns:1fr 22rem; grid-template-rows:auto 1fr; height:100vh; }
+
+  header { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between;
+    padding:.7rem 1.1rem; border-bottom:1px solid var(--line); gap:1rem; }
+  .brand { display:flex; align-items:baseline; gap:.7rem; min-width:0; }
+  .brand h1 { font-family:var(--serif); font-weight:500; font-size:1.3rem; letter-spacing:.02em; white-space:nowrap; }
+  .brand .sub { color:var(--faint); font-size:.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stats { display:flex; gap:1.4rem; font-size:.72rem; color:var(--dim); white-space:nowrap; }
+  .stats b { display:block; font-family:var(--serif); font-size:1.15rem; color:var(--ink); }
+  .stats .a b { color:var(--warm); }
+  .demo { font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--warm); border:1px solid rgba(232,178,63,.3); border-radius:3px; padding:.2rem .5rem; }
+
+  .stage { position:relative; overflow:hidden; background:var(--bg); }
+  canvas { display:block; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+  .controls { position:absolute; left:.8rem; bottom:.8rem; display:flex; flex-direction:column; gap:.35rem; }
+  .controls button { width:2.2rem; height:2.2rem; font-size:1.2rem; background:rgba(18,24,33,.85); color:var(--ink);
+    border:1px solid var(--line); border-radius:5px; cursor:pointer; backdrop-filter:blur(4px); }
+  .controls button:hover { border-color:var(--warm); }
+  .readout { position:absolute; right:.8rem; bottom:.8rem; font-size:.72rem; color:var(--dim);
+    background:rgba(18,24,33,.8); border:1px solid var(--line); border-radius:5px; padding:.3rem .55rem; backdrop-filter:blur(4px); font-variant-numeric:tabular-nums; }
+  .legend { position:absolute; left:.8rem; top:.8rem; display:flex; gap:.9rem; font-size:.68rem; color:var(--dim);
+    background:rgba(18,24,33,.8); border:1px solid var(--line); border-radius:5px; padding:.35rem .6rem; backdrop-filter:blur(4px); flex-wrap:wrap; max-width:60vw; }
+  .legend span { display:inline-flex; align-items:center; gap:.3rem; }
+  .swatch { width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .jump { position:absolute; right:.8rem; top:.8rem; display:flex; gap:.3rem; }
+  .jump input { width:4.2rem; background:rgba(18,24,33,.85); border:1px solid var(--line); color:var(--ink);
+    border-radius:4px; padding:.3rem .4rem; font-size:.75rem; font-family:var(--sans); }
+  .jump button { background:rgba(18,24,33,.85); border:1px solid var(--line); color:var(--ink); border-radius:4px; padding:.3rem .6rem; font-size:.72rem; cursor:pointer; }
+
+  /* panel */
+  aside { background:var(--panel); border-left:1px solid var(--line); overflow-y:auto; padding:1.1rem; }
+  .mine { border:1px solid var(--line); border-radius:6px; padding:.6rem .7rem; margin-bottom:1rem; font-size:.78rem; color:var(--dim); }
+  .mine h4 { font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-bottom:.5rem; }
+  .mine .chip { display:inline-flex; align-items:center; gap:.35rem; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:4px; padding:.25rem .5rem; margin:.15rem .2rem .15rem 0; cursor:pointer; color:var(--ink); font-size:.74rem; }
+  .mine .chip.claim { border-color:var(--warm); color:var(--warm); }
+  .mine .chip:hover { border-color:var(--warm); }
+  .mine .empty { color:var(--faint); font-style:italic; }
+
+  .panel-empty { color:var(--faint); font-style:italic; text-align:center; padding:3rem 1rem; line-height:1.7; }
+  .p-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:.2rem; }
+  .p-coord { font-family:var(--serif); font-size:1.35rem; }
+  .p-status { font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; padding:.15rem .45rem; border-radius:3px; }
+  .st-unclaimed { color:var(--dim); border:1px solid var(--line); }
+  .st-active { color:var(--warm); border:1px solid rgba(232,178,63,.4); }
+  .st-await { color:var(--warm-dim); border:1px solid rgba(138,106,42,.5); }
+  .st-owned { color:var(--green); border:1px solid rgba(107,125,106,.5); }
+  .p-sub { color:var(--faint); font-size:.78rem; margin-bottom:1.2rem; }
+
+  label { display:block; font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin:1rem 0 .35rem; }
+  input[type=text], input[type=number], textarea {
+    width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:5px; padding:.6rem .7rem; font-family:var(--sans); font-size:.95rem; resize:none; }
+  input:focus, textarea:focus { outline:none; border-color:var(--warm); }
+  .amt-wrap { position:relative; }
+  .amt-wrap span { position:absolute; left:.7rem; top:50%; transform:translateY(-50%); color:var(--dim); }
+  .amt-wrap input { padding-left:1.5rem; font-variant-numeric:tabular-nums; }
+  .row { display:flex; gap:.5rem; }
+  .row > * { flex:1; }
+  .swatches { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .swatches button { width:1.9rem; height:1.9rem; border-radius:4px; border:2px solid transparent; cursor:pointer; }
+  .swatches button.sel { border-color:var(--ink); }
+  .btn { width:100%; margin-top:1.3rem; padding:.8rem; font-family:var(--sans); font-weight:600; font-size:.9rem;
+    letter-spacing:.04em; border:none; border-radius:5px; cursor:pointer; background:linear-gradient(160deg,#f0c368,var(--warm)); color:#1a1305; }
+  .btn:hover { filter:brightness(1.06); }
+  .btn:disabled { opacity:.55; cursor:wait; }
+  .btn-2 { background:none; border:1px solid var(--line); color:var(--dim); margin-top:.6rem; }
+  .err { color:var(--danger); font-size:.82rem; margin-top:.8rem; min-height:1em; }
+
+  .bid-now { font-family:var(--serif); }
+  .bid-now .amt { font-size:2rem; color:var(--warm); }
+  .bid-now .by { color:var(--dim); font-size:.85rem; }
+  .count { font-variant-numeric:tabular-nums; font-family:var(--sans); }
+  .youtag { display:inline-block; font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; padding:.1rem .4rem; border-radius:3px; margin-left:.4rem; }
+  .youtag.win { background:rgba(107,125,106,.2); color:var(--green); }
+  .youtag.out { background:rgba(201,105,92,.18); color:var(--danger); }
+  .history { margin-top:1.2rem; border-top:1px solid var(--line); padding-top:.8rem; }
+  .history h4 { font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-bottom:.5rem; }
+  .history li { list-style:none; display:flex; justify-content:space-between; font-size:.82rem; color:var(--dim); padding:.2rem 0; }
+  .history li .c { color:var(--ink); font-variant-numeric:tabular-nums; }
+
+  .memorial { text-align:center; padding:1.4rem 1rem; border:1px solid var(--line); border-radius:8px; background:var(--panel-2); }
+  .memorial .stone { width:2.4rem; height:2.4rem; border-radius:5px; margin:0 auto 1rem; }
+  .memorial .mname { font-family:var(--serif); font-size:1.5rem; }
+  .memorial .mdates { color:var(--dim); font-size:.9rem; margin-top:.3rem; font-variant-numeric:tabular-nums; }
+  .memorial .mepitaph { font-family:var(--serif); font-style:italic; color:var(--dim); margin-top:1.1rem; line-height:1.7; }
+  .memorial .msince { color:var(--faint); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; margin-top:1.3rem; }
+
+  footer { grid-column:1 / -1; border-top:1px solid var(--line); padding:.5rem 1.1rem; font-size:.72rem; color:var(--faint); display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  footer a { color:var(--dim); }
+
+  .toast { position:fixed; left:50%; bottom:1.5rem; transform:translateX(-50%) translateY(20px); background:var(--panel);
+    border:1px solid rgba(232,178,63,.4); color:var(--ink); padding:.9rem 1.4rem; border-radius:6px; font-size:.9rem;
+    opacity:0; pointer-events:none; transition:all .35s; box-shadow:0 12px 40px rgba(0,0,0,.5); max-width:92vw; z-index:50; text-align:center; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+  .toast b { color:var(--warm); } .toast a { color:var(--warm); }
+
+  @media (max-width:820px) {
+    .app { grid-template-columns:1fr; grid-template-rows:auto 1fr auto; }
+    aside { border-left:none; border-top:1px solid var(--line); max-height:44vh; }
+    .stats { gap:.9rem; } .brand .sub { display:none; }
+    .legend { max-width:52vw; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>A Million Plots</h1>
+      <span class="sub">a virtual cemetery · one pixel, one plot, kept forever</span>
+    </div>
+    <div class="stats">
+      <div><b id="stOwned">—</b>at rest</div>
+      <div class="a"><b id="stAuctions">—</b>live auctions</div>
+      <div><b id="stFree">—</b>plots remain</div>
+      <span class="demo" id="demo" hidden>Demo</span>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend">
+      <span><i class="swatch" style="background:#c7c2b4"></i>at rest</span>
+      <span><i class="swatch" style="background:#e8b23f"></i>auction live</span>
+      <span><i class="swatch" style="background:#8a6a2a"></i>being claimed</span>
+      <span><i class="swatch" style="background:#0f1720;border:1px solid #333"></i>unclaimed</span>
+    </div>
+    <div class="jump">
+      <input id="jx" type="number" min="0" max="999" placeholder="x" aria-label="x">
+      <input id="jy" type="number" min="0" max="999" placeholder="y" aria-label="y">
+      <button id="jgo">Go</button>
+    </div>
+    <div class="controls">
+      <button id="zin" aria-label="Zoom in">+</button>
+      <button id="zout" aria-label="Zoom out">−</button>
+      <button id="zfit" aria-label="Fit" title="Fit whole cemetery">⤢</button>
+    </div>
+    <div class="readout" id="readout">—</div>
+  </div>
+
+  <aside>
+    <div class="mine" id="mine" hidden>
+      <h4>Your plots</h4>
+      <div id="mineBody"></div>
+    </div>
+    <div id="panel">
+      <div class="panel-empty">Click any plot in the cemetery to see it.<br>Unclaimed plots can be won at auction; those at rest bear a memorial.</div>
+    </div>
+  </aside>
+
+  <footer>
+    <span>Plots are permanent once claimed. Auctions open at $<span id="floor">5</span>. Being outbid is part of the process; hateful memorials are removed.</span>
+    <span><a href="/legal.html">Terms &amp; refunds</a> · <a href="mailto:hello@example.com" id="contact">Contact</a></span>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  const fmt = c => '$' + (c/100).toLocaleString('en-US',{minimumFractionDigits:c%100?2:0});
+  const esc = s => { const d=document.createElement('div'); d.textContent=s==null?'':s; return d.innerHTML; };
+
+  // ---- bidder identity ----
+  let token = localStorage.getItem('mp-token');
+  if (!token) { token = (crypto.randomUUID ? crypto.randomUUID() : 'tok-'+Math.random().toString(36).slice(2)+Date.now()); localStorage.setItem('mp-token', token); }
+  let myName = localStorage.getItem('mp-name') || '';
+
+  // ---- world / view ----
+  let DIM = 1000, TOTAL = 1000000, PALETTE = ['#9a9a9a'], AUCTION_COLOR='#e8b23f', CLAIMING_COLOR='#8a6a2a', FLOOR=500;
+  let owned = new Map(), auctions = new Map();
+  let serverSkew = 0; // serverNow - clientNow
+  const GROUND = '#0f1720';
+
+  // offscreen grid image
+  const grid = document.createElement('canvas'); grid.width = DIM; grid.height = DIM;
+  const gctx = grid.getContext('2d');
+  let buf, u32;
+  function hexU32(hex, a=255){ const n=parseInt(hex.slice(1),16); const r=(n>>16)&255,g=(n>>8)&255,b=n&255; return ((a<<24)|(b<<16)|(g<<8)|r)>>>0; }
+  function rebuildGrid(){
+    if(!buf){ buf=new Uint8ClampedArray(DIM*DIM*4); u32=new Uint32Array(buf.buffer); }
+    u32.fill(hexU32(GROUND));
+    const pal = PALETTE.map(h=>hexU32(h));
+    for(const [idx,c] of owned) u32[idx]=pal[c]||pal[0];
+    const au=hexU32(AUCTION_COLOR), cl=hexU32(CLAIMING_COLOR);
+    for(const [idx,st] of auctions) u32[idx]= st===2?cl:au;
+    gctx.putImageData(new ImageData(buf, DIM, DIM), 0, 0);
+  }
+
+  let scale=0.5, cx=DIM/2, cy=DIM/2, hoverIdx=-1, selIdx=-1;
+  function fitScale(){ return Math.min(cv.clientWidth/DIM, cv.clientHeight/DIM); }
+  function clampView(){ const minS=fitScale(); scale=Math.max(minS, Math.min(scale, 44)); cx=Math.max(0,Math.min(DIM,cx)); cy=Math.max(0,Math.min(DIM,cy)); }
+
+  function resize(){
+    const r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio||1, 2);
+    cv.width = Math.round(r.width*dpr); cv.height = Math.round(r.height*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    clampView();
+  }
+  function worldLeftTop(){ return { L: cx - (cv.clientWidth/scale)/2, T: cy - (cv.clientHeight/scale)/2 }; }
+  function screenToPlot(mx,my){ const {L,T}=worldLeftTop(); const wx=Math.floor(L+mx/scale), wy=Math.floor(T+my/scale);
+    if(wx<0||wy<0||wx>=DIM||wy>=DIM) return -1; return wy*DIM+wx; }
+
+  let pulse=0;
+  function paint(){
+    const w=cv.clientWidth, h=cv.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle=GROUND; ctx.fillRect(0,0,w,h);
+    const {L,T}=worldLeftTop();
+    ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(grid, -L*scale, -T*scale, DIM*scale, DIM*scale);
+
+    // make live auctions visible even when zoomed way out: pulsing markers
+    pulse = (pulse+0.05)%(Math.PI*2);
+    const glow = 0.5+0.5*Math.sin(pulse);
+    const mk = Math.max(scale, 4);
+    for(const [idx,st] of auctions){
+      const x=idx%DIM, y=(idx/DIM)|0;
+      const sx=(x-L)*scale, sy=(y-T)*scale;
+      if(sx<-mk||sy<-mk||sx>w+mk||sy>h+mk) continue;
+      ctx.fillStyle = st===2 ? 'rgba(138,106,42,'+(0.5+0.4*glow)+')' : 'rgba(232,178,63,'+(0.45+0.5*glow)+')';
+      ctx.fillRect(sx-(mk-scale)/2, sy-(mk-scale)/2, mk, mk);
+    }
+    // grid lines when zoomed in
+    if(scale>=10){
+      ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=1;
+      const x0=Math.max(0,Math.floor(L)), x1=Math.min(DIM,Math.ceil(L+w/scale));
+      const y0=Math.max(0,Math.floor(T)), y1=Math.min(DIM,Math.ceil(T+h/scale));
+      ctx.beginPath();
+      for(let x=x0;x<=x1;x++){ const sx=(x-L)*scale; ctx.moveTo(sx,0); ctx.lineTo(sx,h); }
+      for(let y=y0;y<=y1;y++){ const sy=(y-T)*scale; ctx.moveTo(0,sy); ctx.lineTo(w,sy); }
+      ctx.stroke();
+    }
+    // hover + selection
+    if(hoverIdx>=0) outline(hoverIdx, 'rgba(255,255,255,.5)', 1.5);
+    if(selIdx>=0) outline(selIdx, '#e8b23f', 2);
+    requestAnimationFrame(paint);
+  }
+  function outline(idx,color,lw){ const {L,T}=worldLeftTop(); const x=idx%DIM,y=(idx/DIM)|0;
+    const s=Math.max(scale,6); ctx.strokeStyle=color; ctx.lineWidth=lw;
+    ctx.strokeRect((x-L)*scale-(s-scale)/2, (y-T)*scale-(s-scale)/2, s, s); }
+
+  function zoomAt(mx,my,factor){
+    const {L,T}=worldLeftTop(); const wx=L+mx/scale, wy=T+my/scale;
+    scale*=factor; clampView();
+    cx = wx - mx/scale + (cv.clientWidth/scale)/2;
+    cy = wy - my/scale + (cv.clientHeight/scale)/2;
+    clampView();
+  }
+
+  // ---- pointer: pan / pinch / tap ----
+  const pointers=new Map(); let panMoved=0, lastPinch=0;
+  cv.addEventListener('pointerdown', e=>{ cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); panMoved=0; });
+  cv.addEventListener('pointermove', e=>{
+    const rect=cv.getBoundingClientRect();
+    if(pointers.has(e.pointerId)){
+      const prev=pointers.get(e.pointerId); pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pointers.size===1){ const dx=e.clientX-prev.x, dy=e.clientY-prev.y; panMoved+=Math.abs(dx)+Math.abs(dy);
+        cx-=dx/scale; cy-=dy/scale; clampView(); }
+      else if(pointers.size===2){ const p=[...pointers.values()]; const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+        if(lastPinch){ const mid={x:(p[0].x+p[1].x)/2-rect.left,y:(p[0].y+p[1].y)/2-rect.top}; zoomAt(mid.x,mid.y,d/lastPinch); }
+        lastPinch=d; panMoved=99; }
+    } else {
+      hoverIdx = screenToPlot(e.clientX-rect.left, e.clientY-rect.top);
+      updateReadout();
+    }
+  });
+  function endPtr(e){ if(pointers.size<2) lastPinch=0;
+    if(pointers.has(e.pointerId)){
+      if(pointers.size===1 && panMoved<6){ const rect=cv.getBoundingClientRect(); const idx=screenToPlot(e.clientX-rect.left,e.clientY-rect.top); if(idx>=0) select(idx); }
+      pointers.delete(e.pointerId);
+    }
+  }
+  cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+  cv.addEventListener('pointerleave', ()=>{ hoverIdx=-1; });
+  cv.addEventListener('wheel', e=>{ e.preventDefault(); const rect=cv.getBoundingClientRect();
+    zoomAt(e.clientX-rect.left, e.clientY-rect.top, e.deltaY<0?1.15:1/1.15); }, {passive:false});
+
+  $('zin').onclick=()=>zoomAt(cv.clientWidth/2,cv.clientHeight/2,1.4);
+  $('zout').onclick=()=>zoomAt(cv.clientWidth/2,cv.clientHeight/2,1/1.4);
+  $('zfit').onclick=()=>{ scale=fitScale(); cx=DIM/2; cy=DIM/2; clampView(); };
+  $('jgo').onclick=()=>{ const x=Math.max(0,Math.min(999,+$('jx').value||0)), y=Math.max(0,Math.min(999,+$('jy').value||0));
+    cx=x+0.5; cy=y+0.5; scale=Math.max(scale,18); clampView(); select(y*DIM+x); };
+
+  function updateReadout(){
+    const idx = hoverIdx>=0?hoverIdx:selIdx;
+    if(idx<0){ $('readout').textContent='—'; return; }
+    $('readout').textContent = '('+(idx%DIM)+', '+((idx/DIM)|0)+')';
+  }
+
+  // ---- data ----
+  async function loadState(){
+    try{
+      const s = await (await fetch('/api/state')).json();
+      DIM=s.dim; TOTAL=s.total; PALETTE=s.palette; AUCTION_COLOR=s.auctionColor; CLAIMING_COLOR=s.claimingColor; FLOOR=s.floorCents;
+      serverSkew = s.now - Date.now();
+      if(grid.width!==DIM){ grid.width=grid.height=DIM; buf=null; }
+      owned = new Map(s.owned); auctions = new Map(s.auctions.map(a=>[a[0], a[4]]));
+      rebuildGrid();
+      $('stOwned').textContent = s.counts.owned.toLocaleString();
+      $('stAuctions').textContent = s.counts.auctions.toLocaleString();
+      $('stFree').textContent = s.counts.unclaimed.toLocaleString();
+      $('floor').textContent = (FLOOR/100).toFixed(0);
+      $('demo').hidden = !s.demo;
+      if(s.contact) $('contact').href='mailto:'+s.contact;
+    }catch(e){}
+  }
+  function serverNow(){ return Date.now()+serverSkew; }
+
+  async function loadMine(){
+    try{
+      const m = await (await fetch('/api/mine?token='+encodeURIComponent(token))).json();
+      const has = m.bidding.length+m.toClaim.length+m.owned.length>0;
+      $('mine').hidden = !has;
+      if(!has) return;
+      const parts=[];
+      m.toClaim.forEach(p=>parts.push('<span class="chip claim" data-i="'+p.index+'">⚑ Claim ('+(p.index%DIM)+','+((p.index/DIM)|0)+') · '+fmt(p.topCents)+'</span>'));
+      m.bidding.forEach(p=>parts.push('<span class="chip" data-i="'+p.index+'">'+(p.youAreTop?'◆':'○')+' ('+(p.index%DIM)+','+((p.index/DIM)|0)+') · '+fmt(p.topCents)+'</span>'));
+      m.owned.forEach(p=>parts.push('<span class="chip" data-i="'+p.index+'">✦ '+esc(p.name)+'</span>'));
+      $('mineBody').innerHTML = parts.join('') || '<span class="empty">—</span>';
+      $('mineBody').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ const i=+c.dataset.i; cx=(i%DIM)+0.5; cy=((i/DIM)|0)+0.5; scale=Math.max(scale,18); clampView(); select(i); });
+    }catch(e){}
+  }
+
+  // ---- selection + panel ----
+  let selData=null, panelFp='';
+  function fpOf(p){ if(!p) return ''; if(p.status==='owned') return 'owned:'+p.index; const a=p.auction;
+    return p.index+':'+p.status+':'+(a?a.topCents+':'+a.bidCount+':'+(a.endsAt||a.claimBy||0)+':'+a.youAreTop+':'+a.youWon:''); }
+  function panelHasFocus(){ const el=document.activeElement; return el && $('panel').contains(el) && /^(INPUT|TEXTAREA)$/.test(el.tagName); }
+  async function select(idx){
+    selIdx=idx; updateReadout();
+    try{ selData = await (await fetch('/api/plot?index='+idx+'&token='+encodeURIComponent(token))).json(); renderPanel(); }
+    catch(e){}
+  }
+  async function refreshSel(force){
+    if(selIdx<0) return;
+    try{
+      const d=await (await fetch('/api/plot?index='+selIdx+'&token='+encodeURIComponent(token))).json();
+      selData=d; // keep data fresh for the countdown ticker
+      // Don't rebuild the form if nothing meaningful changed, or if the visitor is mid-typing —
+      // re-rendering would wipe their bid amount or half-written memorial.
+      if(!force && (fpOf(d)===panelFp || panelHasFocus())) return;
+      renderPanel();
+    }catch(e){}
+  }
+
+  let selectedColor=0;
+  function renderPanel(){
+    const p=selData; if(!p){ return; }
+    const coord='('+p.x+', '+p.y+')';
+    let html='';
+    const head=(cls,label)=>'<div class="p-head"><span class="p-coord">Plot '+coord+'</span><span class="p-status '+cls+'">'+label+'</span></div>';
+
+    if(p.status==='unclaimed'){
+      html = head('st-unclaimed','Unclaimed')
+        + '<p class="p-sub">This ground is empty. Open an auction to claim it — the first bid starts a countdown, and the highest bid when time runs out wins the right to be laid here.</p>'
+        + '<label>Your name (bidder)</label><input type="text" id="fName" maxlength="32" placeholder="Shown on your bids" value="'+esc(myName)+'">'
+        + '<label>Opening bid</label><div class="amt-wrap"><span>$</span><input type="number" id="fAmt" min="'+(FLOOR/100)+'" step="1" value="'+(FLOOR/100)+'"></div>'
+        + '<button class="btn" id="bBid">Place opening bid</button><div class="err" id="err"></div>';
+    }
+    else if(p.status==='active'){
+      const a=p.auction;
+      const tag = a.youAreTop?'<span class="youtag win">You lead</span>':(a.youWon?'':'');
+      html = head('st-active','Auction live')
+        + '<div class="bid-now"><div class="amt">'+fmt(a.topCents)+tag+'</div><div class="by">high bid · '+esc(a.topName)+' · '+a.bidCount+' bid'+(a.bidCount===1?'':'s')+'</div></div>'
+        + '<p class="p-sub" style="margin-top:.6rem">Ends in <b class="count" id="cd">—</b></p>'
+        + '<label>Your name (bidder)</label><input type="text" id="fName" maxlength="32" placeholder="Shown on your bids" value="'+esc(myName)+'">'
+        + '<label>Your bid — at least '+fmt(a.minNextCents)+'</label><div class="amt-wrap"><span>$</span><input type="number" id="fAmt" min="'+(a.minNextCents/100)+'" step="1" value="'+(a.minNextCents/100)+'"></div>'
+        + '<button class="btn" id="bBid"'+(a.youAreTop?' disabled title="You already lead"':'')+'>'+(a.youAreTop?'You hold the top bid':'Place bid')+'</button><div class="err" id="err"></div>'
+        + historyHtml(a);
+    }
+    else if(p.status==='awaiting_claim' && p.auction.youWon){
+      const a=p.auction;
+      html = head('st-await','You won')
+        + '<p class="p-sub">You won this plot for <b style="color:var(--warm)">'+fmt(a.topCents)+'</b>. Complete the memorial and pay to be laid here forever. Claim closes in <b class="count" id="cd">—</b>.</p>'
+        + '<label>Name to be remembered</label><input type="text" id="mName" maxlength="40" placeholder="Their name">'
+        + '<div class="row"><div><label>Born</label><input type="text" id="mBirth" maxlength="24" placeholder="1947"></div><div><label>Died</label><input type="text" id="mDeath" maxlength="24" placeholder="2024"></div></div>'
+        + '<label>Epitaph (optional)</label><textarea id="mEpi" rows="3" maxlength="140" placeholder="A few words to keep"></textarea>'
+        + '<label>Headstone colour</label><div class="swatches" id="sw"></div>'
+        + '<button class="btn" id="bClaim">Claim &amp; pay '+fmt(a.topCents)+'</button><div class="err" id="err"></div>';
+    }
+    else if(p.status==='awaiting_claim'){
+      const a=p.auction;
+      html = head('st-await','Being claimed')
+        + '<p class="p-sub">Won by <b>'+esc(a.topName)+'</b> for '+fmt(a.topCents)+'. Awaiting their memorial. If they don’t complete it in time, the plot reopens to the next bidder.</p>'
+        + historyHtml(a);
+    }
+    else if(p.status==='owned'){
+      const m=p.memorial; const col=PALETTE[m.color]||PALETTE[0];
+      const dates = (m.birth||m.death) ? esc(m.birth||'')+' – '+esc(m.death||'') : '';
+      html = head('st-owned','At rest')
+        + '<div class="memorial"><div class="stone" style="background:'+col+'"></div>'
+        + '<div class="mname">'+esc(m.name)+'</div>'
+        + (dates?'<div class="mdates">'+dates+'</div>':'')
+        + (m.epitaph?'<div class="mepitaph">“'+esc(m.epitaph)+'”</div>':'')
+        + '<div class="msince">Laid here '+new Date(m.at).toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</div></div>';
+    }
+    $('panel').innerHTML = html;
+    panelFp = fpOf(p);
+    wirePanel(p);
+  }
+  function historyHtml(a){
+    if(!a.history||!a.history.length) return '';
+    return '<div class="history"><h4>Bidding history</h4><ul>'+
+      a.history.map(h=>'<li><span>'+esc(h.name)+'</span><span class="c">'+fmt(h.cents)+'</span></li>').join('')+'</ul></div>';
+  }
+  function wirePanel(p){
+    const err=$('err');
+    const nameEl=$('fName'); if(nameEl) nameEl.oninput=()=>{ myName=nameEl.value.trim(); localStorage.setItem('mp-name',myName); };
+    if($('bBid')) $('bBid').onclick=async()=>{
+      const amt=Math.round(parseFloat($('fAmt').value)*100);
+      const name=($('fName').value.trim())||'Anonymous'; myName=name; localStorage.setItem('mp-name',name);
+      $('bBid').disabled=true; err.textContent='';
+      const r=await api('/api/bid',{index:p.index,amountCents:amt,bidderToken:token,displayName:name});
+      if(!r.ok){ err.textContent=r.error; if($('bBid')) $('bBid').disabled=false; return; }
+      toast(r.opened?'Auction opened — you hold the first bid.':'Bid placed — you lead for now.');
+      await loadState(); await loadMine(); await refreshSel(true);
+    };
+    if($('sw')){ const sw=$('sw'); PALETTE.forEach((c,i)=>{ const b=document.createElement('button'); b.style.background=c; if(i===selectedColor)b.className='sel'; b.onclick=()=>{ selectedColor=i; sw.querySelectorAll('button').forEach(x=>x.className=''); b.className='sel'; }; sw.appendChild(b); }); }
+    if($('bClaim')) $('bClaim').onclick=async()=>{
+      const name=$('mName').value.trim();
+      if(!name){ err.textContent='Please give the name to be remembered.'; return; }
+      $('bClaim').disabled=true; err.textContent='';
+      localStorage.setItem('mp-claim-'+p.index, JSON.stringify({name,birth:$('mBirth').value,death:$('mDeath').value,epitaph:$('mEpi').value,color:selectedColor}));
+      const r=await api('/api/claim',{index:p.index,bidderToken:token,name,birth:$('mBirth').value,death:$('mDeath').value,epitaph:$('mEpi').value,color:selectedColor});
+      if(!r.ok){ err.textContent=r.error; if($('bClaim')) $('bClaim').disabled=false; return; }
+      window.location.href=r.url;
+    };
+  }
+  async function api(path,body){ try{ const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json(); return r.ok?Object.assign({ok:true},j):{ok:false,error:j.error||'Something went wrong.'}; }catch(e){ return {ok:false,error:'Network error — please retry.'}; } }
+
+  // countdown ticker
+  function fmtCountdown(ms){ if(ms<=0) return 'moments'; const s=Math.floor(ms/1000); const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),ss=s%60;
+    if(d>0) return d+'d '+h+'h'; if(h>0) return h+'h '+m+'m'; if(m>0) return m+'m '+ss+'s'; return ss+'s'; }
+  setInterval(()=>{ const cd=$('cd'); if(cd&&selData&&selData.auction){ const t=selData.auction.endsAt||selData.auction.claimBy; if(t) cd.textContent=fmtCountdown(t-serverNow()); } },1000);
+
+  // toast
+  let tt; function toast(html,ms){ const t=$('toast'); t.innerHTML=html; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),ms||6000); }
+
+  // return from checkout
+  const q=new URLSearchParams(location.search);
+  if(q.get('sid')){
+    fetch('/api/confirm?sid='+encodeURIComponent(q.get('sid'))).then(r=>r.json().then(j=>({ok:r.ok,j}))).then(async ({ok,j})=>{
+      if(ok&&j.ok){ localStorage.removeItem('mp-claim-'+j.index);
+        await loadState(); loadMine(); // load palette/state BEFORE rendering the memorial, or the stone colour falls back to grey
+        selIdx=j.index; selData=j.plot; renderPanel(); cx=(j.index%DIM)+0.5; cy=((j.index/DIM)|0)+0.5; scale=Math.max(scale,18); clampView();
+        const sh='https://twitter.com/intent/tweet?text='+encodeURIComponent('I claimed a plot in A Million Plots for '+(j.plot.memorial?j.plot.memorial.name:'')+'. '+location.origin);
+        toast('<b>The plot is yours, forever.</b> <a href="'+sh+'" target="_blank" rel="noopener">Share →</a>',12000);
+        history.replaceState(null,'','/'); }
+      else { toast(j.conflict? j.error : '<b>Confirming payment…</b> <a href="'+location.href+'">check again</a> — if charged, your plot is secured.',20000); }
+    }).catch(()=>toast('<b>Confirming payment…</b> <a href="'+location.href+'">check again</a>.',20000));
+  } else if(q.get('canceled')){
+    toast('Nothing was charged. Your winning plot still awaits your memorial.');
+    const i=+q.get('index'); if(i>=0){ setTimeout(()=>{ cx=(i%DIM)+0.5; cy=((i/DIM)|0)+0.5; scale=Math.max(scale,18); clampView(); select(i); },300); }
+    history.replaceState(null,'','/');
+  }
+
+  // ---- boot ----
+  window.addEventListener('resize', resize);
+  resize(); scale=fitScale(); clampView();
+  loadState().then(()=>{ loadMine(); });
+  requestAnimationFrame(paint);
+  setInterval(()=>{ loadState(); loadMine(); refreshSel(); }, 6000);
+})();
+</script>
+</body>
+</html>

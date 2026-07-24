@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Eternal Flame — a quiet place on the internet</title>
+<meta name="description" content="A wall of flames, each remembering someone. Light one for someone you carry with you.">
+<meta property="og:title" content="The Eternal Flame — a quiet place on the internet">
+<meta property="og:description" content="A wall of flames, each remembering someone. Light one for someone you carry with you.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%2305070d'/%3E%3Cellipse cx='50' cy='55' rx='16' ry='26' fill='%23e8b23f'/%3E%3Cellipse cx='50' cy='62' rx='9' ry='15' fill='%23f8ecc9'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night-1: #0a0e1a;
+    --night-2: #05070d;
+    --ink: #e8e2d5;
+    --ink-dim: #9a948a;
+    --ink-faint: #857f72;
+    --warm: #e8b23f;
+    --warm-soft: rgba(232,178,63,.55);
+    --serif: "EB Garamond", "Iowan Old Style", Georgia, serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background-color: var(--night-2); } /* overscroll must never flash white */
+  body {
+    background: radial-gradient(ellipse 120% 90% at 50% -10%, var(--night-1), var(--night-2) 75%) fixed;
+    color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+
+  .demo-banner {
+    text-align: center; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(232,178,63,.08); color: var(--warm); padding: .45rem 1rem;
+    border-bottom: 1px solid rgba(232,178,63,.15); font-family: system-ui, sans-serif;
+  }
+
+  header { text-align: center; padding: 5rem 1.5rem 3.5rem; }
+  h1 { font-weight: 400; font-size: clamp(1.9rem, 4.5vw, 2.9rem); letter-spacing: .3em; text-transform: uppercase; text-indent: .3em; }
+  .sub { margin-top: 1.3rem; font-style: italic; font-size: 1.15rem; color: var(--ink-dim); line-height: 1.7; max-width: 30rem; margin-inline: auto; }
+  .count { margin-top: 2rem; font-size: .8rem; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-faint); }
+
+  .cta-row { text-align: center; margin: 2.4rem 0 4rem; }
+  .btn-light {
+    font-family: var(--serif); font-size: 1.02rem; letter-spacing: .12em;
+    color: var(--ink); background: transparent; border: 1px solid rgba(232,178,63,.45); border-radius: 2px;
+    padding: .95rem 2.4rem; cursor: pointer; transition: all .25s ease;
+  }
+  .btn-light:hover { border-color: var(--warm); background: rgba(232,178,63,.06); box-shadow: 0 0 30px rgba(232,178,63,.12); }
+  .btn-light:disabled { opacity: .5; cursor: wait; }
+  .btn-light .price { color: var(--warm); }
+
+  /* ---- the wall ---- */
+  .wall {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 2.6rem 1rem;
+    max-width: 70rem; margin: 0 auto; padding: 1rem 2rem 7rem; align-items: end;
+  }
+  .candle { text-align: center; cursor: pointer; background: none; border: none; color: inherit; font-family: inherit; padding: 0; }
+  .candle:focus-visible { outline: 1px solid var(--warm); outline-offset: 8px; border-radius: 4px; }
+  .flame-zone { position: relative; height: 66px; display: flex; justify-content: center; align-items: flex-end; }
+  .glow {
+    position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 90px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,178,63,.28), rgba(232,178,63,.07) 45%, transparent 70%);
+    animation: glowPulse 3.4s ease-in-out infinite;
+  }
+  .flame {
+    position: relative; width: 14px; height: 34px;
+    background: linear-gradient(to top, #f8ecc9 4%, #f3c96a 32%, #e8952e 68%, rgba(197,94,24,.35));
+    border-radius: 50% 50% 48% 52% / 62% 62% 38% 38%;
+    transform-origin: 50% 100%;
+    animation: flicker 2.8s ease-in-out infinite;
+    filter: blur(.4px);
+  }
+  .flame::after { /* blue base of the flame */
+    content: ""; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%);
+    width: 8px; height: 9px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(120,160,255,.55), transparent 70%);
+  }
+  .wick { width: 2px; height: 7px; background: #2a2118; margin: 0 auto; border-radius: 1px; }
+  .wax {
+    width: 30px; height: 26px; margin: 0 auto;
+    background: linear-gradient(180deg, #2b2620, #1c1915);
+    border-radius: 5px 5px 3px 3px;
+    box-shadow: inset 0 2px 3px rgba(248,236,201,.12);
+  }
+  .candle .for {
+    margin-top: .9rem; font-size: .82rem; letter-spacing: .1em; color: var(--ink-dim);
+    line-height: 1.45; overflow-wrap: break-word;
+  }
+  .candle .ago { margin-top: .25rem; font-size: .74rem; letter-spacing: .08em; color: var(--ink-faint); font-style: italic; }
+  .candle:hover .for { color: var(--ink); }
+  .candle:hover .glow { animation-duration: 1.8s; }
+
+  /* stagger so the wall breathes instead of blinking in unison */
+  .candle:nth-child(3n) .flame { animation-delay: -.9s; animation-duration: 3.3s; }
+  .candle:nth-child(3n) .glow { animation-delay: -.9s; }
+  .candle:nth-child(5n) .flame { animation-delay: -1.7s; animation-duration: 2.4s; }
+  .candle:nth-child(5n) .glow { animation-delay: -1.7s; }
+  .candle:nth-child(7n) .flame { animation-delay: -2.2s; }
+  .candle:nth-child(4n) .flame-zone { height: 74px; }
+  .candle:nth-child(4n) .wax { height: 34px; }
+  .candle:nth-child(6n) .flame-zone { height: 60px; }
+  .candle:nth-child(6n) .wax { height: 20px; }
+
+  @keyframes flicker {
+    0%, 100% { transform: scaleY(1) scaleX(1) rotate(-1deg); }
+    26%      { transform: scaleY(1.08) scaleX(.94) rotate(1.4deg); }
+    48%      { transform: scaleY(.94) scaleX(1.05) rotate(-2deg); }
+    64%      { transform: scaleY(1.05) scaleX(.96) rotate(.8deg); }
+    82%      { transform: scaleY(.97) scaleX(1.02) rotate(-1.2deg); }
+  }
+  @keyframes glowPulse {
+    0%, 100% { opacity: .85; } 50% { opacity: 1.0; transform: translateX(-50%) scale(1.08); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flame, .glow { animation: none; }
+  }
+
+  .empty-wall { grid-column: 1 / -1; text-align: center; font-style: italic; color: var(--ink-dim); font-size: 1.1rem; line-height: 1.8; padding: 3rem 1rem; }
+
+  footer {
+    border-top: 1px solid rgba(232,226,213,.08); padding: 2.6rem 1.5rem; text-align: center;
+    font-size: .82rem; color: var(--ink-faint); line-height: 2; font-style: italic;
+  }
+  footer a { color: var(--ink-dim); }
+
+  /* ---- dialogs ---- */
+  dialog {
+    background: #0d1220; color: var(--ink); border: 1px solid rgba(232,226,213,.12); border-radius: 4px;
+    padding: 2.8rem; width: min(92vw, 30rem); box-shadow: 0 30px 90px rgba(0,0,0,.7);
+    font-family: var(--serif);
+    margin: auto; /* the * reset above kills the UA's centering — restore it */
+  }
+  .older-row { text-align: center; padding: 0 1.5rem 5rem; }
+  dialog::backdrop { background: rgba(3,4,8,.8); backdrop-filter: blur(4px); }
+
+  /* view a candle */
+  #viewModal { text-align: center; }
+  #viewModal .mini-flame-zone { height: 60px; display: flex; justify-content: center; align-items: flex-end; position: relative; margin-bottom: 1.2rem; }
+  #viewModal h3 { font-weight: 500; font-size: 1.6rem; letter-spacing: .04em; }
+  #viewModal .dedication { margin-top: 1.2rem; font-style: italic; font-size: 1.08rem; line-height: 1.8; color: var(--ink-dim); }
+  #viewModal .lit-by { margin-top: 1.6rem; font-size: .78rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); }
+  #viewModal .close-x { margin-top: 2rem; }
+
+  /* light a candle */
+  #lightModal h3 { font-weight: 500; font-size: 1.55rem; margin-bottom: .6rem; }
+  #lightModal .dsub { color: var(--ink-dim); font-size: .95rem; font-style: italic; margin-bottom: 1.4rem; line-height: 1.6; }
+  label { display: block; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-dim); margin: 1.3rem 0 .5rem; font-family: system-ui, sans-serif; }
+  input[type=text], textarea {
+    width: 100%; background: #090d17; color: var(--ink); border: 1px solid rgba(232,226,213,.14); border-radius: 3px;
+    padding: .85rem .95rem; font-family: var(--serif); font-size: 1.08rem; resize: none;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--warm-soft); }
+  .kinds { display: flex; gap: .6rem; }
+  .kinds button {
+    flex: 1; background: #090d17; border: 1px solid rgba(232,226,213,.14); color: var(--ink-dim); border-radius: 3px;
+    padding: .7rem 0; font-family: var(--serif); font-size: .98rem; cursor: pointer; transition: all .15s;
+  }
+  .kinds button.sel { border-color: var(--warm-soft); color: var(--ink); background: rgba(232,178,63,.06); }
+  .form-error { color: #b8756a; font-size: .85rem; margin-top: 1rem; min-height: 1.2em; font-style: italic; }
+  .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; }
+  .btn-ghost { background: none; border: none; color: var(--ink-dim); font-family: var(--serif); font-size: .95rem; letter-spacing: .06em; cursor: pointer; padding: .6rem; }
+  .btn-ghost:hover { color: var(--ink); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%) translateY(20px);
+    background: #0d1220; border: 1px solid rgba(232,178,63,.35); color: var(--ink);
+    padding: 1.1rem 1.8rem; border-radius: 4px; font-size: 1rem; font-style: italic; opacity: 0; pointer-events: none;
+    transition: all .4s ease; box-shadow: 0 12px 40px rgba(0,0,0,.6); max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 560px) {
+    header { padding: 3.4rem 1.2rem 2.4rem; }
+    .wall { gap: 2rem .6rem; padding: .5rem 1.2rem 5rem; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+    dialog { padding: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner" id="demoBanner" hidden>Demo mode — payments are simulated. No card required.</div>
+
+<header>
+  <h1>The Eternal Flame</h1>
+  <p class="sub">A quiet place on the internet.<br>Each flame remembers someone.</p>
+  <p class="count" id="count"></p>
+  <div class="cta-row">
+    <button class="btn-light" id="lightBtn">Light a flame &nbsp;·&nbsp; <span class="price" id="price">$9</span></button>
+  </div>
+</header>
+
+<main class="wall" id="wall"></main>
+<div class="older-row"><button class="btn-light" id="olderBtn" hidden>View older flames</button></div>
+
+<footer>
+  Flames burn for as long as this site exists. We intend that to be a very long time.<br>
+  <a href="#" id="termsLink">What lighting a flame means</a> ·
+  <a href="/legal.html">Terms &amp; refunds</a> ·
+  <a href="mailto:hello@example.com" id="contactLink">Write to the keepers</a>
+</footer>
+
+<dialog id="termsModal">
+  <h3 style="font-weight:500; font-size:1.4rem; margin-bottom:.8rem">What lighting a flame means</h3>
+  <p style="color:var(--ink-dim); font-style:italic; line-height:1.9">
+    Nine dollars lights one flame, permanently. It stays on this wall for as long as the
+    site exists, and every flame ever lit remains reachable — older flames are never
+    deleted to make room. If something here needs our attention, or if you regret a
+    dedication, write to the keepers and we will make it right; we would rather refund a
+    flame than argue beside one. Payments are handled by Stripe — we never see your card
+    number, and we store only the words you choose to leave.
+  </p>
+  <p style="margin-top:1rem"><a href="/legal.html" style="color:var(--warm)">Read the full terms, privacy &amp; refund policy →</a></p>
+  <button class="btn-ghost close-x" id="termsClose" style="margin-top:1.6rem">Return to the wall</button>
+</dialog>
+
+<dialog id="viewModal">
+  <div class="mini-flame-zone"><div class="glow"></div><div><div class="flame"></div><div class="wick"></div></div></div>
+  <h3 id="viewName"></h3>
+  <p class="dedication" id="viewDedication"></p>
+  <p class="lit-by" id="viewLitBy"></p>
+  <button class="btn-ghost close-x" id="viewClose">Return to the wall</button>
+</dialog>
+
+<dialog id="lightModal">
+  <h3>Light a flame</h3>
+  <p class="dsub">For someone you carry with you. It will burn here, among the others, for as long as this place stands.</p>
+  <form id="lightForm" method="dialog">
+    <label for="forName">In memory of</label>
+    <input type="text" id="forName" maxlength="40" placeholder="Their name, as you knew them" required>
+    <label>They were a</label>
+    <div class="kinds">
+      <button type="button" data-kind="person" class="sel">Person</button>
+      <button type="button" data-kind="pet">Companion</button>
+      <button type="button" data-kind="other">Something else</button>
+    </div>
+    <label for="dedication">A few words, if you would like them shown (optional)</label>
+    <textarea id="dedication" rows="3" maxlength="240" placeholder="What you would say if they could read it"></textarea>
+    <label for="litBy">Lit by (optional)</label>
+    <input type="text" id="litBy" maxlength="32" placeholder="Your name, or no name at all">
+    <p class="form-error" id="formError"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelBtn">Not now</button>
+      <button type="submit" class="btn-light" id="payBtn">Light it &nbsp;·&nbsp; <span class="price" id="payPrice">$9</span></button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const fmt = c => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: c % 100 ? 2 : 0 });
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function ago(ts) {
+    const d = Math.floor((Date.now() - ts) / 86400000);
+    if (d < 1) return 'lit today';
+    if (d === 1) return 'lit yesterday';
+    if (d < 30) return 'lit ' + d + ' days ago';
+    if (d < 365) return 'lit ' + Math.floor(d / 30) + (Math.floor(d / 30) === 1 ? ' month ago' : ' months ago');
+    return 'lit ' + Math.floor(d / 365) + (Math.floor(d / 365) === 1 ? ' year ago' : ' years ago');
+  }
+
+  let candles = [];   // newest page from /api/state
+  let older = [];     // older pages the visitor has asked for
+  let selectedKind = 'person';
+  let fingerprint = '';
+
+  function render(s) {
+    fingerprint = s.total + ':' + (s.candles[0] ? s.candles[0].id : '-');
+    $('demoBanner').hidden = !s.demo;
+    if (s.contact) {
+      $('contactLink').href = 'mailto:' + s.contact;
+    }
+    $('price').textContent = fmt(s.priceCents);
+    $('payPrice').textContent = fmt(s.priceCents);
+    $('count').textContent = s.total === 0 ? '' :
+      s.total === 1 ? 'One flame burns here' : s.total.toLocaleString('en-US') + ' flames burn here';
+    candles = s.candles;
+    $('olderBtn').hidden = !(s.hasMore && olderHasMore);
+    renderWall();
+  }
+  let olderHasMore = true;
+
+  function renderWall() {
+    const all = candles.concat(older);
+    const wall = $('wall');
+    wall.innerHTML = '';
+    if (!all.length) {
+      wall.innerHTML = '<div class="empty-wall">No flames burn here yet.<br>The first one waits for someone worth remembering.</div>';
+      return;
+    }
+    for (const c of all) {
+      const el = document.createElement('button');
+      el.className = 'candle';
+      el.setAttribute('aria-label', 'Flame in memory of ' + c.forName);
+      el.innerHTML =
+        '<div class="flame-zone"><div class="glow"></div><div><div class="flame"></div><div class="wick"></div></div></div>' +
+        '<div class="wax"></div>' +
+        '<div class="for">' + esc(c.forName) + '</div>' +
+        '<div class="ago">' + ago(c.at) + '</div>';
+      el.addEventListener('click', () => view(c));
+      wall.appendChild(el);
+    }
+  }
+
+  $('olderBtn').addEventListener('click', async () => {
+    const all = candles.concat(older);
+    const oldest = all[all.length - 1];
+    if (!oldest) return;
+    try {
+      const r = await (await fetch('/api/candles?before=' + encodeURIComponent(oldest.id))).json();
+      older = older.concat(r.candles);
+      olderHasMore = r.hasMore;
+      $('olderBtn').hidden = !r.hasMore;
+      renderWall();
+    } catch (e) { /* transient */ }
+  });
+
+  function view(c) {
+    $('viewName').textContent = c.forName;
+    $('viewDedication').textContent = c.dedication ? '“' + c.dedication + '”' : '';
+    $('viewLitBy').textContent = (c.litBy ? 'Lit by ' + c.litBy + ' · ' : '') + ago(c.at).replace('lit ', '');
+    $('viewModal').showModal();
+  }
+  $('viewClose').addEventListener('click', () => $('viewModal').close());
+
+  async function refresh() {
+    try {
+      const s = await (await fetch('/api/state')).json();
+      const fp = s.total + ':' + (s.candles[0] ? s.candles[0].id : '-');
+      if (fp === fingerprint) return; // wall unchanged — don't rebuild (keeps focus, flame rhythm)
+      render(s);
+    } catch (e) { /* transient */ }
+  }
+
+  $('lightBtn').addEventListener('click', () => { $('formError').textContent = ''; $('lightModal').showModal(); $('forName').focus(); });
+  $('cancelBtn').addEventListener('click', () => $('lightModal').close());
+  $('termsLink').addEventListener('click', e => { e.preventDefault(); $('termsModal').showModal(); });
+  $('termsClose').addEventListener('click', () => $('termsModal').close());
+
+  document.querySelectorAll('.kinds button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.kinds button').forEach(b => b.classList.remove('sel'));
+      btn.classList.add('sel');
+      selectedKind = btn.dataset.kind;
+    });
+  });
+
+  $('lightForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payBtn = $('payBtn');
+    payBtn.disabled = true;
+    $('formError').textContent = '';
+    try {
+      // A hesitant griever's words must never be lost to a canceled checkout.
+      localStorage.setItem('ef-draft', JSON.stringify({
+        forName: $('forName').value, dedication: $('dedication').value, litBy: $('litBy').value, kind: selectedKind,
+      }));
+      const r = await fetch('/api/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forName: $('forName').value, dedication: $('dedication').value, litBy: $('litBy').value, kind: selectedKind }),
+      });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body.error || 'Something went wrong.');
+      window.location.href = body.url;
+    } catch (err) {
+      $('formError').textContent = err.message;
+      payBtn.disabled = false;
+    }
+  });
+
+  let toastTimer;
+  function toast(html, ms) {
+    const t = $('toast');
+    t.innerHTML = html;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), ms || 7000);
+  }
+
+  const q = new URLSearchParams(location.search);
+  if (q.get('sid')) {
+    fetch('/api/confirm?sid=' + encodeURIComponent(q.get('sid')))
+      .then(r => r.json().then(b => ({ ok: r.ok, b })))
+      .then(({ ok, b }) => {
+        if (ok && b.ok) {
+          localStorage.removeItem('ef-draft');
+          render(b.state);
+          toast('The flame is lit. It burns among the others now.');
+          history.replaceState(null, '', '/');
+        } else {
+          toast('Your payment is still being confirmed. <a href="' + location.href +
+            '" style="color:var(--warm)">Check again</a> — if you were charged, the flame will be lit. It will not be lost.', 20000);
+        }
+      })
+      .catch(() => toast('Your payment is still being confirmed. <a href="' + location.href +
+        '" style="color:var(--warm)">Check again</a>.', 20000));
+  } else if (q.get('canceled')) {
+    const d = JSON.parse(localStorage.getItem('ef-draft') || 'null');
+    if (d && d.forName) {
+      $('forName').value = d.forName; $('dedication').value = d.dedication || ''; $('litBy').value = d.litBy || '';
+      selectedKind = d.kind || 'person';
+      document.querySelectorAll('.kinds button').forEach(b => b.classList.toggle('sel', b.dataset.kind === selectedKind));
+      $('lightModal').showModal();
+    }
+    toast('Nothing was charged. Your words are kept here, if and when you are ready.');
+    history.replaceState(null, '', '/');
+  }
+
+  refresh();
+  setInterval(refresh, 15000);
+})();
+</script>
+</body>
+</html>

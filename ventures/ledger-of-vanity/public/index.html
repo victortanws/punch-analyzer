@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ledger of Vanity — a ranked record of those who paid to be ranked</title>
+<meta name="description" content="A public list of names, images, and declarations ranked purely by amount paid. It confers nothing. That has never stopped anyone.">
+<meta property="og:title" content="The Ledger of Vanity">
+<meta property="og:description" content="A public list of names, images, and declarations ranked purely by amount paid. It confers nothing. That has never stopped anyone.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230b0b0f'/%3E%3Ctext x='50' y='72' font-size='58' text-anchor='middle' fill='%23c9a961' font-family='Georgia'%3E%E2%85%A0%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0f;
+    --bg-raise: #131318;
+    --bg-card: #101015;
+    --ink: #ece7db;
+    --ink-dim: #969083;
+    --ink-faint: #8b8577;
+    --gold: #c9a961;
+    --gold-bright: #ecd394;
+    --gold-mid: #bd9d5c;      /* brighter than gold-dark for AA on small ranks/monograms/$ */
+    --gold-dark: #8a7440;
+    --rule: #211f26;
+    --err: #e0857a;           /* brightened for AA on dark */
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Inter", -apple-system, "Segoe UI", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(201,169,97,.06), transparent 70%);
+  }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .demo-banner {
+    text-align: center; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(201,169,97,.09); color: var(--gold); padding: .45rem 1rem;
+    border-bottom: 1px solid rgba(201,169,97,.18);
+  }
+  .overtake-bar {
+    display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;
+    background: linear-gradient(180deg, #1a1206, #120d05); color: var(--ink);
+    border-bottom: 1px solid rgba(201,169,97,.4); padding: .7rem 1.2rem; font-size: .9rem; text-align: center;
+  }
+  .overtake-bar b { color: var(--gold-bright); }
+  .overtake-bar #reclaimBtn {
+    background: linear-gradient(160deg, var(--gold-bright), var(--gold)); color: #171207; border: none;
+    border-radius: 3px; padding: .45rem 1rem; font-size: .78rem; font-weight: 600; letter-spacing: .06em; cursor: pointer;
+  }
+  .overtake-bar #overtakeClose { background: none; border: none; color: var(--ink-faint); font-size: 1rem; cursor: pointer; padding: .2rem .4rem; }
+  .overtake-bar #overtakeClose:hover { color: var(--ink); }
+
+  .masthead { text-align: center; padding: 4rem 1.5rem 2.6rem; }
+  .masthead .ornament { color: var(--gold); font-size: .9rem; letter-spacing: .6em; margin-bottom: 1.6rem; }
+  h1 {
+    font-family: var(--serif); font-weight: 500; font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+    letter-spacing: .12em; text-transform: uppercase; line-height: 1.1;
+    background: linear-gradient(175deg, var(--gold-bright) 20%, var(--gold) 55%, var(--gold-dark));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .masthead .creed {
+    margin-top: 1.4rem; font-family: var(--serif); font-style: italic; font-size: 1.2rem;
+    color: var(--ink-dim); max-width: 36rem; margin-inline: auto; line-height: 1.6;
+  }
+  .stats {
+    display: flex; justify-content: center; gap: 3.5rem; margin-top: 2.4rem;
+    font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .stats b { display: block; font-family: var(--serif); font-size: 1.7rem; color: var(--gold); letter-spacing: .05em; margin-bottom: .3rem; }
+
+  .cta-row { text-align: center; margin: 2.4rem 0 .6rem; }
+  .btn-primary {
+    font-weight: 600; font-size: .9rem; letter-spacing: .14em; text-transform: uppercase;
+    color: #171207; background: linear-gradient(160deg, var(--gold-bright), var(--gold));
+    border: none; border-radius: 2px; padding: 1.05rem 2.8rem; cursor: pointer;
+    box-shadow: 0 0 0 1px rgba(236,211,148,.4), 0 8px 34px rgba(201,169,97,.2);
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(236,211,148,.6), 0 12px 40px rgba(201,169,97,.3); }
+  .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+  .cta-note { margin-top: .9rem; font-size: .75rem; color: var(--ink-faint); letter-spacing: .06em; }
+
+  main { max-width: 52rem; margin: 0 auto; padding: 1.6rem 1.5rem 6rem; }
+
+  /* ---- the throne (rank 1) ---- */
+  .throne { text-align: center; padding: 3rem 1rem 2.8rem; border-block: 1px solid var(--rule); margin-bottom: 2rem; }
+  .throne .laurel { color: var(--gold); letter-spacing: .5em; font-size: .8rem; margin-bottom: 1.4rem; }
+  .throne .title { font-size: .68rem; letter-spacing: .34em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 1.4rem; }
+  .throne .portrait {
+    width: 148px; height: 148px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 1.4rem;
+    border: 2px solid var(--gold); box-shadow: 0 0 0 6px rgba(201,169,97,.12), 0 14px 44px rgba(201,169,97,.18);
+  }
+  .throne .name {
+    font-family: var(--serif); font-weight: 600; font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.1;
+    background: linear-gradient(175deg, var(--gold-bright), var(--gold));
+    -webkit-background-clip: text; background-clip: text; color: transparent; overflow-wrap: anywhere;
+  }
+  .throne .sum { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); margin-top: .8rem; }
+  .throne .motto { font-family: var(--serif); font-style: italic; color: var(--ink-dim); margin-top: 1rem; font-size: 1.15rem; max-width: 30rem; margin-inline: auto; line-height: 1.6; overflow-wrap: anywhere; }
+  .throne .since { font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); margin-top: 1.2rem; }
+
+  /* ---- roll controls ---- */
+  .roll-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.1rem; flex-wrap: wrap; }
+  .roll-head h2 { font-family: var(--serif); font-weight: 500; font-size: 1.05rem; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-dim); }
+  .search-wrap { position: relative; }
+  .search-wrap input {
+    color: var(--ink); border: 1px solid var(--rule); border-radius: 3px;
+    padding: .55rem .8rem .55rem 2.2rem; font-family: var(--sans); font-size: .85rem; width: 16rem; max-width: 60vw;
+    background: var(--bg-raise) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b8577' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E") no-repeat .65rem center;
+  }
+  .search-wrap input:focus { border-color: var(--gold); }
+
+  /* ---- entry cards ---- */
+  .roll { list-style: none; }
+  .roll li {
+    display: grid; grid-template-columns: 3rem 3.2rem 1fr auto; align-items: center; gap: .9rem;
+    padding: .85rem .9rem; border: 1px solid var(--rule); border-radius: 6px; margin-bottom: .55rem;
+    background: var(--bg-card);
+  }
+  .roll .rank { font-family: var(--serif); font-size: 1.15rem; color: var(--gold-mid); text-align: center; }
+  .roll li.top10 .rank { color: var(--gold); }
+  .roll .pic, .roll .mono {
+    width: 3.2rem; height: 3.2rem; border-radius: 50%; object-fit: cover;
+    border: 1px solid rgba(201,169,97,.35);
+  }
+  .roll .mono {
+    display: flex; align-items: center; justify-content: center; font-family: var(--serif);
+    font-size: 1.3rem; color: var(--gold-mid); background: var(--bg-raise);
+  }
+  .roll .who { min-width: 0; }
+  .roll .who .name { font-family: var(--serif); font-size: 1.25rem; color: var(--ink); overflow-wrap: anywhere; line-height: 1.2; }
+  .roll .who .motto { font-family: var(--serif); font-style: italic; font-size: .95rem; color: var(--ink-faint); margin-top: .2rem; line-height: 1.45; overflow-wrap: anywhere; }
+  .roll .sum { font-family: var(--serif); font-size: 1.2rem; color: var(--ink-dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .roll .empty { display: block; text-align: center; font-family: var(--serif); font-style: italic; color: var(--ink-faint); padding: 3rem 0; font-size: 1.15rem; border: none; background: none; }
+
+  .pager { display: flex; justify-content: center; align-items: center; gap: 1.1rem; margin-top: 1.6rem; }
+  .pager button {
+    background: var(--bg-raise); border: 1px solid var(--rule); color: var(--ink-dim); border-radius: 3px;
+    padding: .5rem 1.1rem; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+  }
+  .pager button:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-bright); }
+  .pager button:disabled { opacity: .35; cursor: default; }
+  .pager .where { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  .ledger-note { text-align: center; font-size: .74rem; color: var(--ink-faint); margin-top: 2rem; letter-spacing: .06em; line-height: 1.9; }
+
+  footer { border-top: 1px solid var(--rule); padding: 2.4rem 1.5rem; text-align: center; font-size: .74rem; color: var(--ink-faint); line-height: 2; }
+  footer a { color: var(--ink-dim); }
+  .demo-credit { margin-top: 1rem; font-size: .66rem; color: var(--ink-faint); opacity: .8; }
+
+  /* ---- modal ---- */
+  dialog {
+    background: var(--bg-raise); color: var(--ink); border: 1px solid #2b2820; border-radius: 4px;
+    padding: 2.4rem; width: min(92vw, 33rem); box-shadow: 0 30px 80px rgba(0,0,0,.65); margin: auto;
+    max-height: 92vh; overflow-y: auto;   /* keep the Pay button reachable on short screens */
+  }
+  dialog::backdrop { background: rgba(5,5,8,.78); backdrop-filter: blur(3px); }
+  dialog h3 { font-family: var(--serif); font-weight: 500; font-size: 1.7rem; margin-bottom: .5rem; }
+  dialog .dsub { color: var(--ink-dim); font-size: .85rem; margin-bottom: 1.2rem; line-height: 1.6; }
+  label { display: block; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-dim); margin: 1.2rem 0 .5rem; }
+  input[type=text], input[type=search], textarea {
+    width: 100%; background: #0d0d11; color: var(--ink); border: 1px solid #2b2820; border-radius: 3px;
+    padding: .8rem .95rem; font-family: var(--serif); font-size: 1.1rem; resize: none;
+  }
+  input:focus, textarea:focus { border-color: var(--gold); }
+  .counter { text-align: right; font-size: .7rem; color: var(--ink-faint); margin-top: .3rem; }
+  .stack-hint { font-size: .74rem; color: var(--gold); background: rgba(201,169,97,.06); border: 1px solid rgba(201,169,97,.22); border-radius: 3px; padding: .55rem .7rem; margin-top: .6rem; line-height: 1.5; }
+  .modal-note { font-size: .8rem; color: var(--ink-dim); background: rgba(201,169,97,.05); border-left: 2px solid var(--gold); padding: .5rem .7rem; margin-bottom: 1rem; line-height: 1.5; }
+  .amounts { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin-top: .2rem; }
+  .amounts button {
+    background: #0d0d11; border: 1px solid #2b2820; color: var(--ink-dim); border-radius: 3px;
+    padding: .8rem 0; font-family: var(--serif); font-size: 1.1rem; cursor: pointer; transition: all .15s;
+  }
+  .amounts button.sel { border-color: var(--gold); color: var(--gold-bright); background: rgba(201,169,97,.07); }
+  .custom-wrap { position: relative; margin-top: .6rem; display: none; }
+  .custom-wrap.show { display: block; }
+  .custom-wrap span { position: absolute; left: .95rem; top: 50%; transform: translateY(-50%); font-family: var(--serif); font-size: 1.15rem; color: var(--gold-mid); }
+  .custom-wrap input { padding-left: 2rem; font-variant-numeric: tabular-nums; }
+
+  .upload-row { display: flex; align-items: center; gap: 1rem; }
+  .upload-preview { width: 3.6rem; height: 3.6rem; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,169,97,.4); display: none; }
+  .upload-preview.show { display: block; }
+  .btn-upload {
+    background: #0d0d11; border: 1px solid #2b2820; color: var(--ink-dim); border-radius: 3px;
+    padding: .7rem 1.1rem; font-size: .78rem; letter-spacing: .08em; cursor: pointer;
+  }
+  .btn-upload:hover { border-color: var(--gold); color: var(--gold-bright); }
+  .btn-clear-img { background: none; border: none; color: var(--ink-faint); font-size: .74rem; cursor: pointer; text-decoration: underline; display: none; }
+  .btn-clear-img.show { display: inline; }
+  .upload-note { font-size: .68rem; color: var(--ink-faint); margin-top: .5rem; line-height: 1.6; }
+
+  .form-error { color: var(--err); font-size: .82rem; margin-top: 1rem; min-height: 1.2em; }
+  /* Keep the primary CTA in view on short screens where the modal scrolls internally. */
+  .modal-footer { position: sticky; bottom: 0; background: var(--bg-raise); padding-top: .7rem; margin-top: 1.2rem; }
+  .modal-actions { display: flex; justify-content: space-between; align-items: center; }
+  .pay-note { text-align: right; font-size: .72rem; color: var(--ink-faint); margin-top: .6rem; }
+  .btn-ghost { background: none; border: none; color: var(--ink-dim); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; padding: .6rem; }
+  .btn-ghost:hover { color: var(--ink); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%) translateY(20px);
+    background: var(--bg-raise); border: 1px solid rgba(201,169,97,.4); color: var(--ink);
+    padding: 1rem 1.6rem; border-radius: 4px; font-size: .9rem; opacity: 0; pointer-events: none;
+    transition: all .35s ease; box-shadow: 0 12px 40px rgba(0,0,0,.5); max-width: 90vw; text-align: center; z-index: 40;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+  .toast b { color: var(--gold-bright); }
+  .toast a { color: var(--gold-bright); }
+
+  @media (max-width: 600px) {
+    .stats { gap: 1.6rem; }
+    .roll li { grid-template-columns: 2.1rem 2.6rem 1fr; }
+    .roll .pic, .roll .mono { width: 2.6rem; height: 2.6rem; }
+    .roll .sum { grid-column: 3; justify-self: end; margin-top: .2rem; }
+    .roll-head { flex-direction: column; align-items: stretch; }
+    .search-wrap input { width: 100%; max-width: none; }
+    dialog { padding: 1.7rem; }
+    .amounts { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner" id="demoBanner" hidden>Demo mode — payments are simulated. No card required.</div>
+
+<header class="masthead">
+  <div class="ornament">✦ ✦ ✦</div>
+  <h1>The Ledger<br>of Vanity</h1>
+  <p class="creed">A ranked record of those who paid to be ranked —<br>each free to show the world a face and a declaration.<br>It confers nothing. That has never stopped anyone.</p>
+  <div class="stats">
+    <div><b id="statTotal">$0</b>tribute collected</div>
+    <div><b id="statNames">0</b>names inscribed</div>
+  </div>
+  <div class="cta-row">
+    <button class="btn-primary" id="inscribeBtn">Inscribe your name</button>
+    <p class="cta-note">From $1. Tributes accumulate. Rank is forever contested.</p>
+  </div>
+</header>
+
+<main>
+  <section class="throne" id="throne" hidden>
+    <div class="laurel">❧ ❦ ❧</div>
+    <div class="title">Patron Supreme</div>
+    <img class="portrait" id="throneImg" alt="" hidden>
+    <div class="name" id="throneName"></div>
+    <div class="sum" id="throneSum"></div>
+    <div class="motto" id="throneMotto"></div>
+    <div class="since" id="throneSince"></div>
+  </section>
+
+  <div class="roll-head">
+    <h2>The Roll of Tributes</h2>
+    <div class="search-wrap"><input type="search" id="search" placeholder="Search names &amp; declarations" aria-label="Search the ledger"></div>
+  </div>
+  <ol class="roll" id="roll"></ol>
+  <div class="pager" id="pager" hidden>
+    <button id="pgPrev">← Prior</button>
+    <span class="where" id="pgWhere"></span>
+    <button id="pgNext">Next →</button>
+  </div>
+
+  <p class="ledger-note">Sums shown are lifetime tribute — same name, same soul; payments stack.<br>
+  Each entry displays the name, declaration, and image of its largest single tribute.<br>
+  The Ledger does not forget, discount, or refund.</p>
+</main>
+
+<footer>
+  The Ledger of Vanity sells exactly what it says: a higher number next to your name.<br>
+  All inscriptions are final. Impersonation and offensive content are removed without refund;
+  images and declarations are displayed at the Keeper’s sole discretion.<br>
+  <a href="#" id="termsLink">Terms of tribute</a> ·
+  <a href="/legal.html">Terms &amp; refunds</a> ·
+  <a href="mailto:hello@example.com" id="contactLink">Contact the Keeper</a>
+  <div class="demo-credit" id="demoCredit" hidden>Demo portrait: Cristiano Ronaldo by Кирилл Венедиктов / soccer.ru, CC BY-SA 3.0 — demo only.</div>
+</footer>
+
+<dialog id="modal" aria-labelledby="modalTitle">
+  <h3 id="modalTitle">State your name and your tribute.</h3>
+  <p class="dsub">Payments to the same name accumulate — spell it exactly as before to stack.
+  Your entry displays the name, declaration, and image of your largest single tribute.
+  <span id="throneHint"></span></p>
+  <form id="inscribeForm" method="dialog">
+    <p class="modal-note" id="modalNote" hidden></p>
+    <label for="name">Name to inscribe</label>
+    <input type="text" id="name" maxlength="32" placeholder="How history should spell it" required>
+    <p class="stack-hint" id="stackHint" hidden></p>
+
+    <label for="motto">Your declaration to the world (optional)</label>
+    <textarea id="motto" rows="2" maxlength="140" placeholder="Displayed beside your name, for everyone, indefinitely"></textarea>
+    <div class="counter"><span id="mottoCount">0</span> / 140</div>
+
+    <div id="uploadBlock">
+      <label>An image, if you wish (optional)</label>
+      <div class="upload-row">
+        <img class="upload-preview" id="imgPreview" alt="Your image">
+        <button type="button" class="btn-upload" id="imgBtn">Choose an image…</button>
+        <button type="button" class="btn-clear-img" id="imgClear">remove</button>
+        <input type="file" id="imgFile" accept="image/jpeg,image/png,image/webp" hidden>
+      </div>
+      <p class="upload-note">JPEG, PNG, or WebP — resized in your browser before upload. Upload only what you
+      have the right to display. The Keeper may remove or censor any image or declaration, without refund.</p>
+    </div>
+
+    <label>Tribute</label>
+    <div class="amounts">
+      <button type="button" data-cents="500">$5</button>
+      <button type="button" data-cents="2500" class="sel">$25</button>
+      <button type="button" data-cents="10000">$100</button>
+      <button type="button" data-cents="custom">Other</button>
+    </div>
+    <div class="custom-wrap" id="customWrap">
+      <span>$</span><input type="text" id="customAmount" inputmode="decimal" placeholder="Any amount, $1 or more">
+    </div>
+
+    <p class="form-error" id="formError"></p>
+    <div class="modal-footer">
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelBtn">Withdraw</button>
+        <button type="submit" class="btn-primary" id="payBtn">Pay <span id="payAmt">$25</span></button>
+      </div>
+      <p class="pay-note">Tributes are final and non-refundable.</p>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="termsModal" aria-labelledby="termsTitle">
+  <h3 id="termsTitle">Terms of tribute</h3>
+  <p class="dsub" style="margin-bottom:0; line-height:1.9">
+    A tribute buys exactly one thing: a larger number beside a name on this page, with the
+    declaration and image you attach. Tributes to the same name accumulate; the spelling,
+    declaration, and image shown are those of the largest single tribute, so a small payment
+    cannot alter a large inscription. All tributes are final. Names, declarations, or images
+    that impersonate, defame, infringe, or offend are removed or censored without refund, at
+    the Keeper’s sole discretion — you must hold the rights to anything you upload. Payments
+    are processed by Stripe — we never see or store your card number.
+    Impersonation reports and questions: <a href="mailto:hello@example.com" id="termsContact" style="color:var(--gold)">write to the Keeper</a>.
+    <br><br><a href="/legal.html" style="color:var(--gold)">Read the full terms, privacy &amp; refund policy →</a>
+  </p>
+  <div class="modal-actions" style="justify-content:flex-end">
+    <button type="button" class="btn-ghost" id="termsClose">Close</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

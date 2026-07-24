@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Last Word — Terms, Privacy &amp; Refunds</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg:#0b0a09; --ink:#f3ede2; --dim:#9d938a; --faint:#8a8178; --accent:#c9a961; --rule:#1d1a17; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font:16px/1.75 -apple-system,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:44rem; margin:0 auto; padding:3.5rem 1.5rem 6rem; }
+  a { color:var(--accent); }
+  .back { display:inline-block; margin-bottom:2.5rem; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; text-decoration:none; color:var(--dim); }
+  .back:hover { color:var(--accent); }
+  h1 { font-family:"Playfair Display",Georgia,serif; font-weight:600; font-size:2rem; margin-bottom:.4rem; }
+  .updated { color:var(--faint); font-size:.85rem; margin-bottom:2.5rem; }
+  h2 { font-size:1.15rem; margin:2.6rem 0 .8rem; color:var(--accent); }
+  p, li { color:#d9d1c4; margin-bottom:1rem; }
+  ul { padding-left:1.3rem; }
+  .note { border:1px solid var(--rule); border-radius:6px; padding:1rem 1.2rem; color:var(--dim); font-size:.9rem; margin:2rem 0; }
+  .placeholder { color:var(--accent); }
+  footer { border-top:1px solid var(--rule); margin-top:3rem; padding-top:1.5rem; color:var(--faint); font-size:.85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← Back to The Last Word</a>
+  <h1>Terms, Privacy &amp; Refunds</h1>
+  <p class="updated">Last updated: <span id="today"></span></p>
+
+  <div class="note">
+    Operator: <span class="placeholder">[Your legal name or business entity]</span>, governed by the laws of
+    <span class="placeholder">[your state/country]</span>. This document is a plain-language starting point —
+    have it reviewed by a lawyer and replace the bracketed placeholders before you take live payments.
+  </div>
+
+  <h2>1. What you are buying</h2>
+  <p>The Last Word sells one thing: the temporary display of a sentence you write, shown prominently on this
+  website until another person pays the then-current price to replace it. The price rises with each replacement.
+  <strong>You are buying display, not ownership</strong> — of the page, the domain, or any exclusive right.</p>
+
+  <h2>2. Being replaced is the product, not a fault</h2>
+  <p>Your sentence may be replaced minutes or months after you post it. That is the entire premise of the service,
+  so replacement is never a defect and is not grounds for a refund. Replaced sentences remain publicly visible in
+  “The Fallen,” with your chosen attribution, indefinitely.</p>
+
+  <h2>3. Payments</h2>
+  <p>Payments are processed by <a href="https://stripe.com" target="_blank" rel="noopener">Stripe</a>. We never
+  receive, see, or store your full card number. You authorize the charge shown at checkout for the single
+  replacement you are purchasing at that moment.</p>
+
+  <h2>4. Refunds</h2>
+  <p>Because the thing you buy is delivered the instant your payment clears, <strong>all sales are final.</strong>
+  The one exception: if a genuine technical fault means your paid sentence never displayed at all, contact us and
+  we will either post it or refund you. We aim to resolve such cases within 5 business days.</p>
+
+  <h2>5. What you may not submit</h2>
+  <ul>
+    <li>Hate speech, slurs, or content that harasses, threatens, or defames a person.</li>
+    <li>Other people’s private information (doxxing).</li>
+    <li>Impersonation, advertising, links, or spam.</li>
+    <li>Anything unlawful, or content you do not have the right to post.</li>
+  </ul>
+  <p>We may remove any submission that violates these rules <strong>without a refund</strong>, and may refuse or
+  reverse any transaction at our discretion.</p>
+
+  <h2>6. Licence to display your text</h2>
+  <p>By submitting a sentence you grant us a non-exclusive, worldwide, royalty-free licence to store, display, and
+  reproduce that text (with your attribution) on this site and in related promotional material. You keep whatever
+  rights you had in the words themselves.</p>
+
+  <h2>7. Privacy</h2>
+  <p>We collect only what the service needs: the sentence and attribution you submit, and the minimal transaction
+  reference Stripe returns. Card details are handled entirely by Stripe under
+  <a href="https://stripe.com/privacy" target="_blank" rel="noopener">their privacy policy</a>. We keep basic server
+  logs (including IP addresses) for security and abuse prevention. We do not sell your data. To request removal of
+  your submission or associated data, email us.</p>
+
+  <h2>8. No warranty; limitation of liability</h2>
+  <p>The service is provided “as is,” without warranty of any kind. To the fullest extent permitted by law, our
+  total liability for any claim relating to the service is limited to the amount you paid us in the preceding
+  30 days.</p>
+
+  <h2>9. Changes</h2>
+  <p>We may update these terms; the “last updated” date reflects the current version. Continued use after a change
+  means you accept it.</p>
+
+  <h2>10. Contact</h2>
+  <p>Questions, removal requests, or refund claims: <a id="contact" href="mailto:hello@example.com">hello@example.com</a>.</p>
+
+  <footer>The Last Word · these terms are a template pending your review.</footer>
+</div>
+<script>
+  document.getElementById('today').textContent = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  fetch('/api/state').then(r=>r.json()).then(s=>{ if(s.contact){ const a=document.getElementById('contact'); a.href='mailto:'+s.contact; a.textContent=s.contact; } }).catch(()=>{});
+</script>
+</body>
+</html>

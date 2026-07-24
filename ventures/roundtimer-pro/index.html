@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>RoundTimer Pro — Boxing &amp; HIIT Round Timer</title>
+<meta name="description" content="A gym-wall round timer for boxing, MMA, and HIIT training with bell cues and session history.">
+<style>
+  :root{
+    --bg-idle: #0b0e14;
+    --bg-prep: #7a4b00;
+    --bg-work: #0d5f2e;
+    --bg-rest: #7a1220;
+    --panel: rgba(255,255,255,0.06);
+    --panel-strong: rgba(255,255,255,0.10);
+    --border: rgba(255,255,255,0.14);
+    --text: #f4f6f8;
+    --text-dim: rgba(244,246,248,0.62);
+    --accent: #ffb400;
+    --accent-2: #38e3a3;
+    --danger: #ff5468;
+    --radius: 16px;
+    --shadow: 0 8px 30px rgba(0,0,0,0.35);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    overflow-x:hidden;
+  }
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-idle);
+    color: var(--text);
+    transition: background-color 0.5s ease;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  body.phase-prep{ background: var(--bg-prep); }
+  body.phase-work{ background: var(--bg-work); }
+  body.phase-rest{ background: var(--bg-rest); }
+
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible{
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+  a{color:var(--accent);}
+
+  /* ---------- App shell / view switching ---------- */
+  .view{ display:none; width:100%; flex:1; }
+  .view.active{ display:flex; flex-direction:column; }
+
+  /* ---------- Top nav ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 14px 20px;
+    gap: 12px;
+    flex-wrap:wrap;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+    font-size:1.15rem;
+    letter-spacing:0.02em;
+  }
+  .brand .dot{
+    width:12px;height:12px;border-radius:50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .nav-tabs{
+    display:flex;
+    gap:8px;
+    background: var(--panel);
+    padding:4px;
+    border-radius: 999px;
+    border:1px solid var(--border);
+  }
+  .nav-tabs button{
+    background:transparent;
+    border:none;
+    color: var(--text-dim);
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:0.9rem;
+    font-weight:600;
+    transition: all 0.2s ease;
+  }
+  .nav-tabs button.active{
+    background: var(--accent);
+    color:#1a1200;
+  }
+  .nav-tabs button:hover:not(.active){
+    color: var(--text);
+    background: var(--panel-strong);
+  }
+
+  /* ---------- Setup view ---------- */
+  #view-setup{
+    padding: 8px 20px calc(40px + env(safe-area-inset-bottom, 0px));
+    max-width: 980px;
+    margin: 0 auto;
+    width:100%;
+  }
+  .section-title{
+    font-size:1rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color: var(--text-dim);
+    margin: 28px 0 12px;
+    font-weight:700;
+  }
+  .section-title:first-of-type{ margin-top:8px; }
+
+  .preset-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap:12px;
+  }
+  .preset-card{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    padding:16px;
+    text-align:left;
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    position:relative;
+  }
+  .preset-card:hover{
+    background: var(--panel-strong);
+    transform: translateY(-2px);
+    border-color: rgba(255,180,0,0.5);
+  }
+  .preset-card.selected{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent) inset;
+  }
+  .preset-card .p-name{
+    font-weight:800;
+    font-size:1.05rem;
+  }
+  .preset-card .p-detail{
+    color: var(--text-dim);
+    font-size:0.85rem;
+  }
+  .preset-card .p-delete{
+    position:absolute;
+    top:8px;
+    right:8px;
+    background: rgba(255,84,104,0.15);
+    border:1px solid rgba(255,84,104,0.4);
+    color: var(--danger);
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    font-size:0.85rem;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .preset-card .p-delete:hover{
+    background: var(--danger);
+    color:#fff;
+  }
+
+  .config-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap:14px;
+  }
+  .field{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .field label{
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color: var(--text-dim);
+    font-weight:700;
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .stepper button{
+    background: var(--panel-strong);
+    border:1px solid var(--border);
+    color: var(--text);
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    font-size:1.1rem;
+    font-weight:700;
+    flex-shrink:0;
+  }
+  .stepper button:hover{ background: var(--accent); color:#1a1200; border-color:var(--accent); }
+  .stepper input{
+    flex:1;
+    min-width:0;
+    background: transparent;
+    border:none;
+    color:var(--text);
+    font-size:1.3rem;
+    font-weight:800;
+    text-align:center;
+    font-variant-numeric: tabular-nums;
+  }
+  .stepper input::-webkit-outer-spin-button,
+  .stepper input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .stepper input[type=number]{ -moz-appearance:textfield; }
+
+  .save-preset-row{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .save-preset-row input{
+    flex:1;
+    min-width:180px;
+    background: var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:12px 14px;
+    border-radius:12px;
+    font-size:0.95rem;
+  }
+  .btn{
+    border:none;
+    border-radius:12px;
+    padding:12px 20px;
+    font-weight:700;
+    font-size:0.95rem;
+    transition: transform 0.12s ease, filter 0.12s ease;
+  }
+  .btn:hover{ filter:brightness(1.1); }
+  .btn:active{ transform: scale(0.97); }
+  .btn-accent{ background: var(--accent); color:#1a1200; }
+  .btn-ghost{ background: var(--panel-strong); color: var(--text); border:1px solid var(--border); }
+  .btn-danger{ background: rgba(255,84,104,0.15); color: var(--danger); border:1px solid rgba(255,84,104,0.4); }
+
+  .start-bar{
+    position: sticky;
+    bottom:0;
+    margin-top:32px;
+    padding: 16px 0 calc(4px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, var(--bg-idle) 60%, transparent);
+  }
+  .start-btn{
+    width:100%;
+    padding: 20px;
+    font-size:1.3rem;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent-2), #1fbf85);
+    color:#052414;
+    font-weight:900;
+    letter-spacing:0.02em;
+    box-shadow: var(--shadow);
+    border:none;
+  }
+  .start-btn:hover{ filter:brightness(1.08); }
+  .start-btn:active{ transform: scale(0.985); }
+
+  .empty-state{
+    color: var(--text-dim);
+    font-size:0.9rem;
+    padding: 18px;
+    text-align:center;
+    border:1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+
+  /* ---------- Timer view ---------- */
+  #view-timer{
+    align-items:center;
+    justify-content:space-between;
+    padding: 18px 20px 24px;
+    min-height:100vh;
+    text-align:center;
+  }
+  .timer-top{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap: 10px;
+    flex-wrap:wrap;
+  }
+  .exit-btn{
+    background: rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.25);
+    color:#fff;
+    padding:10px 16px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:0.85rem;
+  }
+  .exit-btn:hover{ background: rgba(255,255,255,0.22); }
+
+  .round-indicator{
+    font-size:1.1rem;
+    font-weight:800;
+    background: rgba(0,0,0,0.25);
+    padding:8px 18px;
+    border-radius:999px;
+    letter-spacing:0.03em;
+  }
+
+  .phase-label{
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    font-weight:900;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    margin-top: 6px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  .clock{
+    font-size: clamp(5rem, 26vw, 15rem);
+    font-weight:900;
+    line-height:1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    text-shadow: 0 4px 30px rgba(0,0,0,0.35);
+    user-select:none;
+    margin: 4px 0;
+}
+
+  .preset-name-tag{
+    color: rgba(255,255,255,0.75);
+    font-size:1rem;
+    font-weight:600;
+    margin-bottom: 6px;
+  }
+
+  .timer-controls{
+    display:flex;
+    gap:14px;
+    width:100%;
+    max-width:640px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .timer-controls button{
+    flex:1;
+    min-width:120px;
+    padding: 22px 14px;
+    font-size:1.15rem;
+    font-weight:800;
+    border-radius: 18px;
+    border:none;
+    box-shadow: var(--shadow);
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    background: rgba(255,255,255,0.14);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.25);
+    transition: transform 0.12s ease, filter 0.12s ease, background 0.12s ease;
+  }
+  .timer-controls button:hover{ background: rgba(255,255,255,0.24); }
+  .timer-controls button:active{ transform: scale(0.96); }
+  .timer-controls .primary{
+    background: rgba(255,255,255,0.95);
+    color:#111;
+  }
+  .timer-controls .primary:hover{ background:#fff; }
+
+  .wake-note{
+    font-size:0.75rem;
+    color: rgba(255,255,255,0.55);
+    margin-top:2px;
+    min-height: 1em;
+  }
+
+  /* ---------- History view ---------- */
+  #view-history{
+    padding: 8px 20px 40px;
+    max-width: 820px;
+    margin:0 auto;
+    width:100%;
+  }
+  .history-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin: 12px 0 18px;
+  }
+  .history-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .history-item{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: 14px;
+    padding:14px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .history-item .h-left{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .history-item .h-preset{
+    font-weight:700;
+  }
+  .history-item .h-date{
+    color:var(--text-dim);
+    font-size:0.8rem;
+  }
+  .history-item .h-rounds{
+    font-weight:800;
+    color: var(--accent-2);
+    font-size:1.05rem;
+    white-space:nowrap;
+  }
+  .history-item .h-status{
+    font-size:0.75rem;
+    padding:3px 10px;
+    border-radius:999px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .h-status.complete{ background: rgba(56,227,163,0.15); color: var(--accent-2); }
+  .h-status.partial{ background: rgba(255,180,0,0.15); color: var(--accent); }
+
+  footer.credit{
+    text-align:center;
+    color: var(--text-dim);
+    font-size:0.75rem;
+    padding: 10px 20px 22px;
+  }
+
+  @media (max-width: 480px){
+    .timer-controls button{ padding:18px 10px; font-size:1rem; min-width:100px; }
+    .clock{ font-size: clamp(4rem, 22vw, 8rem); }
+  }
+
+  .visually-hidden{
+    position:absolute; width:1px;height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;
+  }
+
+  .flash-pulse{
+    animation: pulseFlash 0.4s ease;
+  }
+  @keyframes pulseFlash{
+    0%{ filter: brightness(1.6); }
+    100%{ filter: brightness(1); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SETUP VIEW ============ -->
+<div id="view-setup" class="view active">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> RoundTimer Pro</div>
+    <div class="nav-tabs" role="tablist">
+      <button type="button" class="active" data-tab="setup" role="tab" aria-selected="true">Setup</button>
+      <button type="button" data-tab="history" role="tab" aria-selected="false">History</button>
+    </div>
+  </div>
+
+  <div class="section-title">Presets</div>
+  <div class="preset-grid" id="presetGrid"></div>
+
+  <div class="save-preset-row">
+    <input type="text" id="presetNameInput" placeholder="Name this setup to save it as a custom preset…" maxlength="40">
+    <button class="btn btn-accent" id="savePresetBtn" type="button">Save Preset</button>
+  </div>
+
+  <div class="section-title">Configuration</div>
+  <div class="config-grid">
+    <div class="field">
+      <label for="numRounds">Rounds</label>
+      <div class="stepper">
+        <button type="button" data-step="-1" data-target="numRounds" aria-label="Decrease rounds">−</button>
+        <input type="number" id="numRounds" value="12" min="1" max="99" inputmode="numeric">
+        <button type="button" data-step="1" data-target="numRounds" aria-label="Increase rounds">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="workMin">Work (min)</label>
+      <div class="stepper">
+        <button type="button" data-step="-1" data-target="workMin" aria-label="Decrease work minutes">−</button>
+        <input type="number" id="workMin" value="3" min="0" max="59" inputmode="numeric">
+        <button type="button" data-step="1" data-target="workMin" aria-label="Increase work minutes">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="workSec">Work (sec)</label>
+      <div class="stepper">
+        <button type="button" data-step="-5" data-target="workSec" aria-label="Decrease work seconds">−</button>
+        <input type="number" id="workSec" value="0" min="0" max="59" inputmode="numeric">
+        <button type="button" data-step="5" data-target="workSec" aria-label="Increase work seconds">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="restMin">Rest (min)</label>
+      <div class="stepper">
+        <button type="button" data-step="-1" data-target="restMin" aria-label="Decrease rest minutes">−</button>
+        <input type="number" id="restMin" value="1" min="0" max="59" inputmode="numeric">
+        <button type="button" data-step="1" data-target="restMin" aria-label="Increase rest minutes">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="restSec">Rest (sec)</label>
+      <div class="stepper">
+        <button type="button" data-step="-5" data-target="restSec" aria-label="Decrease rest seconds">−</button>
+        <input type="number" id="restSec" value="0" min="0" max="59" inputmode="numeric">
+        <button type="button" data-step="5" data-target="restSec" aria-label="Increase rest seconds">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="prepSec">Prep countdown (sec)</label>
+      <div class="stepper">
+        <button type="button" data-step="-5" data-target="prepSec" aria-label="Decrease prep seconds">−</button>
+        <input type="number" id="prepSec" value="10" min="0" max="120" inputmode="numeric">
+        <button type="button" data-step="5" data-target="prepSec" aria-label="Increase prep seconds">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="start-bar">
+    <button class="start-btn" id="startSessionBtn" type="button">Start Session</button>
+  </div>
+
+  <footer class="credit">RoundTimer Pro — works fully offline. Your data never leaves this device.</footer>
+</div>
+
+<!-- ============ TIMER VIEW ============ -->
+<div id="view-timer" class="view">
+  <div class="timer-top">
+    <button class="exit-btn" id="exitBtn" type="button">✕ Exit</button>
+    <div class="round-indicator" id="roundIndicator">Round 1 / 12</div>
+    <div style="width:78px" aria-hidden="true"></div>
+  </div>
+
+  <div>
+    <div class="preset-name-tag" id="presetNameTag">Boxing</div>
+    <div class="phase-label" id="phaseLabel">Get Ready</div>
+    <div class="clock" id="clockDisplay">0:10</div>
+  </div>
+
+  <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:10px;">
+    <div class="timer-controls">
+      <button class="primary" id="startPauseBtn" type="button">Start</button>
+      <button id="resetBtn" type="button">Reset</button>
+    </div>
+    <div class="wake-note" id="wakeNote"></div>
+  </div>
+</div>
+
+<!-- ============ HISTORY VIEW ============ -->
+<div id="view-history" class="view">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> RoundTimer Pro</div>
+    <div class="nav-tabs" role="tablist">
+      <button type="button" data-tab="setup" role="tab" aria-selected="false">Setup</button>
+      <button type="button" class="active" data-tab="history" role="tab" aria-selected="true">History</button>
+    </div>
+  </div>
+
+  <div class="history-header">
+    <div class="section-title" style="margin:0;">Session Log</div>
+    <button class="btn btn-danger" id="clearHistoryBtn" type="button">Clear History</button>
+  </div>
+
+  <div id="historyList" class="history-list"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     Constants & storage keys
+     ========================================================= */
+  var LS_CUSTOM_PRESETS = "rtp_customPresets_v1";
+  var LS_HISTORY = "rtp_history_v1";
+  var LS_LAST_CONFIG = "rtp_lastConfig_v1";
+
+  var BUILTIN_PRESETS = [
+    { id: "builtin_boxing",   name: "Boxing",    rounds: 12, work: 180, rest: 60, prep: 10, builtin: true },
+    { id: "builtin_mma",      name: "MMA",       rounds: 5,  work: 300, rest: 60, prep: 10, builtin: true },
+    { id: "builtin_tabata",   name: "Tabata",    rounds: 8,  work: 20,  rest: 10, prep: 10, builtin: true },
+    { id: "builtin_heavybag", name: "Heavy Bag", rounds: 6,  work: 180, rest: 30, prep: 10, builtin: true }
+  ];
+
+  /* =========================================================
+     Storage helpers (defensive against quota / privacy errors)
+     ========================================================= */
+  function lsGet(key, fallback){
+    try{
+      var raw = localStorage.getItem(key);
+      if(raw === null) return fallback;
+      return JSON.parse(raw);
+    }catch(e){
+      console.warn("RoundTimer Pro: failed to read", key, e);
+      return fallback;
+    }
+  }
+  function lsSet(key, value){
+    try{
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    }catch(e){
+      console.warn("RoundTimer Pro: failed to persist", key, e);
+      return false;
+    }
+  }
+
+  // Like lsGet, but guarantees an array comes back even if the stored value
+  // is valid JSON of the wrong shape (null, an object, a string, a number,
+  // or an array containing garbage entries) — a corrupted/tampered
+  // localStorage value should degrade to "no saved data", not crash render.
+  function lsGetArray(key, itemIsValid){
+    var value = lsGet(key, []);
+    if(!Array.isArray(value)) return [];
+    if(typeof itemIsValid === "function"){
+      return value.filter(function(item){
+        return item !== null && typeof item === "object" && itemIsValid(item);
+      });
+    }
+    return value.filter(function(item){ return item !== null && typeof item === "object"; });
+  }
+
+  /* =========================================================
+     State
+     ========================================================= */
+  var state = {
+    selectedPresetId: "builtin_boxing",
+    customPresets: lsGetArray(LS_CUSTOM_PRESETS, function(p){
+      return typeof p.id === "string" && typeof p.name === "string" &&
+        typeof p.rounds === "number" && typeof p.work === "number" && typeof p.rest === "number";
+    }),
+    history: lsGetArray(LS_HISTORY, function(h){
+      return typeof h.date === "string" && typeof h.preset === "string";
+    }),
+
+    // Session runtime state
+    phase: "idle",       // idle | prep | work | rest | done
+    currentRound: 1,
+    totalRounds: 12,
+    secondsLeft: 10,
+    running: false,
+    timerHandle: null,
+    tickAnchor: 0,        // performance.now() timestamp when the current phase ends
+    pausedMsLeft: 0,      // ms remaining in the current phase, saved while paused
+    activePresetName: "Boxing",
+    activeConfig: null,
+    beepedTenSecThisRound: false,
+    wakeLock: null
+  };
+
+  /* =========================================================
+     DOM refs
+     ========================================================= */
+  var $ = function(id){ return document.getElementById(id); };
+
+  var presetGrid = $("presetGrid");
+  var presetNameInput = $("presetNameInput");
+  var savePresetBtn = $("savePresetBtn");
+
+  var numRounds = $("numRounds");
+  var workMin = $("workMin");
+  var workSec = $("workSec");
+  var restMin = $("restMin");
+  var restSec = $("restSec");
+  var prepSec = $("prepSec");
+
+  var startSessionBtn = $("startSessionBtn");
+
+  var exitBtn = $("exitBtn");
+  var roundIndicator = $("roundIndicator");
+  var presetNameTag = $("presetNameTag");
+  var phaseLabel = $("phaseLabel");
+  var clockDisplay = $("clockDisplay");
+  var startPauseBtn = $("startPauseBtn");
+  var resetBtn = $("resetBtn");
+  var wakeNote = $("wakeNote");
+
+  var historyList = $("historyList");
+  var clearHistoryBtn = $("clearHistoryBtn");
+
+  var viewSetup = $("view-setup");
+  var viewTimer = $("view-timer");
+  var viewHistory = $("view-history");
+
+  /* =========================================================
+     Tab navigation
+     ========================================================= */
+  function switchTab(tab){
+    document.querySelectorAll(".nav-tabs button").forEach(function(btn){
+      var isActive = btn.getAttribute("data-tab") === tab;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+    viewSetup.classList.toggle("active", tab === "setup");
+    viewHistory.classList.toggle("active", tab === "history");
+    if(tab === "history") renderHistory();
+  }
+  document.querySelectorAll(".nav-tabs button").forEach(function(btn){
+    btn.addEventListener("click", function(){ switchTab(btn.getAttribute("data-tab")); });
+  });
+
+  /* =========================================================
+     Preset rendering & selection
+     ========================================================= */
+  function getAllPresets(){
+    return BUILTIN_PRESETS.concat(state.customPresets);
+  }
+
+  function fmtMinSec(totalSeconds){
+    var m = Math.floor(totalSeconds / 60);
+    var s = totalSeconds % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  function renderPresetGrid(){
+    var all = getAllPresets();
+    presetGrid.innerHTML = "";
+    all.forEach(function(p){
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "preset-card" + (p.id === state.selectedPresetId ? " selected" : "");
+      card.setAttribute("data-preset-id", p.id);
+
+      var name = document.createElement("div");
+      name.className = "p-name";
+      name.textContent = p.name;
+
+      var detail = document.createElement("div");
+      detail.className = "p-detail";
+      detail.textContent = p.rounds + " × " + fmtMinSec(p.work) + " work / " + fmtMinSec(p.rest) + " rest";
+
+      card.appendChild(name);
+      card.appendChild(detail);
+
+      if(!p.builtin){
+        var del = document.createElement("span");
+        del.className = "p-delete";
+        del.textContent = "×";
+        del.title = "Delete preset";
+        del.setAttribute("role", "button");
+        del.setAttribute("aria-label", "Delete preset " + p.name);
+        del.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          deleteCustomPreset(p.id);
+        });
+        card.appendChild(del);
+      }
+
+      card.addEventListener("click", function(){
+        selectPreset(p.id);
+      });
+
+      presetGrid.appendChild(card);
+    });
+  }
+
+  function selectPreset(id){
+    var all = getAllPresets();
+    var p = all.find(function(x){ return x.id === id; });
+    if(!p) return;
+    state.selectedPresetId = id;
+    numRounds.value = p.rounds;
+    workMin.value = Math.floor(p.work / 60);
+    workSec.value = p.work % 60;
+    restMin.value = Math.floor(p.rest / 60);
+    restSec.value = p.rest % 60;
+    prepSec.value = p.prep;
+    renderPresetGrid();
+    persistLastConfig();
+  }
+
+  function deleteCustomPreset(id){
+    state.customPresets = state.customPresets.filter(function(p){ return p.id !== id; });
+    lsSet(LS_CUSTOM_PRESETS, state.customPresets);
+    if(state.selectedPresetId === id){
+      state.selectedPresetId = "builtin_boxing";
+      selectPreset("builtin_boxing");
+    }
+    renderPresetGrid();
+  }
+
+  savePresetBtn.addEventListener("click", function(){
+    var name = presetNameInput.value.trim();
+    if(!name){
+      presetNameInput.focus();
+      presetNameInput.placeholder = "Enter a name first…";
+      return;
+    }
+    var cfg = readConfigForm();
+    var id = "custom_" + Date.now();
+    var newPreset = {
+      id: id,
+      name: name,
+      rounds: cfg.rounds,
+      work: cfg.work,
+      rest: cfg.rest,
+      prep: cfg.prep,
+      builtin: false
+    };
+    state.customPresets.push(newPreset);
+    lsSet(LS_CUSTOM_PRESETS, state.customPresets);
+    state.selectedPresetId = id;
+    presetNameInput.value = "";
+    renderPresetGrid();
+  });
+
+  /* =========================================================
+     Config form helpers
+     ========================================================= */
+  function clampInt(val, min, max, fallback){
+    var n = parseInt(val, 10);
+    if(isNaN(n)) n = fallback;
+    if(n < min) n = min;
+    if(n > max) n = max;
+    return n;
+  }
+
+  function readConfigForm(){
+    var rounds = clampInt(numRounds.value, 1, 99, 12);
+    var wMin = clampInt(workMin.value, 0, 59, 3);
+    var wSec = clampInt(workSec.value, 0, 59, 0);
+    var rMin = clampInt(restMin.value, 0, 59, 1);
+    var rSec = clampInt(restSec.value, 0, 59, 0);
+    var prep = clampInt(prepSec.value, 0, 120, 10);
+    var work = wMin * 60 + wSec;
+    var rest = rMin * 60 + rSec;
+    if(work < 1) work = 1;
+    return { rounds: rounds, work: work, rest: rest, prep: prep };
+  }
+
+  function persistLastConfig(){
+    var cfg = readConfigForm();
+    cfg.selectedPresetId = state.selectedPresetId;
+    lsSet(LS_LAST_CONFIG, cfg);
+  }
+
+  [numRounds, workMin, workSec, restMin, restSec, prepSec].forEach(function(input){
+    input.addEventListener("input", function(){
+      // any manual edit deselects the preset highlight (config no longer matches exactly)
+      var all = getAllPresets();
+      var cfg = readConfigForm();
+      var match = all.find(function(p){
+        return p.rounds === cfg.rounds && p.work === cfg.work && p.rest === cfg.rest && p.prep === cfg.prep;
+      });
+      state.selectedPresetId = match ? match.id : null;
+      renderPresetGrid();
+      persistLastConfig();
+    });
+    input.addEventListener("blur", function(){
+      // re-clamp on blur for a clean display
+      var cfg = readConfigForm();
+      numRounds.value = cfg.rounds;
+      workMin.value = Math.floor(cfg.work / 60);
+      workSec.value = cfg.work % 60;
+      restMin.value = Math.floor(cfg.rest / 60);
+      restSec.value = cfg.rest % 60;
+      prepSec.value = cfg.prep;
+    });
+  });
+
+  document.querySelectorAll(".stepper button[data-step]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var step = parseInt(btn.getAttribute("data-step"), 10);
+      var targetId = btn.getAttribute("data-target");
+      var input = $(targetId);
+      var min = parseInt(input.min, 10);
+      var max = parseInt(input.max, 10);
+      var cur = clampInt(input.value, min, max, min);
+      var next = cur + step;
+      if(next < min) next = min;
+      if(next > max) next = max;
+      input.value = next;
+      input.dispatchEvent(new Event("input"));
+    });
+  });
+
+  /* =========================================================
+     Web Audio synthesis
+     ========================================================= */
+  var audioCtx = null;
+
+  function ensureAudioContext(){
+    if(!audioCtx){
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx){ return null; }
+      audioCtx = new Ctx();
+    }
+    if(audioCtx.state === "suspended"){
+      audioCtx.resume().catch(function(){});
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, startTime, duration, opts){
+    opts = opts || {};
+    var ctx = audioCtx;
+    if(!ctx) return;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = opts.type || "sine";
+    osc.frequency.setValueAtTime(freq, startTime);
+    var peak = opts.peak != null ? opts.peak : 0.35;
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(peak, startTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+  }
+
+  // Bell-like tone: fundamental + a couple of inharmonic partials, longer decay.
+  function playBell(atTime){
+    var ctx = audioCtx;
+    if(!ctx) return;
+    var t = atTime != null ? atTime : ctx.currentTime;
+    playTone(880, t, 0.9, { type: "sine", peak: 0.4 });
+    playTone(1320, t, 0.7, { type: "sine", peak: 0.18 });
+    playTone(1760, t + 0.01, 0.5, { type: "sine", peak: 0.10 });
+  }
+
+  function playRoundStartBell(){
+    var ctx = ensureAudioContext();
+    if(!ctx) return;
+    var t = ctx.currentTime;
+    playBell(t);
+    playBell(t + 0.28);
+  }
+
+  function playRoundEndBell(){
+    var ctx = ensureAudioContext();
+    if(!ctx) return;
+    var t = ctx.currentTime;
+    playBell(t);
+    playBell(t + 0.28);
+    playBell(t + 0.56);
+  }
+
+  function playTenSecondWarning(){
+    var ctx = ensureAudioContext();
+    if(!ctx) return;
+    var t = ctx.currentTime;
+    playTone(1200, t, 0.14, { type: "square", peak: 0.22 });
+    playTone(1200, t + 0.2, 0.14, { type: "square", peak: 0.22 });
+  }
+
+  /* =========================================================
+     Wake Lock
+     ========================================================= */
+  function setWakeNote(msg){ wakeNote.textContent = msg || ""; }
+
+  async function requestWakeLock(){
+    if(!("wakeLock" in navigator)){
+      setWakeNote("Screen wake lock not supported on this device — adjust your screen timeout manually.");
+      return;
+    }
+    try{
+      state.wakeLock = await navigator.wakeLock.request("screen");
+      setWakeNote("Screen will stay awake during your session.");
+      state.wakeLock.addEventListener("release", function(){
+        setWakeNote("Screen lock released.");
+      });
+    }catch(e){
+      console.warn("Wake lock request failed:", e);
+      setWakeNote("Couldn't keep screen awake automatically — adjust your device settings if it sleeps.");
+    }
+  }
+
+  function releaseWakeLock(){
+    if(state.wakeLock){
+      try{ state.wakeLock.release(); }catch(e){ /* ignore */ }
+      state.wakeLock = null;
+    }
+  }
+
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible" && state.running && "wakeLock" in navigator){
+      requestWakeLock();
+    }
+  });
+
+  /* =========================================================
+     Timer engine
+     ========================================================= */
+  function phaseBgClass(phase){
+    return { prep: "phase-prep", work: "phase-work", rest: "phase-rest" }[phase] || "";
+  }
+
+  function applyPhaseVisuals(phase){
+    document.body.classList.remove("phase-prep", "phase-work", "phase-rest");
+    var cls = phaseBgClass(phase);
+    if(cls) document.body.classList.add(cls);
+
+    var labelMap = { prep: "Get Ready", work: "WORK", rest: "REST", done: "Complete" };
+    phaseLabel.textContent = labelMap[phase] || "";
+  }
+
+  function updateClockDisplay(){
+    clockDisplay.textContent = fmtMinSec(state.secondsLeft);
+  }
+
+  function updateRoundIndicator(){
+    roundIndicator.textContent = "Round " + Math.min(state.currentRound, state.totalRounds) + " / " + state.totalRounds;
+  }
+
+  function flashClock(){
+    clockDisplay.classList.remove("flash-pulse");
+    void clockDisplay.offsetWidth; // reflow to restart animation
+    clockDisplay.classList.add("flash-pulse");
+  }
+
+  function goToTimerView(){
+    document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+    viewTimer.classList.add("active");
+  }
+
+  function goToSetupView(){
+    document.body.classList.remove("phase-prep", "phase-work", "phase-rest");
+    document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+    viewSetup.classList.add("active");
+    document.querySelectorAll(".nav-tabs button").forEach(function(btn){
+      var isActive = btn.getAttribute("data-tab") === "setup";
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+  }
+
+  function clearTick(){
+    if(state.timerHandle){
+      clearInterval(state.timerHandle);
+      state.timerHandle = null;
+    }
+  }
+
+  function startSession(){
+    var cfg = readConfigForm();
+    var all = getAllPresets();
+    var selected = all.find(function(p){ return p.id === state.selectedPresetId; });
+    state.activePresetName = selected ? selected.name : "Custom";
+    state.activeConfig = cfg;
+    state.totalRounds = cfg.rounds;
+    state.currentRound = 1;
+    state.beepedTenSecThisRound = false;
+
+    presetNameTag.textContent = state.activePresetName;
+    updateRoundIndicator();
+
+    ensureAudioContext();
+
+    if(cfg.prep > 0){
+      state.phase = "prep";
+      state.secondsLeft = cfg.prep;
+      armPhaseTimer(cfg.prep);
+    } else {
+      state.phase = "work";
+      state.secondsLeft = cfg.work;
+      armPhaseTimer(cfg.work);
+      playRoundStartBell();
+    }
+
+    applyPhaseVisuals(state.phase);
+    updateClockDisplay();
+
+    goToTimerView();
+    requestWakeLock();
+
+    state.running = true;
+    startPauseBtn.textContent = "Pause";
+    runTick();
+  }
+
+  // Timestamp-based phase timing: tickAnchor holds the absolute time (performance.now())
+  // at which the *current* phase is due to end. Every tick recomputes secondsLeft from
+  // the delta to that anchor instead of naively decrementing a counter, so drift from
+  // setInterval imprecision and delays from backgrounded/throttled tabs self-correct
+  // instead of accumulating.
+  function armPhaseTimer(durationSeconds){
+    state.tickAnchor = performance.now() + durationSeconds * 1000;
+  }
+
+  function runTick(){
+    clearTick();
+    // Poll frequently so the displayed second changes promptly and phase transitions
+    // fire close to on-time; the actual elapsed-time math (not the poll interval) is
+    // what determines correctness.
+    state.timerHandle = setInterval(function(){
+      if(!state.running) return;
+      tick();
+    }, 200);
+  }
+
+  function tick(){
+    var msLeft = state.tickAnchor - performance.now();
+    var secondsLeftNow = Math.ceil(msLeft / 1000);
+
+    // 10-second warning beep during work phase
+    if(state.phase === "work" && secondsLeftNow === 10 && !state.beepedTenSecThisRound){
+      playTenSecondWarning();
+      state.beepedTenSecThisRound = true;
+    }
+
+    if(msLeft <= 0){
+      // Catch up through any phases fully elapsed while backgrounded/throttled,
+      // bounded so a corrupt config can't spin forever.
+      var guard = 0;
+      while(msLeft <= 0 && guard < 10000){
+        advancePhase();
+        if(state.phase === "done" || !state.running) return;
+        msLeft = state.tickAnchor - performance.now();
+        guard++;
+      }
+      state.secondsLeft = Math.max(0, Math.ceil(msLeft / 1000));
+      updateClockDisplay();
+      return;
+    }
+
+    state.secondsLeft = secondsLeftNow;
+    updateClockDisplay();
+  }
+
+  function advancePhase(){
+    var cfg = state.activeConfig;
+
+    if(state.phase === "prep"){
+      state.phase = "work";
+      state.beepedTenSecThisRound = false;
+      armPhaseTimer(cfg.work);
+      playRoundStartBell();
+      applyPhaseVisuals(state.phase);
+      flashClock();
+      updateClockDisplay();
+      return;
+    }
+
+    if(state.phase === "work"){
+      playRoundEndBell();
+      if(state.currentRound >= state.totalRounds){
+        finishSession(true);
+        return;
+      }
+      if(cfg.rest > 0){
+        state.phase = "rest";
+        armPhaseTimer(cfg.rest);
+        applyPhaseVisuals(state.phase);
+        flashClock();
+        updateClockDisplay();
+      } else {
+        // no rest: go straight to next round's work
+        state.currentRound++;
+        state.beepedTenSecThisRound = false;
+        state.phase = "work";
+        armPhaseTimer(cfg.work);
+        updateRoundIndicator();
+        playRoundStartBell();
+        applyPhaseVisuals(state.phase);
+        flashClock();
+        updateClockDisplay();
+      }
+      return;
+    }
+
+    if(state.phase === "rest"){
+      state.currentRound++;
+      state.beepedTenSecThisRound = false;
+      updateRoundIndicator();
+      state.phase = "work";
+      armPhaseTimer(cfg.work);
+      playRoundStartBell();
+      applyPhaseVisuals(state.phase);
+      flashClock();
+      updateClockDisplay();
+      return;
+    }
+  }
+
+  function finishSession(completed){
+    clearTick();
+    state.running = false;
+    state.phase = "done";
+    applyPhaseVisuals("done");
+    clockDisplay.textContent = completed ? "Done!" : fmtMinSec(Math.max(state.secondsLeft, 0));
+    startPauseBtn.textContent = "Start";
+    releaseWakeLock();
+
+    recordHistoryEntry(completed);
+
+    setTimeout(function(){
+      if(state.phase === "done"){
+        goToSetupView();
+      }
+    }, 2500);
+  }
+
+  function recordHistoryEntry(completed){
+    var entry = {
+      date: new Date().toISOString(),
+      preset: state.activePresetName,
+      roundsCompleted: completed ? state.totalRounds : Math.max(0, state.currentRound - 1),
+      totalRounds: state.totalRounds,
+      completed: !!completed
+    };
+    state.history.unshift(entry);
+    if(state.history.length > 200) state.history.length = 200;
+    lsSet(LS_HISTORY, state.history);
+  }
+
+  function togglePauseResume(){
+    if(state.phase === "idle" || state.phase === "done"){
+      startSession();
+      return;
+    }
+    if(state.running){
+      // Freeze the remaining time so the paused duration isn't silently
+      // counted against the phase once resumed.
+      state.pausedMsLeft = Math.max(0, state.tickAnchor - performance.now());
+      state.running = false;
+      startPauseBtn.textContent = "Resume";
+    } else {
+      ensureAudioContext();
+      // Re-anchor from now using the frozen remaining time so resuming
+      // neither loses nor duplicates elapsed time.
+      state.tickAnchor = performance.now() + state.pausedMsLeft;
+      state.running = true;
+      startPauseBtn.textContent = "Pause";
+    }
+  }
+
+  function resetSession(){
+    clearTick();
+    state.running = false;
+    state.phase = "idle";
+    releaseWakeLock();
+    goToSetupView();
+    startPauseBtn.textContent = "Start";
+  }
+
+  startPauseBtn.addEventListener("click", togglePauseResume);
+  resetBtn.addEventListener("click", function(){
+    // Log a partial session if the user had started (round > 1) before resetting mid-way.
+    if(state.activeConfig && state.currentRound > 0 && (state.currentRound > 1)){
+      recordHistoryEntry(false);
+    }
+    resetSession();
+  });
+  exitBtn.addEventListener("click", function(){
+    if(state.activeConfig && state.currentRound > 1){
+      recordHistoryEntry(false);
+    }
+    clearTick();
+    state.running = false;
+    state.phase = "idle";
+    releaseWakeLock();
+    goToSetupView();
+    startPauseBtn.textContent = "Start";
+  });
+
+  startSessionBtn.addEventListener("click", startSession);
+
+  document.addEventListener("keydown", function(e){
+    if(e.code === "Space"){
+      // Avoid hijacking space when typing in inputs
+      var tag = document.activeElement && document.activeElement.tagName;
+      if(tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      if(viewTimer.classList.contains("active")){
+        togglePauseResume();
+      } else {
+        startSession();
+      }
+    }
+  });
+
+  /* =========================================================
+     History view rendering
+     ========================================================= */
+  function renderHistory(){
+    state.history = lsGetArray(LS_HISTORY, function(h){
+      return typeof h.date === "string" && typeof h.preset === "string";
+    });
+    historyList.innerHTML = "";
+    if(state.history.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "No sessions logged yet. Complete a round timer session and it will show up here.";
+      historyList.appendChild(empty);
+      return;
+    }
+    state.history.forEach(function(entry){
+      var item = document.createElement("div");
+      item.className = "history-item";
+
+      var left = document.createElement("div");
+      left.className = "h-left";
+      var preset = document.createElement("div");
+      preset.className = "h-preset";
+      preset.textContent = entry.preset;
+      var date = document.createElement("div");
+      date.className = "h-date";
+      var d = new Date(entry.date);
+      date.textContent = isNaN(d.getTime()) ? entry.date : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+      left.appendChild(preset);
+      left.appendChild(date);
+
+      var right = document.createElement("div");
+      right.style.display = "flex";
+      right.style.alignItems = "center";
+      right.style.gap = "10px";
+
+      var status = document.createElement("span");
+      status.className = "h-status " + (entry.completed ? "complete" : "partial");
+      status.textContent = entry.completed ? "Complete" : "Partial";
+
+      var rounds = document.createElement("div");
+      rounds.className = "h-rounds";
+      rounds.textContent = entry.roundsCompleted + " / " + entry.totalRounds + " rounds";
+
+      right.appendChild(status);
+      right.appendChild(rounds);
+
+      item.appendChild(left);
+      item.appendChild(right);
+      historyList.appendChild(item);
+    });
+  }
+
+  clearHistoryBtn.addEventListener("click", function(){
+    if(state.history.length === 0) return;
+    var ok = window.confirm("Clear all session history? This cannot be undone.");
+    if(!ok) return;
+    state.history = [];
+    lsSet(LS_HISTORY, []);
+    renderHistory();
+  });
+
+  /* =========================================================
+     Init
+     ========================================================= */
+  function init(){
+    renderPresetGrid();
+
+    var last = lsGet(LS_LAST_CONFIG, null);
+    if(last){
+      numRounds.value = clampInt(last.rounds, 1, 99, 12);
+      workMin.value = Math.floor(clampInt(last.work, 1, 3599, 180) / 60);
+      workSec.value = clampInt(last.work, 1, 3599, 180) % 60;
+      restMin.value = Math.floor(clampInt(last.rest, 0, 3599, 60) / 60);
+      restSec.value = clampInt(last.rest, 0, 3599, 60) % 60;
+      prepSec.value = clampInt(last.prep, 0, 120, 10);
+      state.selectedPresetId = last.selectedPresetId || null;
+      renderPresetGrid();
+    } else {
+      selectPreset("builtin_boxing");
+    }
+
+    updateRoundIndicator();
+    updateClockDisplay();
+    renderHistory();
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>

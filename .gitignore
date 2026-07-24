@@ -1,0 +1,16 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# node
+node_modules/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.log
+
+# venture runtime data is ignored per-app via ventures/*/data/.gitignore

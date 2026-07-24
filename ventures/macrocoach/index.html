@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacroCoach — White-Label Macro Calculator</title>
+<style>
+  :root{
+    --accent:#e0432b;
+    --accent-dim: rgba(224,67,43,0.12);
+    --ink:#14171c;
+    --ink-soft:#4b5563;
+    --paper:#ffffff;
+    --bg:#f4f5f7;
+    --line:#e3e5ea;
+    --line-soft:#edeef1;
+    --card:#ffffff;
+    --shadow: 0 1px 2px rgba(20,23,28,0.04), 0 8px 24px rgba(20,23,28,0.06);
+    --shadow-lg: 0 12px 40px rgba(20,23,28,0.12);
+    --radius: 14px;
+    --radius-sm: 9px;
+    --protein:#e0432b;
+    --carb:#2b8ce0;
+    --fat:#e0ab2b;
+    --success:#1f9d55;
+    --danger:#d0342c;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:var(--font);
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+  img{ max-width:100%; display:block; }
+  button{ font-family:inherit; }
+  input,select,button,textarea{ font-family:inherit; font-size:14px; }
+
+  a{ color:var(--accent); }
+
+  ::selection{ background:var(--accent-dim); }
+
+  /* ---------- Layout shell ---------- */
+  .app-shell{
+    max-width:1180px;
+    margin:0 auto;
+    padding:20px 20px 80px;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:14px 20px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    margin-bottom:20px;
+    position:sticky;
+    top:12px;
+    z-index:50;
+  }
+  .brand-block{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+  .brand-logo{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    object-fit:cover;
+    background:var(--accent-dim);
+    border:1px solid var(--line);
+    flex:none;
+  }
+  .brand-logo-fallback{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    background:var(--accent);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:16px;
+    flex:none;
+    letter-spacing:0.5px;
+  }
+  .brand-text{ min-width:0; }
+  .brand-name{
+    font-weight:700;
+    font-size:17px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .brand-sub{
+    font-size:12px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .topbar-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex:none;
+  }
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    background:var(--line-soft);
+    padding:4px;
+    border-radius:10px;
+  }
+  .tab-btn{
+    border:none;
+    background:transparent;
+    padding:8px 14px;
+    border-radius:8px;
+    font-weight:600;
+    font-size:13px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:background .15s, color .15s;
+    white-space:nowrap;
+  }
+  .tab-btn.active{
+    background:var(--paper);
+    color:var(--ink);
+    box-shadow:0 1px 3px rgba(0,0,0,0.08);
+  }
+  .tab-btn:hover:not(.active){ color:var(--ink); }
+  .tab-btn:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    padding:9px 14px;
+    border-radius:9px;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:all .15s;
+    white-space:nowrap;
+  }
+  .btn:hover{ background:var(--line-soft); border-color:#c9cbd1; }
+  .btn-primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  .btn-primary:hover{ filter:brightness(1.08); background:var(--accent); }
+  .btn-ghost{ border-color:transparent; background:transparent; }
+  .btn-ghost:hover{ background:var(--line-soft); }
+  .btn-sm{ padding:6px 10px; font-size:12px; border-radius:7px; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  /* ---------- Cards / Grid ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width: 900px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px;
+  }
+  .card + .card{ margin-top:20px; }
+  .card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .card-title{
+    font-size:15px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .card-title .num{
+    width:22px; height:22px;
+    background:var(--accent);
+    color:#fff;
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    flex:none;
+  }
+  .card-desc{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:-8px;
+    margin-bottom:16px;
+  }
+
+  /* ---------- Form ---------- */
+  .field-row{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+  }
+  .field-row.cols-3{ grid-template-columns:repeat(3,1fr); }
+  @media (max-width:520px){
+    .field-row, .field-row.cols-3{ grid-template-columns:1fr; }
+  }
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input[type=text],
+  .field input[type=number],
+  .field input[type=email],
+  .field select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .field input:focus, .field select:focus{
+    border-color:var(--accent);
+  }
+  .field .hint{ font-size:11.5px; color:#8b8f98; margin-top:4px; }
+
+  .seg{
+    display:inline-flex;
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .seg button{
+    border:none;
+    background:var(--paper);
+    padding:8px 14px;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    border-right:1px solid var(--line);
+  }
+  .seg button:last-child{ border-right:none; }
+  .seg button.active{
+    background:var(--accent);
+    color:#fff;
+  }
+
+  .radio-cards{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .radio-card{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:10px 12px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .radio-card:hover{ border-color:#c9cbd1; }
+  .radio-card.selected{
+    border-color:var(--accent);
+    background:var(--accent-dim);
+  }
+  .radio-card input{ margin-top:3px; accent-color:var(--accent); flex:none; }
+  .radio-card .rc-title{ font-weight:700; font-size:13.5px; }
+  .radio-card .rc-desc{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+  .goal-tabs{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .goal-tab{
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:9px;
+    padding:10px;
+    text-align:center;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .goal-tab.selected{
+    border-color:var(--accent);
+    background:var(--accent-dim);
+    color:var(--accent);
+  }
+
+  .rate-options{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:8px;
+  }
+  .rate-chip{
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:20px;
+    padding:7px 13px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .rate-chip.selected{
+    border-color:var(--accent);
+    background:var(--accent);
+    color:#fff;
+  }
+
+  /* ---------- Working / math breakdown ---------- */
+  .working{
+    background:var(--line-soft);
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:13px;
+  }
+  .working-row{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px dashed #d7d9de;
+  }
+  .working-row:last-child{ border-bottom:none; }
+  .working-row .wl{ color:var(--ink-soft); }
+  .working-row .wv{ font-weight:700; font-variant-numeric:tabular-nums; }
+  .working-final{
+    margin-top:10px;
+    padding:12px 14px;
+    border-radius:9px;
+    background:var(--accent);
+    color:#fff;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .working-final .wl{ color:rgba(255,255,255,0.85); font-size:12px; text-transform:uppercase; letter-spacing:.03em; font-weight:700;}
+  .working-final .wv{ font-size:22px; font-weight:800; }
+
+  /* ---------- Macro presets ---------- */
+  .preset-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .preset-chip{
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:9px;
+    padding:9px 13px;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    color:var(--ink-soft);
+    text-align:left;
+    line-height:1.3;
+  }
+  .preset-chip small{ display:block; font-weight:500; color:#9a9ea6; font-size:11px; }
+  .preset-chip.selected{
+    border-color:var(--accent);
+    background:var(--accent-dim);
+    color:var(--accent);
+  }
+  .preset-chip.selected small{ color:var(--accent); opacity:.8; }
+
+  .slider-row{ margin-bottom:14px; }
+  .slider-row .sr-top{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .slider-row .sr-top .dot{
+    display:inline-block;
+    width:9px; height:9px;
+    border-radius:50%;
+    margin-right:6px;
+  }
+  input[type=range]{
+    width:100%;
+    accent-color:var(--accent);
+    height:6px;
+  }
+  .macro-total-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 12px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:13px;
+    margin-top:6px;
+  }
+  .macro-total-badge.ok{ background:rgba(31,157,85,0.12); color:var(--success); }
+  .macro-total-badge.bad{ background:rgba(208,52,44,0.1); color:var(--danger); }
+
+  .macro-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:6px;
+    font-size:13.5px;
+  }
+  .macro-table th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    padding:8px 10px;
+    border-bottom:2px solid var(--line);
+  }
+  .macro-table td{
+    padding:10px 10px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .macro-table tr:last-child td{ border-bottom:none; }
+  .macro-table .mlabel{ display:flex; align-items:center; gap:8px; font-weight:700; }
+  .macro-table .dot{ width:10px; height:10px; border-radius:50%; flex:none; }
+  .macro-table td.num, .macro-table th.num{ text-align:right; font-variant-numeric:tabular-nums; }
+
+  .bar{
+    display:flex;
+    width:100%;
+    height:14px;
+    border-radius:7px;
+    overflow:hidden;
+    margin:14px 0;
+    border:1px solid var(--line);
+  }
+  .bar > div{ height:100%; }
+
+  /* ---------- Meal plan ---------- */
+  .meal-count-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .meal-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  .meal-table th{
+    text-align:right;
+    font-size:11px;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:8px 8px;
+    border-bottom:2px solid var(--line);
+  }
+  .meal-table th:first-child, .meal-table td:first-child{ text-align:left; }
+  .meal-table td{
+    padding:9px 8px;
+    text-align:right;
+    border-bottom:1px solid var(--line-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  .meal-table tr:last-child td{ border-bottom:none; }
+  .meal-table tr.total-row td{ font-weight:800; border-top:2px solid var(--line); }
+
+  /* ---------- Client list ---------- */
+  .client-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .client-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:10px 12px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .client-item:hover{ border-color:#c9cbd1; background:var(--line-soft); }
+  .client-item.active{ border-color:var(--accent); background:var(--accent-dim); }
+  .client-item .ci-name{ font-weight:700; font-size:13.5px; }
+  .client-item .ci-meta{ font-size:11.5px; color:var(--ink-soft); }
+  .client-item .ci-actions{ display:flex; gap:6px; }
+
+  .empty-state{
+    text-align:center;
+    padding:30px 16px;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  .empty-state .es-icon{ font-size:28px; margin-bottom:8px; }
+
+  /* ---------- Settings page ---------- */
+  .swatch-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .swatch{
+    width:30px; height:30px;
+    border-radius:50%;
+    border:2px solid var(--paper);
+    box-shadow:0 0 0 1px var(--line);
+    cursor:pointer;
+  }
+  .swatch.selected{ box-shadow:0 0 0 2px var(--ink); }
+  .logo-upload{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .logo-preview{
+    width:64px; height:64px;
+    border-radius:12px;
+    object-fit:cover;
+    border:1px solid var(--line);
+    background:var(--line-soft);
+  }
+  .logo-preview-fallback{
+    width:64px; height:64px;
+    border-radius:12px;
+    background:var(--accent);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:22px;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);
+    color:#fff;
+    padding:11px 20px;
+    border-radius:9px;
+    font-size:13px;
+    font-weight:600;
+    box-shadow:var(--shadow-lg);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s, transform .2s;
+    z-index:999;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size:11.5px;
+    color:#9a9ea6;
+    margin-top:30px;
+    padding:0 20px;
+  }
+
+  .badge{
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:20px;
+    font-size:10.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .badge-cut{ background:rgba(43,140,224,0.12); color:var(--carb); }
+  .badge-bulk{ background:rgba(31,157,85,0.12); color:var(--success); }
+  .badge-maintain{ background:rgba(224,171,43,0.15); color:#a3760a; }
+
+  /* ---------- Print handout page (screen preview) ---------- */
+  .handout-wrap{
+    max-width:820px;
+    margin:0 auto;
+  }
+  .handout{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:40px;
+  }
+  .handout-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:3px solid var(--accent);
+    padding-bottom:18px;
+    margin-bottom:24px;
+  }
+  .handout-header .hh-brand{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .handout-header .hh-logo{
+    width:56px; height:56px;
+    border-radius:10px;
+    object-fit:cover;
+  }
+  .handout-header .hh-logo-fallback{
+    width:56px; height:56px;
+    border-radius:10px;
+    background:var(--accent);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:20px;
+  }
+  .handout-header .hh-name{ font-size:20px; font-weight:800; }
+  .handout-header .hh-tag{ font-size:12px; color:var(--ink-soft); }
+  .handout-header .hh-doc-label{
+    text-align:right;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    font-weight:700;
+  }
+  .handout-header .hh-date{ font-size:11px; color:#9a9ea6; margin-top:2px; }
+
+  .handout h2{
+    font-size:15px;
+    margin:26px 0 10px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+  }
+  .handout-client-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+  .handout-client-grid .hc-item{
+    background:var(--line-soft);
+    border-radius:9px;
+    padding:10px 12px;
+  }
+  .handout-client-grid .hc-label{ font-size:10.5px; text-transform:uppercase; color:var(--ink-soft); font-weight:700; }
+  .handout-client-grid .hc-value{ font-size:15px; font-weight:800; margin-top:2px; }
+
+  .handout-target-box{
+    background:var(--accent);
+    color:#fff;
+    border-radius:12px;
+    padding:18px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:8px;
+  }
+  .handout-target-box .htb-label{ font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.85; font-weight:700; }
+  .handout-target-box .htb-value{ font-size:30px; font-weight:800; }
+  .handout-target-box .htb-sub{ font-size:12px; opacity:.85; margin-top:2px; }
+
+  .handout-footer{
+    margin-top:30px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+  .handout-disclaimer{
+    margin-top:14px;
+    font-size:10.5px;
+    color:#9a9ea6;
+    line-height:1.5;
+  }
+
+  .print-actions{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+
+  /* ================= PRINT ================= */
+  @media print{
+    @page{ margin:14mm; }
+    body *{ visibility:hidden; }
+    #view-print, #view-print *{ visibility:visible; }
+    #view-print{
+      position:absolute;
+      left:0; top:0;
+      width:100%;
+      margin:0;
+      padding:0;
+    }
+    .no-print{ display:none !important; }
+    .handout-wrap{ max-width:none; }
+    .handout{
+      border:none;
+      box-shadow:none;
+      border-radius:0;
+      padding:0;
+    }
+  }
+
+  @media (max-width:480px){
+    .handout{ padding:22px; }
+    .handout-client-grid{ grid-template-columns:repeat(2,1fr); }
+    .handout-header{ flex-direction:column; align-items:flex-start; gap:12px; }
+    .handout-header .hh-doc-label{ text-align:left; }
+  }
+
+  @media (max-width:600px){
+    .topbar{ flex-wrap:wrap; }
+    .tabs{ order:3; width:100%; overflow-x:auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="topbar no-print">
+    <div class="brand-block" id="topbarBrandBlock">
+      <!-- populated by JS -->
+    </div>
+    <div class="tabs" id="tabButtons">
+      <button class="tab-btn active" data-view="calculator">Calculator</button>
+      <button class="tab-btn" data-view="clients">Clients</button>
+      <button class="tab-btn" data-view="print">Handout</button>
+      <button class="tab-btn" data-view="settings">Branding</button>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary btn-sm" id="btnGoPrint">Print / PDF</button>
+    </div>
+  </div>
+
+  <!-- ===================== CALCULATOR VIEW ===================== -->
+  <div id="view-calculator" class="view">
+    <div class="grid">
+      <!-- LEFT COLUMN: INPUTS -->
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><span class="num">1</span>Client details</div>
+            <button class="btn btn-ghost btn-sm" id="btnLoadSample" title="Load sample client">Load sample</button>
+          </div>
+
+          <div class="field">
+            <label for="clientName">Client name</label>
+            <input type="text" id="clientName" placeholder="e.g. Jordan Reyes">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Units</label>
+              <div class="seg" id="segUnits">
+                <button data-unit="metric" class="active">Metric (kg/cm)</button>
+                <button data-unit="imperial">Imperial (lb/in)</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Sex</label>
+              <div class="seg" id="segSex">
+                <button data-sex="male" class="active">Male</button>
+                <button data-sex="female">Female</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row cols-3">
+            <div class="field">
+              <label for="ageInput">Age (years)</label>
+              <input type="number" id="ageInput" min="14" max="90" step="1" value="30">
+            </div>
+            <div class="field" id="metricHeightWrap">
+              <label for="heightInput" id="heightLabel">Height (cm)</label>
+              <input type="number" id="heightInput" min="0" step="0.1" value="178">
+            </div>
+            <div class="field" id="imperialHeightWrap" style="display:none;">
+              <label>Height (ft/in)</label>
+              <div class="field-row">
+                <div><input type="number" id="heightFt" min="0" step="1" placeholder="ft"></div>
+                <div><input type="number" id="heightIn" min="0" step="0.1" placeholder="in"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="weightInput" id="weightLabel">Weight (kg)</label>
+              <input type="number" id="weightInput" min="0" step="0.1" value="82">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><span class="num">2</span>Activity level</div>
+          </div>
+          <div class="radio-cards" id="activityList"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><span class="num">3</span>Goal</div>
+          </div>
+          <div class="goal-tabs" id="goalTabs">
+            <button class="goal-tab" data-goal="cut">Cut</button>
+            <button class="goal-tab selected" data-goal="maintain">Maintain</button>
+            <button class="goal-tab" data-goal="bulk">Bulk</button>
+          </div>
+          <div id="rateOptionsWrap"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: RESULTS -->
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><span class="num">4</span>The math, shown transparently</div>
+          </div>
+          <div class="working" id="workingBox"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><span class="num">5</span>Macro split</div>
+          </div>
+          <div class="preset-row" id="presetRow"></div>
+
+          <div id="sliderBox"></div>
+          <div id="macroBalanceBadge"></div>
+
+          <div class="bar" id="macroBar"></div>
+
+          <table class="macro-table">
+            <thead>
+              <tr><th>Macro</th><th class="num">%</th><th class="num">Grams</th><th class="num">kcal</th><th class="num">g/kg</th></tr>
+            </thead>
+            <tbody id="macroTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><span class="num">6</span>Per-meal breakdown</div>
+          </div>
+          <div class="meal-count-row">
+            <label style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;">Meals/day</label>
+            <div class="seg" id="mealCountSeg"></div>
+          </div>
+          <table class="meal-table" id="mealTable"></table>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Save this client</div>
+          </div>
+          <button class="btn btn-primary" id="btnSaveClient" style="width:100%;justify-content:center;">Save / update client</button>
+          <p class="field hint" style="margin-top:8px;">Saves all inputs above under the client's name so you can reload or print it later.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CLIENTS VIEW ===================== -->
+  <div id="view-clients" class="view" style="display:none;">
+    <div class="card" style="max-width:640px;margin:0 auto;">
+      <div class="card-head">
+        <div class="card-title">Saved clients</div>
+        <button class="btn btn-ghost btn-sm" id="btnNewClient">+ New client</button>
+      </div>
+      <div class="client-list" id="clientList"></div>
+    </div>
+  </div>
+
+  <!-- ===================== PRINT VIEW ===================== -->
+  <div id="view-print" class="view" style="display:none;">
+    <div class="print-actions no-print">
+      <button class="btn btn-primary" id="btnDoPrint">🖨 Print / Save as PDF</button>
+    </div>
+    <div class="handout-wrap">
+      <div class="handout" id="handoutContent"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SETTINGS VIEW ===================== -->
+  <div id="view-settings" class="view" style="display:none;">
+    <div class="card" style="max-width:640px;margin:0 auto;">
+      <div class="card-head">
+        <div class="card-title">Coach branding</div>
+      </div>
+      <div class="card-desc">This applies across the app and the printed client handout — set it up once for your brand.</div>
+
+      <div class="field">
+        <label for="bizName">Business / coach name</label>
+        <input type="text" id="bizName" placeholder="e.g. Ironclad Boxing Performance">
+      </div>
+
+      <div class="field">
+        <label for="contactLine">Contact line (email or IG handle)</label>
+        <input type="text" id="contactLine" placeholder="e.g. coach@ironcladboxing.com · @ironclad_boxing">
+      </div>
+
+      <div class="field">
+        <label>Logo</label>
+        <div class="logo-upload">
+          <div id="logoPreviewWrap"></div>
+          <div>
+            <input type="file" id="logoUpload" accept="image/*" style="display:none;">
+            <button class="btn btn-sm" id="btnUploadLogo">Upload logo</button>
+            <button class="btn btn-ghost btn-sm" id="btnRemoveLogo">Remove</button>
+          </div>
+        </div>
+        <div class="hint">PNG or JPG recommended, square logos look best. Stored locally in your browser only.</div>
+      </div>
+
+      <div class="field">
+        <label>Accent color</label>
+        <div class="swatch-row" id="colorSwatches"></div>
+        <div class="hint">Or pick a custom color:</div>
+        <input type="color" id="customColor" value="#e0432b" style="margin-top:6px;width:60px;height:34px;border:1px solid var(--line);border-radius:8px;cursor:pointer;">
+      </div>
+
+      <button class="btn btn-primary" id="btnSaveBranding" style="width:100%;justify-content:center;margin-top:8px;">Save branding</button>
+    </div>
+
+    <div class="card" style="max-width:640px;margin:20px auto 0;">
+      <div class="card-head"><div class="card-title">Data</div></div>
+      <div class="card-desc">Everything is stored locally in this browser via localStorage. Nothing is sent to a server.</div>
+      <button class="btn btn-sm" id="btnExportData">Export all data (JSON)</button>
+      <button class="btn btn-ghost btn-sm" id="btnResetData">Reset to sample data</button>
+    </div>
+  </div>
+
+  <div class="footer-note no-print">MacroCoach — macro targets are estimates based on standard formulas, not medical advice. Always encourage clients to consult a physician or registered dietitian for individual medical guidance.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     CONSTANTS
+  ============================================================ */
+  var LB_PER_KG = 2.2046226218;
+  var CM_PER_IN = 2.54;
+  var KCAL_PER_G_PROTEIN = 4;
+  var KCAL_PER_G_CARB = 4;
+  var KCAL_PER_G_FAT = 9;
+
+  var ACTIVITY_LEVELS = [
+    { key:"sedentary", mult:1.2, title:"Sedentary", desc:"Little or no exercise, desk job." },
+    { key:"light", mult:1.375, title:"Lightly active", desc:"Light exercise 1-3 days/week." },
+    { key:"moderate", mult:1.55, title:"Moderately active", desc:"Moderate exercise 3-5 days/week (most club/gym clients)." },
+    { key:"active", mult:1.725, title:"Very active", desc:"Hard exercise 6-7 days/week, or training twice a day sometimes." },
+    { key:"athlete", mult:1.9, title:"Elite / athlete", desc:"Very hard daily training plus a physical job, competitive combat-sports camp." }
+  ];
+
+  var RATE_OPTIONS = {
+    cut: [
+      { key:"mild", label:"Mild · 0.25 kg/wk", kgPerWeek:0.25 },
+      { key:"standard", label:"Standard · 0.5 kg/wk", kgPerWeek:0.5 },
+      { key:"aggressive", label:"Aggressive · 0.75 kg/wk", kgPerWeek:0.75 }
+    ],
+    bulk: [
+      { key:"mild", label:"Mild · 0.15 kg/wk", kgPerWeek:0.15 },
+      { key:"standard", label:"Standard · 0.25 kg/wk", kgPerWeek:0.25 },
+      { key:"aggressive", label:"Aggressive · 0.4 kg/wk", kgPerWeek:0.4 }
+    ]
+  };
+  // 1kg of tissue change ~= 7700 kcal, used to convert weekly rate into a daily kcal adjustment.
+  var KCAL_PER_KG = 7700;
+
+  var MACRO_PRESETS = [
+    { key:"balanced", title:"Balanced", desc:"30/40/30", protein:30, carbs:40, fat:30 },
+    { key:"lowcarb", title:"Low-Carb", desc:"40/25/35", protein:40, carbs:25, fat:35 },
+    { key:"highprotein", title:"High-Protein", desc:"40/30/30", protein:40, carbs:30, fat:30 },
+    { key:"custom", title:"Custom", desc:"Set your own", protein:null, carbs:null, fat:null }
+  ];
+
+  var ACCENT_SWATCHES = ["#e0432b","#2b8ce0","#1f9d55","#a3760a","#7c3aed","#0f766e","#db2777","#334155"];
+
+  var STORAGE_KEY = "macrocoach_v1";
+
+  /* ============================================================
+     STATE
+  ============================================================ */
+  var defaultBranding = {
+    bizName: "Ironclad Boxing Performance",
+    contactLine: "coach@ironcladboxing.com · @ironclad_boxing",
+    logo: "",
+    accent: "#e0432b"
+  };
+
+  function sampleClient(){
+    return {
+      id: "sample-jordan",
+      name: "Jordan Reyes",
+      units: "metric",
+      sex: "male",
+      age: 27,
+      heightCm: 178,
+      weightKg: 82,
+      activity: "active",
+      goal: "cut",
+      rateKey: "standard",
+      macroPreset: "highprotein",
+      customMacros: { protein:40, carbs:30, fat:30 },
+      mealCount: 4,
+      updatedAt: Date.now()
+    };
+  }
+
+  var state = {
+    branding: JSON.parse(JSON.stringify(defaultBranding)),
+    clients: [],
+    activeClientId: null,
+    currentView: "calculator",
+    // live editing buffer for the calculator form (not yet necessarily saved)
+    draft: sampleClient()
+  };
+
+  /* ============================================================
+     PERSISTENCE
+  ============================================================ */
+  // Fills in any missing/invalid fields on a client-shaped record with safe
+  // defaults so a corrupted or partial record (e.g. from manual localStorage
+  // edits, a future format change, or a failed save) can never crash the
+  // calculator. Always returns a fully-populated, internally-consistent record.
+  function normalizeClient(raw){
+    var fallback = sampleClient();
+    var c = (raw && typeof raw === "object") ? raw : {};
+
+    var units = (c.units === "metric" || c.units === "imperial") ? c.units : fallback.units;
+    var sex = (c.sex === "male" || c.sex === "female") ? c.sex : fallback.sex;
+    var age = Number.isFinite(c.age) ? c.age : fallback.age;
+    var heightCm = Number.isFinite(c.heightCm) && c.heightCm > 0 ? c.heightCm : fallback.heightCm;
+    var weightKg = Number.isFinite(c.weightKg) && c.weightKg > 0 ? c.weightKg : fallback.weightKg;
+    var activity = ACTIVITY_LEVELS.some(function(a){ return a.key === c.activity; }) ? c.activity : fallback.activity;
+    var goal = (c.goal === "cut" || c.goal === "bulk" || c.goal === "maintain") ? c.goal : fallback.goal;
+    var rateOptsForGoal = RATE_OPTIONS[goal] || [];
+    var rateKey = rateOptsForGoal.some(function(o){ return o.key === c.rateKey; }) ? c.rateKey : fallback.rateKey;
+    var macroPreset = MACRO_PRESETS.some(function(p){ return p.key === c.macroPreset; }) ? c.macroPreset : fallback.macroPreset;
+    var cm = c.customMacros || {};
+    var customMacros = {
+      protein: Number.isFinite(cm.protein) ? cm.protein : fallback.customMacros.protein,
+      carbs: Number.isFinite(cm.carbs) ? cm.carbs : fallback.customMacros.carbs,
+      fat: Number.isFinite(cm.fat) ? cm.fat : fallback.customMacros.fat
+    };
+    var mealCount = Number.isFinite(c.mealCount) ? clamp(Math.round(c.mealCount), 2, 6) : fallback.mealCount;
+
+    return {
+      id: c.id || fallback.id,
+      name: typeof c.name === "string" ? c.name : fallback.name,
+      units: units,
+      sex: sex,
+      age: age,
+      heightCm: heightCm,
+      weightKg: weightKg,
+      activity: activity,
+      goal: goal,
+      rateKey: rateKey,
+      macroPreset: macroPreset,
+      customMacros: customMacros,
+      mealCount: mealCount,
+      updatedAt: Number.isFinite(c.updatedAt) ? c.updatedAt : Date.now()
+    };
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        branding: state.branding,
+        clients: state.clients,
+        activeClientId: state.activeClientId,
+        draft: state.draft
+      }));
+    }catch(e){
+      console.warn("MacroCoach: could not save to localStorage", e);
+    }
+  }
+
+  function load(){
+    var raw;
+    try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){ raw = null; }
+    if(!raw){
+      // first run: seed sample client
+      var sample = sampleClient();
+      state.clients = [sample];
+      state.activeClientId = sample.id;
+      state.draft = JSON.parse(JSON.stringify(sample));
+      save();
+      return;
+    }
+    try{
+      var parsed = JSON.parse(raw);
+      state.branding = Object.assign({}, defaultBranding, parsed.branding || {});
+      var rawClients = Array.isArray(parsed.clients) ? parsed.clients : [];
+      state.clients = rawClients.map(normalizeClient);
+      state.activeClientId = parsed.activeClientId || null;
+      state.draft = normalizeClient(parsed.draft);
+      if(state.clients.length === 0){
+        var s = sampleClient();
+        state.clients = [s];
+        state.activeClientId = s.id;
+      }
+      if(!state.clients.some(function(c){ return c.id === state.activeClientId; })){
+        state.activeClientId = state.clients[0] ? state.clients[0].id : null;
+      }
+    }catch(e){
+      console.warn("MacroCoach: could not parse saved data, resetting.", e);
+      var s2 = sampleClient();
+      state.branding = JSON.parse(JSON.stringify(defaultBranding));
+      state.clients = [s2];
+      state.activeClientId = s2.id;
+      state.draft = JSON.parse(JSON.stringify(s2));
+    }
+  }
+
+  /* ============================================================
+     UTIL
+  ============================================================ */
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function $all(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+  function el(tag, attrs, children){
+    var e = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function(k){
+      if(k === "class") e.className = attrs[k];
+      else if(k === "html") e.innerHTML = attrs[k];
+      else if(k.indexOf("data-") === 0) e.setAttribute(k, attrs[k]);
+      else e[k] = attrs[k];
+    });
+    (children||[]).forEach(function(c){
+      if(typeof c === "string") e.appendChild(document.createTextNode(c));
+      else if(c) e.appendChild(c);
+    });
+    return e;
+  }
+  function round(n, dp){
+    var f = Math.pow(10, dp||0);
+    return Math.round(n*f)/f;
+  }
+  function fmt(n){
+    return Math.round(n).toLocaleString();
+  }
+  function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+  function uid(){ return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function escapeHtml(str){
+    return String(str == null ? "" : str).replace(/[&<>"']/g, function(c){
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
+    });
+  }
+
+  var toastTimer = null;
+  function showToast(msg){
+    var t = $("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  /* ============================================================
+     BRANDING APPLY
+  ============================================================ */
+  function applyBranding(){
+    var b = state.branding;
+    document.documentElement.style.setProperty("--accent", b.accent);
+    // compute a soft accent tint
+    document.documentElement.style.setProperty("--accent-dim", hexToRgba(b.accent, 0.12));
+
+    // topbar brand block
+    var wrap = $("#topbarBrandBlock");
+    wrap.innerHTML = "";
+    if(b.logo){
+      wrap.appendChild(el("img", { class:"brand-logo", src:b.logo, alt:"logo" }));
+    } else {
+      wrap.appendChild(el("div", { class:"brand-logo-fallback", html: initials(b.bizName) }));
+    }
+    var textWrap = el("div", { class:"brand-text" }, [
+      el("div", { class:"brand-name" }, [b.bizName || "Your Coaching Brand"]),
+      el("div", { class:"brand-sub" }, ["MacroCoach · Macro & Calorie Planner"])
+    ]);
+    wrap.appendChild(textWrap);
+
+    // settings fields
+    $("#bizName").value = b.bizName || "";
+    $("#contactLine").value = b.contactLine || "";
+    renderLogoPreview();
+    renderColorSwatches();
+  }
+
+  function initials(name){
+    if(!name) return "MC";
+    var parts = name.trim().split(/\s+/).slice(0,2);
+    return parts.map(function(p){ return p[0] ? p[0].toUpperCase() : ""; }).join("") || "MC";
+  }
+
+  function hexToRgba(hex, alpha){
+    hex = (hex||"#e0432b").replace("#","");
+    if(hex.length === 3) hex = hex.split("").map(function(c){return c+c;}).join("");
+    var r = parseInt(hex.substr(0,2),16);
+    var g = parseInt(hex.substr(2,2),16);
+    var bl = parseInt(hex.substr(4,2),16);
+    if(isNaN(r) || isNaN(g) || isNaN(bl)) return "rgba(224,67,43,"+alpha+")";
+    return "rgba("+r+","+g+","+bl+","+alpha+")";
+  }
+
+  function renderLogoPreview(){
+    var wrap = $("#logoPreviewWrap");
+    wrap.innerHTML = "";
+    if(state.branding.logo){
+      wrap.appendChild(el("img", { class:"logo-preview", src:state.branding.logo, alt:"logo preview" }));
+    } else {
+      wrap.appendChild(el("div", { class:"logo-preview-fallback", html: initials(state.branding.bizName) }));
+    }
+  }
+
+  function renderColorSwatches(){
+    var wrap = $("#colorSwatches");
+    wrap.innerHTML = "";
+    ACCENT_SWATCHES.forEach(function(hex){
+      var sw = el("div", { class:"swatch" + (state.branding.accent.toLowerCase() === hex.toLowerCase() ? " selected" : "") });
+      sw.style.background = hex;
+      sw.title = hex;
+      sw.addEventListener("click", function(){
+        state.branding.accent = hex;
+        applyBranding();
+        renderHandout();
+      });
+      wrap.appendChild(sw);
+    });
+    $("#customColor").value = state.branding.accent;
+  }
+
+  /* ============================================================
+     VIEW SWITCHING
+  ============================================================ */
+  function switchView(view){
+    state.currentView = view;
+    ["calculator","clients","print","settings"].forEach(function(v){
+      $("#view-" + v).style.display = (v === view) ? "" : "none";
+    });
+    $all(".tab-btn").forEach(function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-view") === view);
+    });
+    if(view === "clients") renderClientList();
+    if(view === "print") renderHandout();
+  }
+
+  /* ============================================================
+     CALCULATOR FORM <-> DRAFT SYNC
+  ============================================================ */
+  function renderActivityList(){
+    var wrap = $("#activityList");
+    wrap.innerHTML = "";
+    ACTIVITY_LEVELS.forEach(function(lvl){
+      var checked = state.draft.activity === lvl.key;
+      var label = el("label", { class:"radio-card" + (checked ? " selected" : "") });
+      var input = el("input", { type:"radio", name:"activity", value:lvl.key });
+      input.checked = checked;
+      input.addEventListener("change", function(){
+        state.draft.activity = lvl.key;
+        renderActivityList();
+        recalcAndRender();
+      });
+      var textWrap = el("div", {}, [
+        el("div", { class:"rc-title" }, [lvl.title]),
+        el("div", { class:"rc-desc" }, [lvl.desc])
+      ]);
+      label.appendChild(input);
+      label.appendChild(textWrap);
+      wrap.appendChild(label);
+    });
+  }
+
+  function renderRateOptions(){
+    var wrap = $("#rateOptionsWrap");
+    wrap.innerHTML = "";
+    if(state.draft.goal === "maintain"){
+      wrap.appendChild(el("div", { class:"card-desc", style:"margin-top:8px;" }, ["Maintenance: calories set at TDEE, no surplus or deficit."]));
+      return;
+    }
+    var opts = RATE_OPTIONS[state.draft.goal] || [];
+    var row = el("div", { class:"rate-options" });
+    opts.forEach(function(opt){
+      var selected = state.draft.rateKey === opt.key;
+      var chip = el("button", { class:"rate-chip" + (selected ? " selected" : ""), type:"button" }, [opt.label]);
+      chip.addEventListener("click", function(){
+        state.draft.rateKey = opt.key;
+        renderRateOptions();
+        recalcAndRender();
+      });
+      row.appendChild(chip);
+    });
+    wrap.appendChild(row);
+  }
+
+  function renderGoalTabs(){
+    $all(".goal-tab").forEach(function(btn){
+      btn.classList.toggle("selected", btn.getAttribute("data-goal") === state.draft.goal);
+    });
+  }
+
+  function renderPresetRow(){
+    var wrap = $("#presetRow");
+    wrap.innerHTML = "";
+    MACRO_PRESETS.forEach(function(p){
+      var selected = state.draft.macroPreset === p.key;
+      var chip = el("button", { class:"preset-chip" + (selected?" selected":""), type:"button" }, [
+        p.title, el("small", {}, [p.desc])
+      ]);
+      chip.addEventListener("click", function(){
+        state.draft.macroPreset = p.key;
+        if(p.key !== "custom"){
+          state.draft.customMacros = { protein:p.protein, carbs:p.carbs, fat:p.fat };
+        }
+        renderPresetRow();
+        renderSliders();
+        recalcAndRender();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  function currentMacroSplit(){
+    var preset = MACRO_PRESETS.find(function(p){ return p.key === state.draft.macroPreset; });
+    if(preset && preset.key !== "custom"){
+      return { protein:preset.protein, carbs:preset.carbs, fat:preset.fat };
+    }
+    return state.draft.customMacros;
+  }
+
+  function renderSliders(){
+    var wrap = $("#sliderBox");
+    wrap.innerHTML = "";
+    var isCustom = state.draft.macroPreset === "custom";
+    var split = currentMacroSplit();
+
+    var defs = [
+      { key:"protein", label:"Protein", color:"var(--protein)" },
+      { key:"carbs", label:"Carbs", color:"var(--carb)" },
+      { key:"fat", label:"Fat", color:"var(--fat)" }
+    ];
+
+    defs.forEach(function(d){
+      var row = el("div", { class:"slider-row" });
+      var top = el("div", { class:"sr-top" }, [
+        el("span", {}, [ (function(){ var dot = el("span",{class:"dot"}); dot.style.background = d.color; dot.style.display="inline-block"; return dot; })(), d.label]),
+        el("span", { id:"sliderVal-"+d.key }, [split[d.key] + "%"])
+      ]);
+      var slider = el("input", { type:"range", min:"0", max:"100", step:"1", value:String(split[d.key]) });
+      slider.disabled = !isCustom;
+      slider.addEventListener("input", function(){
+        state.draft.customMacros[d.key] = parseInt(slider.value, 10);
+        $("#sliderVal-"+d.key).textContent = slider.value + "%";
+        updateMacroBadge();
+      });
+      slider.addEventListener("change", function(){
+        recalcAndRender();
+      });
+      row.appendChild(top);
+      row.appendChild(slider);
+      wrap.appendChild(row);
+    });
+
+    updateMacroBadge();
+  }
+
+  function updateMacroBadge(){
+    var split = currentMacroSplit();
+    var total = split.protein + split.carbs + split.fat;
+    var badge = $("#macroBalanceBadge");
+    if(!badge) return;
+    if(total === 100){
+      badge.innerHTML = "";
+      badge.appendChild(el("span", { class:"macro-total-badge ok" }, ["✓ Totals 100%"]));
+    } else {
+      var wrap = el("span", { class:"macro-total-badge bad" }, ["Totals " + total + "% — "]);
+      var fixBtn = el("button", { class:"btn btn-sm", style:"margin-left:6px;" }, ["Auto-balance"]);
+      fixBtn.addEventListener("click", autoBalanceMacros);
+      badge.innerHTML = "";
+      badge.appendChild(wrap);
+      badge.appendChild(fixBtn);
+    }
+  }
+
+  function autoBalanceMacros(){
+    var split = currentMacroSplit();
+    var total = split.protein + split.carbs + split.fat;
+    if(total === 0){
+      state.draft.customMacros = { protein:34, carbs:33, fat:33 };
+    } else {
+      var scale = 100 / total;
+      var p = round(split.protein * scale, 0);
+      var c = round(split.carbs * scale, 0);
+      var f = 100 - p - c; // ensures exact 100 total, remainder absorbed by fat
+      if(f < 0){ f = 0; c = 100 - p; }
+      state.draft.customMacros = { protein:p, carbs:c, fat:f };
+    }
+    state.draft.macroPreset = "custom";
+    renderPresetRow();
+    renderSliders();
+    recalcAndRender();
+  }
+
+  function renderMealSeg(){
+    var wrap = $("#mealCountSeg");
+    wrap.innerHTML = "";
+    for(var n = 2; n <= 6; n++){
+      (function(n){
+        var btn = el("button", { type:"button" }, [String(n)]);
+        btn.classList.toggle("active", state.draft.mealCount === n);
+        btn.addEventListener("click", function(){
+          state.draft.mealCount = n;
+          renderMealSeg();
+          recalcAndRender();
+        });
+        wrap.appendChild(btn);
+      })(n);
+    }
+  }
+
+  /* ============================================================
+     UNIT CONVERSION HELPERS
+  ============================================================ */
+  function getHeightCm(){
+    if(state.draft.units === "metric"){
+      return parseFloat($("#heightInput").value) || 0;
+    } else {
+      var ft = parseFloat($("#heightFt").value) || 0;
+      var inch = parseFloat($("#heightIn").value) || 0;
+      return (ft * 12 + inch) * CM_PER_IN;
+    }
+  }
+  function getWeightKg(){
+    if(state.draft.units === "metric"){
+      return parseFloat($("#weightInput").value) || 0;
+    } else {
+      var lb = parseFloat($("#weightInput").value) || 0;
+      return lb / LB_PER_KG;
+    }
+  }
+
+  function syncUnitFields(){
+    var weightLabel = $("#weightLabel");
+    var heightInput = $("#heightInput");
+    var weightInput = $("#weightInput");
+    var imperialWrap = $("#imperialHeightWrap");
+    var metricWrap = $("#metricHeightWrap");
+
+    if(state.draft.units === "metric"){
+      weightLabel.textContent = "Weight (kg)";
+      metricWrap.style.display = "";
+      imperialWrap.style.display = "none";
+      heightInput.value = round(state.draft.heightCm, 1);
+      weightInput.value = round(state.draft.weightKg, 1);
+    } else {
+      weightLabel.textContent = "Weight (lb)";
+      metricWrap.style.display = "none";
+      imperialWrap.style.display = "";
+      var totalIn = state.draft.heightCm / CM_PER_IN;
+      var ft = Math.floor(totalIn / 12);
+      var inch = round(totalIn - ft*12, 1);
+      $("#heightFt").value = ft;
+      $("#heightIn").value = inch;
+      weightInput.value = round(state.draft.weightKg * LB_PER_KG, 1);
+    }
+  }
+
+  /* ============================================================
+     CORE MATH
+  ============================================================ */
+  function computeResults(d){
+    // Mifflin-St Jeor
+    // Men: 10*kg + 6.25*cm - 5*age + 5
+    // Women: 10*kg + 6.25*cm - 5*age - 161
+    var bmr = 10 * d.weightKg + 6.25 * d.heightCm - 5 * d.age + (d.sex === "male" ? 5 : -161);
+    bmr = Math.max(bmr, 0);
+
+    var activityLvl = ACTIVITY_LEVELS.find(function(a){ return a.key === d.activity; }) || ACTIVITY_LEVELS[2];
+    var tdee = bmr * activityLvl.mult;
+
+    var adjustment = 0;
+    var rateInfo = null;
+    // Guard against malformed/legacy state: only "cut" and "bulk" have rate
+    // tables, so anything else (including an unexpected or missing goal) is
+    // treated as maintenance rather than crashing on an undefined rateInfo.
+    if(d.goal === "cut" || d.goal === "bulk"){
+      var opts = RATE_OPTIONS[d.goal] || [];
+      rateInfo = opts.find(function(o){ return o.key === d.rateKey; }) || opts[1] || null;
+      if(rateInfo){
+        var dailyDelta = (rateInfo.kgPerWeek * KCAL_PER_KG) / 7;
+        adjustment = (d.goal === "cut") ? -dailyDelta : dailyDelta;
+      }
+    }
+
+    var target = Math.max(tdee + adjustment, 1000); // floor for safety in the UI
+    var wasFloored = (tdee + adjustment) < 1000;
+
+    var split = d.macroPreset === "custom" ? d.customMacros : (MACRO_PRESETS.find(function(p){return p.key===d.macroPreset;}) || MACRO_PRESETS[0]);
+    var totalPct = split.protein + split.carbs + split.fat;
+    // if not balanced to 100, normalize proportionally purely for the results display safety net
+    var normSplit = split;
+    if(totalPct !== 100 && totalPct > 0){
+      var s = 100/totalPct;
+      normSplit = { protein: split.protein*s, carbs: split.carbs*s, fat: split.fat*s };
+    }
+
+    var proteinKcal = target * (normSplit.protein/100);
+    var carbKcal = target * (normSplit.carbs/100);
+    var fatKcal = target * (normSplit.fat/100);
+
+    var proteinG = proteinKcal / KCAL_PER_G_PROTEIN;
+    var carbG = carbKcal / KCAL_PER_G_CARB;
+    var fatG = fatKcal / KCAL_PER_G_FAT;
+
+    var proteinGPerKg = d.weightKg > 0 ? proteinG / d.weightKg : 0;
+
+    return {
+      bmr: bmr,
+      activityLvl: activityLvl,
+      tdee: tdee,
+      adjustment: adjustment,
+      rateInfo: rateInfo,
+      target: target,
+      wasFloored: wasFloored,
+      split: normSplit,
+      rawSplitTotal: totalPct,
+      protein: { pct: normSplit.protein, kcal: proteinKcal, g: proteinG, gPerKg: proteinGPerKg },
+      carbs: { pct: normSplit.carbs, kcal: carbKcal, g: carbG },
+      fat: { pct: normSplit.fat, kcal: fatKcal, g: fatG }
+    };
+  }
+
+  /* ============================================================
+     RENDER: WORKING BOX
+  ============================================================ */
+  function renderWorking(res, d){
+    var box = $("#workingBox");
+    box.innerHTML = "";
+
+    function row(label, value){
+      return el("div", { class:"working-row" }, [
+        el("span", { class:"wl" }, [label]),
+        el("span", { class:"wv" }, [value])
+      ]);
+    }
+
+    box.appendChild(row("BMR (Mifflin-St Jeor)", fmt(res.bmr) + " kcal/day"));
+    box.appendChild(row("Activity multiplier", res.activityLvl.title + " (×" + res.activityLvl.mult + ")"));
+    box.appendChild(row("TDEE (maintenance)", fmt(res.tdee) + " kcal/day"));
+
+    if(d.goal !== "maintain"){
+      var sign = d.goal === "cut" ? "−" : "+";
+      box.appendChild(row("Goal adjustment (" + res.rateInfo.label + ")", sign + fmt(Math.abs(res.adjustment)) + " kcal/day"));
+    } else {
+      box.appendChild(row("Goal adjustment", "None (maintenance)"));
+    }
+
+    var finalBox = el("div", { class:"working-final" }, [
+      el("span", { class:"wl" }, ["Daily calorie target"]),
+      el("span", { class:"wv" }, [fmt(res.target) + " kcal"])
+    ]);
+    box.appendChild(finalBox);
+
+    if(res.wasFloored){
+      box.appendChild(el("div", { class:"hint", style:"margin-top:8px;color:var(--danger);" }, ["Note: calculated target fell below a safe floor and was capped at 1,000 kcal. Re-check inputs or use a milder rate."]));
+    }
+  }
+
+  /* ============================================================
+     RENDER: MACRO TABLE + BAR
+  ============================================================ */
+  function renderMacroResults(res, d){
+    var bar = $("#macroBar");
+    bar.innerHTML = "";
+    var pDiv = el("div", { style:"width:"+res.protein.pct+"%;background:var(--protein);" });
+    var cDiv = el("div", { style:"width:"+res.carbs.pct+"%;background:var(--carb);" });
+    var fDiv = el("div", { style:"width:"+res.fat.pct+"%;background:var(--fat);" });
+    bar.appendChild(pDiv); bar.appendChild(cDiv); bar.appendChild(fDiv);
+
+    var body = $("#macroTableBody");
+    body.innerHTML = "";
+
+    function makeRow(label, color, pct, g, kcal, gPerKg){
+      var tr = el("tr");
+      var labelCell = el("td", {}, [
+        el("div", { class:"mlabel" }, [
+          (function(){ var dot = el("span",{class:"dot"}); dot.style.background = color; return dot; })(),
+          label
+        ])
+      ]);
+      tr.appendChild(labelCell);
+      tr.appendChild(el("td", { class:"num" }, [round(pct,0) + "%"]));
+      tr.appendChild(el("td", { class:"num" }, [fmt(g) + "g"]));
+      tr.appendChild(el("td", { class:"num" }, [fmt(kcal)]));
+      tr.appendChild(el("td", { class:"num" }, [gPerKg != null ? round(gPerKg,2) + " g/kg" : "—"]));
+      return tr;
+    }
+
+    body.appendChild(makeRow("Protein", "var(--protein)", res.protein.pct, res.protein.g, res.protein.kcal, res.protein.gPerKg));
+    body.appendChild(makeRow("Carbs", "var(--carb)", res.carbs.pct, res.carbs.g, res.carbs.kcal, null));
+    body.appendChild(makeRow("Fat", "var(--fat)", res.fat.pct, res.fat.g, res.fat.kcal, null));
+
+    var totalRow = el("tr", { style:"font-weight:800;border-top:2px solid var(--line);" });
+    totalRow.appendChild(el("td", {}, ["Total"]));
+    totalRow.appendChild(el("td", { class:"num" }, [round(res.protein.pct+res.carbs.pct+res.fat.pct,0) + "%"]));
+    totalRow.appendChild(el("td", { class:"num" }, [fmt(res.protein.g+res.carbs.g+res.fat.g) + "g"]));
+    totalRow.appendChild(el("td", { class:"num" }, [fmt(res.target)]));
+    totalRow.appendChild(el("td", { class:"num" }, ["—"]));
+    body.appendChild(totalRow);
+  }
+
+  /* ============================================================
+     RENDER: MEAL TABLE
+  ============================================================ */
+  function renderMealTable(res, d){
+    var table = $("#mealTable");
+    table.innerHTML = "";
+    var thead = el("thead");
+    var headRow = el("tr");
+    ["Meal","kcal","Protein (g)","Carbs (g)","Fat (g)"].forEach(function(h){
+      headRow.appendChild(el("th", {}, [h]));
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = el("tbody");
+    var n = d.mealCount;
+    var perKcal = res.target / n;
+    var perP = res.protein.g / n;
+    var perC = res.carbs.g / n;
+    var perF = res.fat.g / n;
+
+    for(var i=1;i<=n;i++){
+      var tr = el("tr");
+      tr.appendChild(el("td", {}, ["Meal " + i]));
+      tr.appendChild(el("td", {}, [fmt(perKcal)]));
+      tr.appendChild(el("td", {}, [fmt(perP) + "g"]));
+      tr.appendChild(el("td", {}, [fmt(perC) + "g"]));
+      tr.appendChild(el("td", {}, [fmt(perF) + "g"]));
+      tbody.appendChild(tr);
+    }
+    var totalTr = el("tr", { class:"total-row" });
+    totalTr.appendChild(el("td", {}, ["Total"]));
+    totalTr.appendChild(el("td", {}, [fmt(res.target)]));
+    totalTr.appendChild(el("td", {}, [fmt(res.protein.g) + "g"]));
+    totalTr.appendChild(el("td", {}, [fmt(res.carbs.g) + "g"]));
+    totalTr.appendChild(el("td", {}, [fmt(res.fat.g) + "g"]));
+    tbody.appendChild(totalTr);
+    table.appendChild(tbody);
+  }
+
+  /* ============================================================
+     MASTER RECALC
+  ============================================================ */
+  var lastResults = null;
+
+  function recalcAndRender(){
+    state.draft.heightCm = getHeightCm();
+    state.draft.weightKg = getWeightKg();
+
+    var d = state.draft;
+    var res = computeResults(d);
+    lastResults = res;
+
+    renderWorking(res, d);
+    renderMacroResults(res, d);
+    renderMealTable(res, d);
+    save();
+  }
+
+  /* ============================================================
+     CLIENT MANAGEMENT
+  ============================================================ */
+  function loadClientIntoDraft(client){
+    state.draft = JSON.parse(JSON.stringify(client));
+    state.activeClientId = client.id;
+    hydrateFormFromDraft();
+    recalcAndRender();
+  }
+
+  function hydrateFormFromDraft(){
+    var d = state.draft;
+    $("#clientName").value = d.name || "";
+    $all("#segUnits button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-unit") === d.units); });
+    $all("#segSex button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-sex") === d.sex); });
+    $("#ageInput").value = d.age;
+    syncUnitFields();
+    renderActivityList();
+    renderGoalTabs();
+    renderRateOptions();
+    renderPresetRow();
+    renderSliders();
+    renderMealSeg();
+  }
+
+  function renderClientList(){
+    var wrap = $("#clientList");
+    wrap.innerHTML = "";
+    if(state.clients.length === 0){
+      wrap.appendChild(el("div", { class:"empty-state" }, [
+        el("div", { class:"es-icon" }, ["👤"]),
+        el("div", {}, ["No clients saved yet. Fill out the calculator and hit “Save / update client.”"])
+      ]));
+      return;
+    }
+    var sorted = state.clients.slice().sort(function(a,b){ return (b.updatedAt||0) - (a.updatedAt||0); });
+    sorted.forEach(function(c){
+      var item = el("div", { class:"client-item" + (c.id === state.activeClientId ? " active" : "") });
+      var goalBadgeClass = c.goal === "cut" ? "badge-cut" : (c.goal === "bulk" ? "badge-bulk" : "badge-maintain");
+      var left = el("div", {}, [
+        el("div", { class:"ci-name" }, [c.name || "Unnamed client"]),
+        el("div", { class:"ci-meta" }, [
+          c.sex + " · " + c.age + "y · " + round(c.weightKg,1) + "kg · ",
+          (function(){ var b = el("span", { class:"badge " + goalBadgeClass }); b.textContent = c.goal; return b; })()
+        ])
+      ]);
+      var actions = el("div", { class:"ci-actions" });
+      var loadBtn = el("button", { class:"btn btn-sm" }, ["Open"]);
+      loadBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        loadClientIntoDraft(c);
+        switchView("calculator");
+      });
+      var printBtn = el("button", { class:"btn btn-sm" }, ["Print"]);
+      printBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        loadClientIntoDraft(c);
+        switchView("print");
+      });
+      var delBtn = el("button", { class:"btn btn-ghost btn-sm" }, ["✕"]);
+      delBtn.title = "Delete client";
+      delBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        if(confirm("Delete " + (c.name || "this client") + "? This can't be undone.")){
+          state.clients = state.clients.filter(function(x){ return x.id !== c.id; });
+          if(state.activeClientId === c.id) state.activeClientId = null;
+          save();
+          renderClientList();
+          showToast("Client deleted");
+        }
+      });
+      actions.appendChild(loadBtn);
+      actions.appendChild(printBtn);
+      actions.appendChild(delBtn);
+      item.appendChild(left);
+      item.appendChild(actions);
+      item.addEventListener("click", function(){ loadClientIntoDraft(c); switchView("calculator"); });
+      wrap.appendChild(item);
+    });
+  }
+
+  function saveCurrentClient(){
+    var d = state.draft;
+    d.name = $("#clientName").value.trim() || "Unnamed client";
+    d.heightCm = getHeightCm();
+    d.weightKg = getWeightKg();
+    d.updatedAt = Date.now();
+
+    if(!d.id){
+      d.id = uid();
+    }
+    var existingIdx = state.clients.findIndex(function(c){ return c.id === d.id; });
+    var toSave = JSON.parse(JSON.stringify(d));
+    if(existingIdx >= 0){
+      state.clients[existingIdx] = toSave;
+    } else {
+      state.clients.push(toSave);
+    }
+    state.activeClientId = d.id;
+    save();
+    showToast("Saved " + d.name);
+  }
+
+  /* ============================================================
+     PRINT HANDOUT
+  ============================================================ */
+  function renderHandout(){
+    var d = state.draft;
+    d.heightCm = getHeightCm ? d.heightCm : d.heightCm; // no-op guard
+    var res = computeResults(d);
+    var b = state.branding;
+    var container = $("#handoutContent");
+    container.innerHTML = "";
+
+    // header
+    var header = el("div", { class:"handout-header" });
+    var brandWrap = el("div", { class:"hh-brand" });
+    if(b.logo){
+      brandWrap.appendChild(el("img", { class:"hh-logo", src:b.logo, alt:"logo" }));
+    } else {
+      brandWrap.appendChild(el("div", { class:"hh-logo-fallback", html: initials(b.bizName) }));
+    }
+    brandWrap.appendChild(el("div", {}, [
+      el("div", { class:"hh-name" }, [b.bizName || "Your Coaching Brand"]),
+      el("div", { class:"hh-tag" }, [b.contactLine || ""])
+    ]));
+    header.appendChild(brandWrap);
+    var dateStr = new Date().toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" });
+    header.appendChild(el("div", {}, [
+      el("div", { class:"hh-doc-label" }, ["Nutrition Plan"]),
+      el("div", { class:"hh-date" }, [dateStr])
+    ]));
+    container.appendChild(header);
+
+    // client info
+    container.appendChild(el("h2", {}, ["Client"]));
+    var grid = el("div", { class:"handout-client-grid" });
+    var heightDisplay = d.units === "metric" ? round(d.heightCm,1) + " cm" : (function(){
+      var totalIn = d.heightCm / CM_PER_IN; var ft = Math.floor(totalIn/12); var inch = round(totalIn-ft*12,1);
+      return ft + "'" + inch + '"';
+    })();
+    var weightDisplay = d.units === "metric" ? round(d.weightKg,1) + " kg" : round(d.weightKg*LB_PER_KG,1) + " lb";
+    [
+      ["Name", d.name || "—"],
+      ["Age", d.age + " yrs"],
+      ["Height", heightDisplay],
+      ["Weight", weightDisplay]
+    ].forEach(function(pair){
+      grid.appendChild(el("div", { class:"hc-item" }, [
+        el("div", { class:"hc-label" }, [pair[0]]),
+        el("div", { class:"hc-value" }, [pair[1]])
+      ]));
+    });
+    container.appendChild(grid);
+
+    // goal + target
+    container.appendChild(el("h2", {}, ["Daily Target"]));
+    var goalLabel = d.goal === "maintain" ? "Maintenance" : (d.goal.charAt(0).toUpperCase()+d.goal.slice(1)) + (res.rateInfo ? " — " + res.rateInfo.label : "");
+    var targetBox = el("div", { class:"handout-target-box" }, [
+      el("div", {}, [
+        el("div", { class:"htb-label" }, ["Goal: " + goalLabel]),
+        el("div", { class:"htb-sub" }, ["BMR " + fmt(res.bmr) + " kcal → TDEE " + fmt(res.tdee) + " kcal (" + res.activityLvl.title + ")"])
+      ]),
+      el("div", { style:"text-align:right;" }, [
+        el("div", { class:"htb-value" }, [fmt(res.target) + " kcal/day"])
+      ])
+    ]);
+    container.appendChild(targetBox);
+
+    // macro table
+    container.appendChild(el("h2", {}, ["Macro Targets"]));
+    var mTable = el("table", { class:"macro-table" });
+    var mThead = el("thead");
+    var mHeadRow = el("tr");
+    ["Macro","%","Grams","kcal","g/kg bodyweight"].forEach(function(h){ mHeadRow.appendChild(el("th", { class: h==="Macro"?"":"num" }, [h])); });
+    mThead.appendChild(mHeadRow);
+    mTable.appendChild(mThead);
+    var mBody = el("tbody");
+    function mRow(label, color, pct, g, kcal, gpk){
+      var tr = el("tr");
+      tr.appendChild(el("td", {}, [
+        el("div", { class:"mlabel" }, [ (function(){var dt=el("span",{class:"dot"}); dt.style.background=color; return dt;})(), label])
+      ]));
+      tr.appendChild(el("td", { class:"num" }, [round(pct,0)+"%"]));
+      tr.appendChild(el("td", { class:"num" }, [fmt(g)+"g"]));
+      tr.appendChild(el("td", { class:"num" }, [fmt(kcal)]));
+      tr.appendChild(el("td", { class:"num" }, [gpk!=null ? round(gpk,2)+" g/kg" : "—"]));
+      return tr;
+    }
+    mBody.appendChild(mRow("Protein","var(--protein)",res.protein.pct,res.protein.g,res.protein.kcal,res.protein.gPerKg));
+    mBody.appendChild(mRow("Carbs","var(--carb)",res.carbs.pct,res.carbs.g,res.carbs.kcal,null));
+    mBody.appendChild(mRow("Fat","var(--fat)",res.fat.pct,res.fat.g,res.fat.kcal,null));
+    mTable.appendChild(mBody);
+    container.appendChild(mTable);
+
+    // meal table
+    container.appendChild(el("h2", {}, ["Per-Meal Breakdown (" + d.mealCount + " meals/day)"]));
+    var mealTable = el("table", { class:"meal-table" });
+    var mtHead = el("thead");
+    var mtHeadRow = el("tr");
+    ["Meal","kcal","Protein (g)","Carbs (g)","Fat (g)"].forEach(function(h){ mtHeadRow.appendChild(el("th", {}, [h])); });
+    mtHead.appendChild(mtHeadRow);
+    mealTable.appendChild(mtHead);
+    var mtBody = el("tbody");
+    var n = d.mealCount;
+    for(var i=1;i<=n;i++){
+      var tr = el("tr");
+      tr.appendChild(el("td", {}, ["Meal " + i]));
+      tr.appendChild(el("td", {}, [fmt(res.target/n)]));
+      tr.appendChild(el("td", {}, [fmt(res.protein.g/n)+"g"]));
+      tr.appendChild(el("td", {}, [fmt(res.carbs.g/n)+"g"]));
+      tr.appendChild(el("td", {}, [fmt(res.fat.g/n)+"g"]));
+      mtBody.appendChild(tr);
+    }
+    var totalTr = el("tr", { class:"total-row" });
+    totalTr.appendChild(el("td", {}, ["Total"]));
+    totalTr.appendChild(el("td", {}, [fmt(res.target)]));
+    totalTr.appendChild(el("td", {}, [fmt(res.protein.g)+"g"]));
+    totalTr.appendChild(el("td", {}, [fmt(res.carbs.g)+"g"]));
+    totalTr.appendChild(el("td", {}, [fmt(res.fat.g)+"g"]));
+    mtBody.appendChild(totalTr);
+    mealTable.appendChild(mtBody);
+    container.appendChild(mealTable);
+
+    // footer
+    var footer = el("div", { class:"handout-footer" }, [
+      el("div", {}, [b.bizName || "Your Coaching Brand"]),
+      el("div", {}, [b.contactLine || ""])
+    ]);
+    container.appendChild(footer);
+    container.appendChild(el("div", { class:"handout-disclaimer" }, [
+      "These calorie and macro targets are estimates generated from standard predictive formulas (Mifflin-St Jeor) and self-reported inputs. They are not medical advice and do not account for individual medical conditions. Please consult a physician or registered dietitian before making significant dietary changes."
+    ]));
+  }
+
+  /* ============================================================
+     EVENT WIRING
+  ============================================================ */
+  function wireTopbar(){
+    $all(".tab-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){ switchView(btn.getAttribute("data-view")); });
+    });
+    $("#btnGoPrint").addEventListener("click", function(){ switchView("print"); });
+  }
+
+  function wireCalculatorForm(){
+    $("#clientName").addEventListener("input", function(){ /* saved on demand */ });
+
+    $all("#segUnits button").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var newUnit = btn.getAttribute("data-unit");
+        if(newUnit === state.draft.units) return;
+        // capture current values before switching display
+        state.draft.heightCm = getHeightCm();
+        state.draft.weightKg = getWeightKg();
+        state.draft.units = newUnit;
+        $all("#segUnits button").forEach(function(b){ b.classList.toggle("active", b===btn); });
+        syncUnitFields();
+        recalcAndRender();
+      });
+    });
+
+    $all("#segSex button").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        state.draft.sex = btn.getAttribute("data-sex");
+        $all("#segSex button").forEach(function(b){ b.classList.toggle("active", b===btn); });
+        recalcAndRender();
+      });
+    });
+
+    $("#ageInput").addEventListener("input", function(){
+      state.draft.age = clamp(parseInt(this.value,10) || 0, 0, 120);
+      recalcAndRender();
+    });
+    $("#heightInput").addEventListener("input", recalcAndRender);
+    $("#weightInput").addEventListener("input", recalcAndRender);
+    $("#heightFt").addEventListener("input", recalcAndRender);
+    $("#heightIn").addEventListener("input", recalcAndRender);
+
+    $all(".goal-tab").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        state.draft.goal = btn.getAttribute("data-goal");
+        if(state.draft.goal !== "maintain" && !state.draft.rateKey){
+          state.draft.rateKey = "standard";
+        }
+        renderGoalTabs();
+        renderRateOptions();
+        recalcAndRender();
+      });
+    });
+
+    $("#btnSaveClient").addEventListener("click", saveCurrentClient);
+
+    $("#btnLoadSample").addEventListener("click", function(){
+      var s = sampleClient();
+      s.id = null; // treat as new unless a client with same generated id exists
+      state.draft = s;
+      hydrateFormFromDraft();
+      recalcAndRender();
+      showToast("Sample client loaded");
+    });
+  }
+
+  function wireClientsView(){
+    $("#btnNewClient").addEventListener("click", function(){
+      var blank = {
+        id: null,
+        name: "",
+        units: "metric",
+        sex: "male",
+        age: 30,
+        heightCm: 175,
+        weightKg: 75,
+        activity: "moderate",
+        goal: "maintain",
+        rateKey: "standard",
+        macroPreset: "balanced",
+        customMacros: { protein:30, carbs:40, fat:30 },
+        mealCount: 3,
+        updatedAt: Date.now()
+      };
+      state.draft = blank;
+      state.activeClientId = null;
+      hydrateFormFromDraft();
+      recalcAndRender();
+      switchView("calculator");
+      $("#clientName").focus();
+    });
+  }
+
+  function wirePrintView(){
+    $("#btnDoPrint").addEventListener("click", function(){ window.print(); });
+
+    // Safety net: if the user triggers the browser's native print (Cmd/Ctrl+P)
+    // from any tab, make sure the handout is the thing that's visible & up to date.
+    var viewBeforePrint = null;
+    window.addEventListener("beforeprint", function(){
+      if(state.currentView !== "print"){
+        viewBeforePrint = state.currentView;
+        switchView("print");
+      } else {
+        renderHandout();
+      }
+    });
+    window.addEventListener("afterprint", function(){
+      if(viewBeforePrint){
+        switchView(viewBeforePrint);
+        viewBeforePrint = null;
+      }
+    });
+  }
+
+  function wireSettings(){
+    $("#btnSaveBranding").addEventListener("click", function(){
+      state.branding.bizName = $("#bizName").value.trim() || defaultBranding.bizName;
+      state.branding.contactLine = $("#contactLine").value.trim();
+      applyBranding();
+      save();
+      showToast("Branding saved");
+    });
+
+    $("#btnUploadLogo").addEventListener("click", function(){ $("#logoUpload").click(); });
+    $("#logoUpload").addEventListener("change", function(ev){
+      var file = ev.target.files && ev.target.files[0];
+      if(!file) return;
+      if(file.size > 2*1024*1024){
+        showToast("Logo too large (max 2MB)");
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(e){
+        state.branding.logo = e.target.result;
+        applyBranding();
+        save();
+        showToast("Logo updated");
+      };
+      reader.readAsDataURL(file);
+    });
+    $("#btnRemoveLogo").addEventListener("click", function(){
+      state.branding.logo = "";
+      applyBranding();
+      save();
+      showToast("Logo removed");
+    });
+
+    $("#customColor").addEventListener("input", function(){
+      state.branding.accent = this.value;
+      applyBranding();
+    });
+    $("#customColor").addEventListener("change", function(){
+      save();
+      renderColorSwatches();
+    });
+
+    $("#btnExportData").addEventListener("click", function(){
+      var data = JSON.stringify({ branding: state.branding, clients: state.clients }, null, 2);
+      var blob = new Blob([data], { type:"application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "macrocoach-export.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Exported data");
+    });
+
+    $("#btnResetData").addEventListener("click", function(){
+      if(!confirm("Reset all data (branding + clients) back to the default sample? This cannot be undone.")) return;
+      try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+      state.branding = JSON.parse(JSON.stringify(defaultBranding));
+      var s = sampleClient();
+      state.clients = [s];
+      state.activeClientId = s.id;
+      state.draft = JSON.parse(JSON.stringify(s));
+      save();
+      applyBranding();
+      hydrateFormFromDraft();
+      recalcAndRender();
+      switchView("calculator");
+      showToast("Reset to sample data");
+    });
+  }
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  function init(){
+    load();
+    applyBranding();
+    wireTopbar();
+    wireCalculatorForm();
+    wireClientsView();
+    wirePrintView();
+    wireSettings();
+    hydrateFormFromDraft();
+    recalcAndRender();
+    switchView("calculator");
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+
+</body>
+</html>

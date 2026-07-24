@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuoteCalc Builder — Build Instant-Quote Calculators</title>
+<style>
+  :root{
+    --bg: #0f1115;
+    --panel: #161922;
+    --panel-2: #1d2130;
+    --border: #2a2f40;
+    --border-light: #363c52;
+    --text: #eef0f5;
+    --text-dim: #9aa1b5;
+    --text-faint: #656d85;
+    --accent: #6c5ce7;
+    --accent-2: #a29bfe;
+    --success: #2ecc71;
+    --danger: #ff5b6a;
+    --warn: #f5a623;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 8px 24px rgba(0,0,0,0.35);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--accent); color: #fff; }
+
+  a { color: var(--accent-2); }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  input, select, textarea, button {
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.2px;
+  }
+
+  .topbar-brand .logo-mark {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .topbar-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+    background: var(--panel-2);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13.5px;
+    transition: background .15s ease, border-color .15s ease, transform .05s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #262c3f; border-color: var(--accent-2); }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #5b4bd6);
+    border-color: transparent;
+    color: #fff;
+  }
+  .btn-primary:hover { filter: brightness(1.08); background: linear-gradient(135deg, var(--accent), #5b4bd6); }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-dim);
+    padding: 9px 10px;
+  }
+  .btn-ghost:hover { background: var(--panel-2); color: var(--text); }
+
+  .btn-danger { color: var(--danger); border-color: rgba(255,91,106,0.35); background: rgba(255,91,106,0.08); }
+  .btn-danger:hover { background: rgba(255,91,106,0.16); }
+
+  .btn-sm { padding: 6px 10px; font-size: 12.5px; }
+  .btn-icon { padding: 6px 8px; }
+
+  /* ---------- Layout ---------- */
+  .app-shell {
+    display: grid;
+    grid-template-columns: minmax(340px, 460px) 1fr;
+    min-height: calc(100vh - 57px);
+  }
+
+  @media (max-width: 900px) {
+    .app-shell { grid-template-columns: 1fr; }
+  }
+
+  .builder-pane {
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px;
+    max-height: calc(100vh - 57px);
+  }
+
+  @media (max-width: 900px) {
+    .builder-pane { max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
+  }
+
+  .preview-pane {
+    background: #0a0c10;
+    padding: 28px 20px;
+    overflow-y: auto;
+    max-height: calc(100vh - 57px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  @media (max-width: 900px) {
+    .preview-pane { max-height: none; }
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 18px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 9px 8px;
+    border-radius: 7px;
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 13px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn .18s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform: translateY(0);} }
+
+  /* ---------- Cards / sections ---------- */
+  .section-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-faint);
+    margin: 0 0 12px 0;
+  }
+
+  .field-group { margin-bottom: 14px; }
+  .field-group:last-child { margin-bottom: 0; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  label.label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="number"], input[type="email"], input[type="tel"], select, textarea {
+    width: 100%;
+    padding: 9px 11px;
+    background: var(--panel-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 3px rgba(108,92,231,0.22);
+  }
+
+  textarea { resize: vertical; min-height: 60px; }
+
+  input[type="color"] {
+    -webkit-appearance: none;
+    width: 44px;
+    height: 36px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+    background: var(--panel-2);
+    cursor: pointer;
+  }
+  input[type="color"]::-webkit-color-swatch { border-radius: 4px; border: none; }
+
+  .color-row { display: flex; align-items: center; gap: 10px; }
+  .color-swatch-label { font-size: 13px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+  .hint {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 6px;
+  }
+
+  .radio-pair {
+    display: flex;
+    gap: 8px;
+  }
+  .radio-pill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 10px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--panel-2);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .radio-pill input { display: none; }
+  .radio-pill.checked { background: rgba(108,92,231,0.18); border-color: var(--accent); color: var(--text); }
+
+  .logo-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-preview {
+    width: 52px; height: 52px;
+    border-radius: var(--radius-sm);
+    background: var(--panel-2);
+    border: 1px dashed var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .logo-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .logo-preview .placeholder-icon { color: var(--text-faint); font-size: 20px; }
+
+  .file-input-wrap { position: relative; overflow: hidden; display: inline-block; }
+  .file-input-wrap input[type=file] {
+    position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
+  }
+
+  /* ---------- Field list (builder) ---------- */
+  .field-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .field-card {
+    background: var(--panel-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
+  .field-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .drag-handle {
+    cursor: grab;
+    color: var(--text-faint);
+    font-size: 16px;
+    padding: 2px 4px;
+    user-select: none;
+  }
+  .drag-handle:active { cursor: grabbing; }
+
+  .field-type-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 3px 7px;
+    border-radius: 20px;
+    background: rgba(108,92,231,0.18);
+    color: var(--accent-2);
+    white-space: nowrap;
+  }
+
+  .field-card-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .field-card-actions { display: flex; gap: 4px; }
+
+  .field-card-body { margin-top: 10px; display: none; padding-top: 10px; border-top: 1px solid var(--border); }
+  .field-card.expanded .field-card-body { display: block; }
+  .field-card.expanded .expand-icon { transform: rotate(90deg); }
+  .expand-icon { transition: transform .15s ease; display: inline-block; }
+
+  .option-row {
+    display: grid;
+    grid-template-columns: 1fr 100px auto;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .option-row input { width: 100%; }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-faint);
+    border: 1px dashed var(--border-light);
+    border-radius: var(--radius);
+  }
+  .empty-state .empty-icon { font-size: 28px; margin-bottom: 8px; }
+  .empty-state .empty-title { font-weight: 600; color: var(--text-dim); margin-bottom: 4px; }
+
+  .add-field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .add-field-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 12.5px;
+    transition: all .15s ease;
+  }
+  .add-field-btn:hover { border-color: var(--accent); color: var(--text); background: rgba(108,92,231,0.1); }
+  .add-field-btn .icon { font-size: 18px; }
+
+  /* ---------- Preview / calculator widget ---------- */
+  .calc-shell {
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    color: #1a1d29;
+  }
+
+  .calc-header {
+    padding: 20px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+  }
+
+  .calc-header .calc-logo {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+  .calc-header .calc-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+  .calc-header .calc-biz-name {
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.2px;
+  }
+  .calc-header .calc-tagline {
+    font-size: 12.5px;
+    opacity: 0.85;
+    margin-top: 1px;
+  }
+
+  .calc-body { padding: 20px; }
+
+  .calc-field { margin-bottom: 18px; }
+  .calc-field:last-of-type { margin-bottom: 0; }
+
+  .calc-field label {
+    display: block;
+    font-weight: 600;
+    font-size: 13.5px;
+    color: #2a2d3a;
+    margin-bottom: 8px;
+  }
+
+  .calc-field input[type=number] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #e2e4ec;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fafafe;
+    color: #1a1d29;
+  }
+  .calc-field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #e2e4ec;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fafafe;
+    color: #1a1d29;
+  }
+  .calc-field input[type=number]:focus, .calc-field select:focus {
+    outline: none;
+    border-color: var(--calc-accent, #6c5ce7);
+  }
+
+  .calc-checkbox-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f1f6;
+  }
+  .calc-checkbox-row:last-child { border-bottom: none; }
+  .calc-checkbox-row .cb-label { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: #2a2d3a; font-weight: 500; }
+  .calc-checkbox-row .cb-price { font-size: 12.5px; color: #8a8fa3; font-weight: 600; }
+  .calc-checkbox-row input[type=checkbox] {
+    width: 18px; height: 18px;
+    accent-color: var(--calc-accent, #6c5ce7);
+    cursor: pointer;
+  }
+
+  .calc-range-row { }
+  .calc-range-value {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: #8a8fa3;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+  .calc-range-value span.big { font-size: 15px; color: #1a1d29; }
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--calc-accent, #6c5ce7);
+    cursor: pointer;
+  }
+
+  .calc-breakdown {
+    margin: 20px -20px -20px;
+    padding: 18px 20px;
+    background: #f7f7fb;
+    border-top: 1px solid #ececf3;
+  }
+  .calc-breakdown-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #9498ab;
+    margin-bottom: 10px;
+  }
+  .calc-line-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #4a4d5c;
+    padding: 4px 0;
+  }
+  .calc-line-item .li-amt { font-weight: 600; color: #1a1d29; }
+  .calc-line-item.base { color: #7a7d8c; }
+
+  .calc-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1.5px dashed #dcdee8;
+  }
+  .calc-total-row .total-label { font-weight: 700; font-size: 14.5px; color: #1a1d29; }
+  .calc-total-row .total-amt { font-weight: 800; font-size: 24px; color: var(--calc-accent, #6c5ce7); }
+
+  .calc-cta-wrap { padding: 0 20px 20px; }
+  .calc-cta {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: var(--calc-accent, #6c5ce7);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.1px;
+    transition: filter .15s ease, transform .05s ease;
+  }
+  .calc-cta:hover { filter: brightness(1.08); }
+  .calc-cta:active { transform: translateY(1px); }
+  .calc-cta:focus-visible { outline: 2px solid #1a1d29; outline-offset: 2px; }
+
+  .calc-footer-note {
+    text-align: center;
+    font-size: 11px;
+    color: #b3b6c4;
+    padding: 0 20px 16px;
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(6,7,10,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--panel);
+  }
+  .modal-head h3 { margin: 0; font-size: 16px; }
+  .modal-body { padding: 20px; }
+  .modal-body p { color: var(--text-dim); font-size: 13.5px; }
+
+  .embed-code-box {
+    background: #08090c;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 12px;
+    color: #8ee6a0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 180px;
+    overflow-y: auto;
+    margin: 10px 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1c2030;
+    border: 1px solid var(--border-light);
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    font-size: 13.5px;
+    font-weight: 600;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+  .toast .toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+
+  .preview-label {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .preview-wrap { position: relative; width: 100%; max-width: 420px; }
+  .preview-badge {
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+
+  .footer-hint {
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 12px;
+    margin-top: 16px;
+    max-width: 420px;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 20px; }
+  ::-webkit-scrollbar-thumb:hover { background: #454c68; }
+
+  @media (max-width: 375px) {
+    .builder-pane { padding: 14px; }
+    .field-row { grid-template-columns: 1fr; }
+    .add-field-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="logo-mark">🧮</div>
+    <span>QuoteCalc Builder</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" id="btnReset" title="Reset to sample data">↺ Reset sample</button>
+    <button class="btn" id="btnEmbed">🔗 Embed code</button>
+    <button class="btn btn-primary" id="btnExport">⬇ Download calculator</button>
+  </div>
+</div>
+
+<div class="app-shell">
+  <!-- ============ BUILDER PANE ============ -->
+  <div class="builder-pane">
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="branding" role="tab">Branding</button>
+      <button class="tab-btn" data-tab="pricing" role="tab">Pricing</button>
+      <button class="tab-btn" data-tab="fields" role="tab">Fields</button>
+      <button class="tab-btn" data-tab="cta" role="tab">Lead CTA</button>
+    </div>
+
+    <!-- BRANDING TAB -->
+    <div class="tab-panel active" data-panel="branding">
+      <div class="section-card">
+        <p class="section-title">Business identity</p>
+        <div class="field-group">
+          <label class="label" for="inpBizName">Business name</label>
+          <input type="text" id="inpBizName" placeholder="e.g. Sparkle Home Cleaning">
+        </div>
+        <div class="field-group">
+          <label class="label" for="inpTagline">Tagline (shown under name)</label>
+          <input type="text" id="inpTagline" placeholder="e.g. Instant quote in 30 seconds">
+        </div>
+        <div class="field-group">
+          <label class="label">Logo</label>
+          <div class="logo-upload-row">
+            <div class="logo-preview" id="logoPreview"><span class="placeholder-icon">🏢</span></div>
+            <div class="file-input-wrap">
+              <button class="btn btn-sm" type="button">Upload image</button>
+              <input type="file" id="inpLogo" accept="image/*">
+            </div>
+            <button class="btn btn-ghost btn-sm" id="btnClearLogo">Remove</button>
+          </div>
+          <p class="hint">PNG/JPG/SVG, stored locally as a data URL. Keep it small (under ~200KB) for fast loading.</p>
+        </div>
+        <div class="field-group">
+          <label class="label" for="inpAccent">Accent color</label>
+          <div class="color-row">
+            <input type="color" id="inpAccent" value="#6c5ce7">
+            <span class="color-swatch-label" id="accentHex">#6C5CE7</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICING TAB -->
+    <div class="tab-panel" data-panel="pricing">
+      <div class="section-card">
+        <p class="section-title">Base pricing</p>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="label" for="inpCurrency">Currency</label>
+            <select id="inpCurrency">
+              <option value="$">USD ($)</option>
+              <option value="£">GBP (£)</option>
+              <option value="€">EUR (€)</option>
+              <option value="CA$">CAD (CA$)</option>
+              <option value="A$">AUD (A$)</option>
+              <option value="R">ZAR (R)</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="label" for="inpBasePrice">Base price</label>
+            <input type="number" id="inpBasePrice" min="0" step="1" value="0">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="label" for="inpMinCharge">Minimum charge</label>
+          <input type="number" id="inpMinCharge" min="0" step="1" value="0">
+          <p class="hint">If the computed total is below this, the minimum is quoted instead.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIELDS TAB -->
+    <div class="tab-panel" data-panel="fields">
+      <div class="section-card">
+        <p class="section-title">Add a field</p>
+        <div class="add-field-grid">
+          <button class="add-field-btn" data-add="number"><span class="icon">🔢</span>Number input</button>
+          <button class="add-field-btn" data-add="dropdown"><span class="icon">📋</span>Dropdown</button>
+          <button class="add-field-btn" data-add="checkbox"><span class="icon">✅</span>Checkbox add-on</button>
+          <button class="add-field-btn" data-add="range"><span class="icon">🎚️</span>Range slider</button>
+        </div>
+      </div>
+      <div class="section-card">
+        <p class="section-title">Calculator fields <span id="fieldCount" style="color:var(--text-faint); font-weight:500; text-transform:none; letter-spacing:0;"></span></p>
+        <div class="field-list" id="fieldList"></div>
+        <div class="empty-state" id="fieldsEmpty" style="display:none;">
+          <div class="empty-icon">🧩</div>
+          <div class="empty-title">No fields yet</div>
+          <div>Add a field above to start building your calculator.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA TAB -->
+    <div class="tab-panel" data-panel="cta">
+      <div class="section-card">
+        <p class="section-title">Call to action</p>
+        <div class="field-group">
+          <label class="label" for="inpCtaText">Button text</label>
+          <input type="text" id="inpCtaText" placeholder="e.g. Book This Quote">
+        </div>
+        <div class="field-group">
+          <label class="label">Send lead via</label>
+          <div class="radio-pair">
+            <label class="radio-pill" id="pillMailto">
+              <input type="radio" name="ctaType" value="mailto">
+              ✉️ Email
+            </label>
+            <label class="radio-pill" id="pillWhatsapp">
+              <input type="radio" name="ctaType" value="whatsapp">
+              💬 WhatsApp
+            </label>
+          </div>
+        </div>
+        <div class="field-group" id="mailtoFields">
+          <label class="label" for="inpCtaEmail">Business email</label>
+          <input type="email" id="inpCtaEmail" placeholder="e.g. quotes@sparklecleaning.com">
+        </div>
+        <div class="field-group" id="whatsappFields" style="display:none;">
+          <label class="label" for="inpCtaPhone">WhatsApp number (with country code, digits only)</label>
+          <input type="tel" id="inpCtaPhone" placeholder="e.g. 15551234567">
+        </div>
+        <p class="hint">Clicking the CTA in the calculator opens this destination prefilled with the customer's itemized quote.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PREVIEW PANE ============ -->
+  <div class="preview-pane">
+    <div class="preview-wrap">
+      <div class="preview-badge">Live preview</div>
+      <div class="calc-shell" id="calcShell">
+        <!-- rendered by JS -->
+      </div>
+      <p class="footer-hint">This is exactly what your customer sees. Interact with it — the total updates live, just like on the exported page.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EMBED MODAL ============ -->
+<div class="modal-overlay" id="embedModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Embed snippet</h3>
+      <button class="btn btn-ghost btn-icon" id="btnCloseEmbed">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>First download the calculator, host <code>calculator.html</code> anywhere (your website, S3, Netlify, etc.), then replace the URL below and paste this snippet into your client's site.</p>
+      <div class="embed-code-box" id="embedCode"></div>
+      <button class="btn btn-primary" id="btnCopyEmbed" style="width:100%; justify-content:center;">📋 Copy to clipboard</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="toast-dot"></span><span id="toastMsg">Saved</span></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'quotecalc_builder_state_v1';
+
+  var uid = function(){ return 'f' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); };
+
+  function sampleState(){
+    return {
+      branding: {
+        bizName: 'Sparkle Home Cleaning',
+        tagline: 'Get your instant quote in 30 seconds',
+        logo: '',
+        accent: '#6c5ce7'
+      },
+      pricing: {
+        currency: '$',
+        basePrice: 39,
+        minCharge: 59
+      },
+      cta: {
+        text: 'Book This Cleaning',
+        type: 'mailto',
+        email: 'quotes@sparklecleaning.com',
+        phone: '15551234567'
+      },
+      fields: [
+        {
+          id: uid(),
+          type: 'number',
+          label: 'Bedrooms',
+          unitPrice: 15,
+          min: 0,
+          max: 10
+        },
+        {
+          id: uid(),
+          type: 'number',
+          label: 'Bathrooms',
+          unitPrice: 12,
+          min: 0,
+          max: 8
+        },
+        {
+          id: uid(),
+          type: 'dropdown',
+          label: 'Service type',
+          options: [
+            { label: 'Standard Clean', price: 0 },
+            { label: 'Deep Clean', price: 45 },
+            { label: 'Move-Out Clean', price: 70 }
+          ]
+        },
+        {
+          id: uid(),
+          type: 'range',
+          label: 'Approximate square footage (x100 sqft)',
+          unitPrice: 4,
+          min: 5,
+          max: 40
+        },
+        {
+          id: uid(),
+          type: 'checkbox',
+          label: 'Add-ons',
+          options: [
+            { label: 'Inside Oven', price: 20 },
+            { label: 'Inside Fridge', price: 18 },
+            { label: 'Interior Windows', price: 25 },
+            { label: 'Inside Cabinets', price: 22 }
+          ]
+        }
+      ]
+    };
+  }
+
+  var state = loadState();
+
+  function loadState(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return sampleState();
+      var parsed = JSON.parse(raw);
+      if (!parsed || !parsed.fields) return sampleState();
+      return parsed;
+    } catch(e){
+      return sampleState();
+    }
+  }
+
+  function saveState(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      showToast('Saved');
+    } catch(e){
+      showToast('Could not save (storage full?)');
+    }
+  }
+
+  var saveTimer = null;
+  function persist(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveState, 300);
+  }
+
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    var m = document.getElementById('toastMsg');
+    m.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+
+  function esc(str){
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  function fmtMoney(n){
+    var currency = state.pricing.currency || '$';
+    var num = Math.round((n + Number.EPSILON) * 100) / 100;
+    return currency + num.toFixed(2);
+  }
+
+  function clampNum(v, fallback){
+    var n = parseFloat(v);
+    return isNaN(n) ? fallback : n;
+  }
+
+  // ---------------- Tabs ----------------
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      tabPanels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelector('.tab-panel[data-panel="' + btn.dataset.tab + '"]').classList.add('active');
+    });
+  });
+
+  // ---------------- Branding bindings ----------------
+  var inpBizName = document.getElementById('inpBizName');
+  var inpTagline = document.getElementById('inpTagline');
+  var inpAccent = document.getElementById('inpAccent');
+  var accentHex = document.getElementById('accentHex');
+  var inpLogo = document.getElementById('inpLogo');
+  var logoPreview = document.getElementById('logoPreview');
+  var btnClearLogo = document.getElementById('btnClearLogo');
+
+  function fillBrandingUI(){
+    inpBizName.value = state.branding.bizName || '';
+    inpTagline.value = state.branding.tagline || '';
+    inpAccent.value = state.branding.accent || '#6c5ce7';
+    accentHex.textContent = (state.branding.accent || '#6c5ce7').toUpperCase();
+    renderLogoPreview();
+  }
+
+  function renderLogoPreview(){
+    if (state.branding.logo) {
+      logoPreview.innerHTML = '<img src="' + esc(state.branding.logo) + '" alt="Logo">';
+    } else {
+      logoPreview.innerHTML = '<span class="placeholder-icon">🏢</span>';
+    }
+  }
+
+  inpBizName.addEventListener('input', function(){ state.branding.bizName = inpBizName.value; renderPreview(); persist(); });
+  inpTagline.addEventListener('input', function(){ state.branding.tagline = inpTagline.value; renderPreview(); persist(); });
+  inpAccent.addEventListener('input', function(){
+    state.branding.accent = inpAccent.value;
+    accentHex.textContent = inpAccent.value.toUpperCase();
+    renderPreview(); persist();
+  });
+
+  inpLogo.addEventListener('change', function(){
+    var file = inpLogo.files && inpLogo.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      state.branding.logo = e.target.result;
+      renderLogoPreview();
+      renderPreview();
+      persist();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  btnClearLogo.addEventListener('click', function(){
+    state.branding.logo = '';
+    inpLogo.value = '';
+    renderLogoPreview();
+    renderPreview();
+    persist();
+  });
+
+  // ---------------- Pricing bindings ----------------
+  var inpCurrency = document.getElementById('inpCurrency');
+  var inpBasePrice = document.getElementById('inpBasePrice');
+  var inpMinCharge = document.getElementById('inpMinCharge');
+
+  function fillPricingUI(){
+    inpCurrency.value = state.pricing.currency || '$';
+    inpBasePrice.value = state.pricing.basePrice;
+    inpMinCharge.value = state.pricing.minCharge;
+  }
+
+  inpCurrency.addEventListener('change', function(){ state.pricing.currency = inpCurrency.value; renderPreview(); persist(); });
+  inpBasePrice.addEventListener('input', function(){ state.pricing.basePrice = clampNum(inpBasePrice.value, 0); renderPreview(); persist(); });
+  inpMinCharge.addEventListener('input', function(){ state.pricing.minCharge = clampNum(inpMinCharge.value, 0); renderPreview(); persist(); });
+
+  // ---------------- CTA bindings ----------------
+  var inpCtaText = document.getElementById('inpCtaText');
+  var inpCtaEmail = document.getElementById('inpCtaEmail');
+  var inpCtaPhone = document.getElementById('inpCtaPhone');
+  var pillMailto = document.getElementById('pillMailto');
+  var pillWhatsapp = document.getElementById('pillWhatsapp');
+  var mailtoFields = document.getElementById('mailtoFields');
+  var whatsappFields = document.getElementById('whatsappFields');
+
+  function fillCtaUI(){
+    inpCtaText.value = state.cta.text || '';
+    inpCtaEmail.value = state.cta.email || '';
+    inpCtaPhone.value = state.cta.phone || '';
+    var isMailto = state.cta.type !== 'whatsapp';
+    pillMailto.querySelector('input').checked = isMailto;
+    pillWhatsapp.querySelector('input').checked = !isMailto;
+    pillMailto.classList.toggle('checked', isMailto);
+    pillWhatsapp.classList.toggle('checked', !isMailto);
+    mailtoFields.style.display = isMailto ? '' : 'none';
+    whatsappFields.style.display = isMailto ? 'none' : '';
+  }
+
+  inpCtaText.addEventListener('input', function(){ state.cta.text = inpCtaText.value; renderPreview(); persist(); });
+  inpCtaEmail.addEventListener('input', function(){ state.cta.email = inpCtaEmail.value; persist(); });
+  inpCtaPhone.addEventListener('input', function(){ state.cta.phone = inpCtaPhone.value.replace(/[^\d]/g, ''); persist(); });
+
+  [pillMailto, pillWhatsapp].forEach(function(pill){
+    pill.addEventListener('click', function(){
+      var val = pill.querySelector('input').value;
+      state.cta.type = val;
+      fillCtaUI();
+      persist();
+    });
+  });
+
+  // ---------------- Fields builder ----------------
+  var fieldList = document.getElementById('fieldList');
+  var fieldsEmpty = document.getElementById('fieldsEmpty');
+  var fieldCount = document.getElementById('fieldCount');
+
+  document.querySelectorAll('.add-field-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      addField(btn.dataset.add);
+    });
+  });
+
+  function defaultFieldFor(type){
+    var base = { id: uid(), type: type };
+    if (type === 'number') {
+      return Object.assign(base, { label: 'New number field', unitPrice: 10, min: 0, max: 20 });
+    }
+    if (type === 'dropdown') {
+      return Object.assign(base, { label: 'New dropdown', options: [ { label: 'Option A', price: 0 }, { label: 'Option B', price: 10 } ] });
+    }
+    if (type === 'checkbox') {
+      return Object.assign(base, { label: 'New add-ons group', options: [ { label: 'Add-on 1', price: 10 } ] });
+    }
+    if (type === 'range') {
+      return Object.assign(base, { label: 'New slider', unitPrice: 2, min: 0, max: 100 });
+    }
+    return base;
+  }
+
+  function addField(type){
+    var f = defaultFieldFor(type);
+    state.fields.push(f);
+    initLiveValueFor(f);
+    renderFieldList();
+    renderPreview();
+    persist();
+    var card = fieldList.querySelector('[data-field-id="' + f.id + '"]');
+    if (card) { card.classList.add('expanded'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  }
+
+  function findField(id){
+    for (var i = 0; i < state.fields.length; i++) if (state.fields[i].id === id) return state.fields[i];
+    return null;
+  }
+
+  function typeLabel(type){
+    return { number: 'Number', dropdown: 'Dropdown', checkbox: 'Add-ons', range: 'Slider' }[type] || type;
+  }
+
+  function renderFieldList(){
+    fieldList.innerHTML = '';
+    fieldCount.textContent = state.fields.length ? '(' + state.fields.length + ')' : '';
+    fieldsEmpty.style.display = state.fields.length ? 'none' : 'block';
+
+    state.fields.forEach(function(f, idx){
+      var card = document.createElement('div');
+      card.className = 'field-card';
+      card.setAttribute('data-field-id', f.id);
+      card.setAttribute('draggable', 'true');
+
+      var head = document.createElement('div');
+      head.className = 'field-card-head';
+
+      var handle = document.createElement('span');
+      handle.className = 'drag-handle';
+      handle.title = 'Drag to reorder';
+      handle.textContent = '⠿';
+
+      var badge = document.createElement('span');
+      badge.className = 'field-type-badge';
+      badge.textContent = typeLabel(f.type);
+
+      var title = document.createElement('span');
+      title.className = 'field-card-title';
+      title.textContent = f.label || '(untitled)';
+
+      var actions = document.createElement('div');
+      actions.className = 'field-card-actions';
+
+      var btnUp = mkIconBtn('↑', 'Move up', function(){ moveField(idx, -1); });
+      var btnDown = mkIconBtn('↓', 'Move down', function(){ moveField(idx, 1); });
+      var btnEdit = mkIconBtn('✎', 'Edit', function(){ card.classList.toggle('expanded'); });
+      var btnDel = mkIconBtn('🗑', 'Delete', function(){ deleteField(f.id); });
+      btnDel.classList.add('btn-danger');
+
+      actions.appendChild(btnUp);
+      actions.appendChild(btnDown);
+      actions.appendChild(btnEdit);
+      actions.appendChild(btnDel);
+
+      head.appendChild(handle);
+      head.appendChild(badge);
+      head.appendChild(title);
+      head.appendChild(actions);
+
+      var body = document.createElement('div');
+      body.className = 'field-card-body';
+      body.appendChild(buildFieldEditor(f));
+
+      card.appendChild(head);
+      card.appendChild(body);
+
+      // drag & drop reorder
+      card.addEventListener('dragstart', function(e){
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', f.id);
+        card.style.opacity = '0.5';
+      });
+      card.addEventListener('dragend', function(){ card.style.opacity = '1'; });
+      card.addEventListener('dragover', function(e){ e.preventDefault(); });
+      card.addEventListener('drop', function(e){
+        e.preventDefault();
+        var draggedId = e.dataTransfer.getData('text/plain');
+        if (draggedId === f.id) return;
+        var fromIdx = state.fields.findIndex(function(x){ return x.id === draggedId; });
+        var toIdx = state.fields.findIndex(function(x){ return x.id === f.id; });
+        if (fromIdx < 0 || toIdx < 0) return;
+        var moved = state.fields.splice(fromIdx, 1)[0];
+        state.fields.splice(toIdx, 0, moved);
+        renderFieldList();
+        renderPreview();
+        persist();
+      });
+
+      fieldList.appendChild(card);
+    });
+  }
+
+  function mkIconBtn(symbol, title, onClick){
+    var b = document.createElement('button');
+    b.className = 'btn btn-ghost btn-icon btn-sm';
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.textContent = symbol;
+    b.addEventListener('click', function(e){ e.stopPropagation(); onClick(); });
+    return b;
+  }
+
+  function moveField(idx, dir){
+    var newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= state.fields.length) return;
+    var arr = state.fields;
+    var tmp = arr[idx];
+    arr[idx] = arr[newIdx];
+    arr[newIdx] = tmp;
+    renderFieldList();
+    renderPreview();
+    persist();
+  }
+
+  function deleteField(id){
+    state.fields = state.fields.filter(function(f){ return f.id !== id; });
+    renderFieldList();
+    renderPreview();
+    persist();
+  }
+
+  function buildFieldEditor(f){
+    var wrap = document.createElement('div');
+
+    var labelGroup = document.createElement('div');
+    labelGroup.className = 'field-group';
+    var lbl = document.createElement('label');
+    lbl.className = 'label';
+    lbl.textContent = 'Field label';
+    var inpLabel = document.createElement('input');
+    inpLabel.type = 'text';
+    inpLabel.value = f.label || '';
+    inpLabel.addEventListener('input', function(){
+      f.label = inpLabel.value;
+      var titleEl = fieldList.querySelector('[data-field-id="' + f.id + '"] .field-card-title');
+      if (titleEl) titleEl.textContent = f.label || '(untitled)';
+      renderPreview();
+      persist();
+    });
+    labelGroup.appendChild(lbl);
+    labelGroup.appendChild(inpLabel);
+    wrap.appendChild(labelGroup);
+
+    if (f.type === 'number' || f.type === 'range') {
+      var row = document.createElement('div');
+      row.className = 'field-row';
+
+      row.appendChild(mkNumberGroup('Unit price (' + (f.type === 'range' ? 'per step' : 'per unit') + ')', f.unitPrice, function(v){ f.unitPrice = v; renderPreview(); persist(); }));
+      row.appendChild(mkNumberGroup('Min', f.min, function(v){ f.min = v; renderPreview(); persist(); }));
+      wrap.appendChild(row);
+
+      var row2 = document.createElement('div');
+      row2.className = 'field-row';
+      row2.appendChild(mkNumberGroup('Max', f.max, function(v){ f.max = v; renderPreview(); persist(); }));
+      wrap.appendChild(row2);
+
+      var hint = document.createElement('p');
+      hint.className = 'hint';
+      hint.textContent = f.type === 'range'
+        ? 'Total contribution = slider value × unit price.'
+        : 'Total contribution = quantity entered × unit price.';
+      wrap.appendChild(hint);
+    }
+
+    if (f.type === 'dropdown' || f.type === 'checkbox') {
+      var optsWrap = document.createElement('div');
+      optsWrap.className = 'field-group';
+      var optsLbl = document.createElement('label');
+      optsLbl.className = 'label';
+      optsLbl.textContent = f.type === 'dropdown' ? 'Options' : 'Add-ons';
+      optsWrap.appendChild(optsLbl);
+
+      f.options.forEach(function(opt, oidx){
+        var orow = document.createElement('div');
+        orow.className = 'option-row';
+
+        var oLabel = document.createElement('input');
+        oLabel.type = 'text';
+        oLabel.placeholder = 'Label';
+        oLabel.value = opt.label;
+        oLabel.addEventListener('input', function(){ opt.label = oLabel.value; renderPreview(); persist(); });
+
+        var oPrice = document.createElement('input');
+        oPrice.type = 'number';
+        oPrice.placeholder = 'Price';
+        oPrice.step = '0.01';
+        oPrice.value = opt.price;
+        oPrice.addEventListener('input', function(){ opt.price = clampNum(oPrice.value, 0); renderPreview(); persist(); });
+
+        var oDel = mkIconBtn('✕', 'Remove option', function(){
+          f.options.splice(oidx, 1);
+          renderFieldList();
+          renderPreview();
+          persist();
+          var c = fieldList.querySelector('[data-field-id="' + f.id + '"]');
+          if (c) c.classList.add('expanded');
+        });
+        oDel.classList.add('btn-danger');
+
+        orow.appendChild(oLabel);
+        orow.appendChild(oPrice);
+        orow.appendChild(oDel);
+        optsWrap.appendChild(orow);
+      });
+
+      var addOptBtn = document.createElement('button');
+      addOptBtn.className = 'btn btn-sm';
+      addOptBtn.type = 'button';
+      addOptBtn.textContent = '+ Add option';
+      addOptBtn.addEventListener('click', function(){
+        f.options.push({ label: 'New option', price: 0 });
+        renderFieldList();
+        renderPreview();
+        persist();
+        var c = fieldList.querySelector('[data-field-id="' + f.id + '"]');
+        if (c) c.classList.add('expanded');
+      });
+      optsWrap.appendChild(addOptBtn);
+      wrap.appendChild(optsWrap);
+    }
+
+    return wrap;
+  }
+
+  function mkNumberGroup(labelText, value, onInput){
+    var g = document.createElement('div');
+    g.className = 'field-group';
+    var l = document.createElement('label');
+    l.className = 'label';
+    l.textContent = labelText;
+    var i = document.createElement('input');
+    i.type = 'number';
+    i.step = '0.01';
+    i.value = value;
+    i.addEventListener('input', function(){ onInput(clampNum(i.value, 0)); });
+    g.appendChild(l);
+    g.appendChild(i);
+    return g;
+  }
+
+  // ---------------- Preview / calculator engine ----------------
+  var calcShell = document.getElementById('calcShell');
+
+  // liveValues holds the user's current interactive selections, keyed by field id
+  var liveValues = {};
+
+  function initLiveValueFor(f){
+    if (f.type === 'number') liveValues[f.id] = f.min || 0;
+    else if (f.type === 'range') liveValues[f.id] = f.min || 0;
+    else if (f.type === 'dropdown') liveValues[f.id] = 0;
+    else if (f.type === 'checkbox') liveValues[f.id] = {};
+  }
+
+  function initLiveValues(){
+    liveValues = {};
+    state.fields.forEach(initLiveValueFor);
+  }
+
+  function computeQuote(){
+    var base = clampNum(state.pricing.basePrice, 0);
+    var lineItems = [{ label: 'Base price', amount: base, isBase: true }];
+    var total = base;
+
+    state.fields.forEach(function(f){
+      if (f.type === 'number') {
+        var qty = clampNum(liveValues[f.id], 0);
+        var amt = qty * clampNum(f.unitPrice, 0);
+        if (qty > 0) {
+          lineItems.push({ label: f.label + ' (' + qty + ')', amount: amt });
+          total += amt;
+        }
+      } else if (f.type === 'range') {
+        var val = clampNum(liveValues[f.id], f.min || 0);
+        var ramt = val * clampNum(f.unitPrice, 0);
+        lineItems.push({ label: f.label + ' (' + val + ')', amount: ramt });
+        total += ramt;
+      } else if (f.type === 'dropdown') {
+        var oidx = liveValues[f.id] || 0;
+        var opt = f.options && f.options[oidx];
+        if (opt) {
+          if (clampNum(opt.price, 0) !== 0 || f.options.length) {
+            lineItems.push({ label: f.label + ': ' + opt.label, amount: clampNum(opt.price, 0) });
+          }
+          total += clampNum(opt.price, 0);
+        }
+      } else if (f.type === 'checkbox') {
+        (f.options || []).forEach(function(opt, oidx){
+          if (liveValues[f.id] && liveValues[f.id][oidx]) {
+            lineItems.push({ label: opt.label, amount: clampNum(opt.price, 0) });
+            total += clampNum(opt.price, 0);
+          }
+        });
+      }
+    });
+
+    var minCharge = clampNum(state.pricing.minCharge, 0);
+    var finalTotal = total;
+    var minApplied = false;
+    if (finalTotal < minCharge) {
+      finalTotal = minCharge;
+      minApplied = true;
+    }
+
+    return { lineItems: lineItems, subtotal: total, finalTotal: finalTotal, minApplied: minApplied, minCharge: minCharge };
+  }
+
+  function buildQuoteText(quote){
+    var lines = [];
+    lines.push((state.branding.bizName || 'Your Business') + ' — Instant Quote');
+    lines.push('');
+    quote.lineItems.forEach(function(li){
+      lines.push('- ' + li.label + ': ' + fmtMoney(li.amount));
+    });
+    if (quote.minApplied) {
+      lines.push('');
+      lines.push('(Minimum charge of ' + fmtMoney(quote.minCharge) + ' applied)');
+    }
+    lines.push('');
+    lines.push('TOTAL: ' + fmtMoney(quote.finalTotal));
+    return lines.join('\n');
+  }
+
+  function renderPreview(){
+    var accent = state.branding.accent || '#6c5ce7';
+    var html = '';
+    html += '<div class="calc-header" style="background:' + esc(accent) + ';">';
+    html += '<div class="calc-logo">' + (state.branding.logo ? '<img src="' + esc(state.branding.logo) + '" alt="logo">' : '🏢') + '</div>';
+    html += '<div><div class="calc-biz-name">' + esc(state.branding.bizName || 'Your Business') + '</div>';
+    if (state.branding.tagline) html += '<div class="calc-tagline">' + esc(state.branding.tagline) + '</div>';
+    html += '</div></div>';
+
+    html += '<div class="calc-body" style="--calc-accent:' + esc(accent) + ';">';
+
+    if (!state.fields.length) {
+      html += '<div class="empty-state"><div class="empty-icon">🧩</div><div class="empty-title">No fields yet</div><div>Add fields in the builder to see them here.</div></div>';
+    }
+
+    state.fields.forEach(function(f){
+      html += '<div class="calc-field" data-live-field="' + f.id + '">';
+      if (f.type === 'number') {
+        html += '<label>' + esc(f.label) + '</label>';
+        html += '<input type="number" min="' + (f.min || 0) + '" max="' + (f.max != null ? f.max : '') + '" value="' + liveValues[f.id] + '" data-input-for="' + f.id + '">';
+      } else if (f.type === 'dropdown') {
+        html += '<label>' + esc(f.label) + '</label>';
+        html += '<select data-input-for="' + f.id + '">';
+        (f.options || []).forEach(function(opt, oidx){
+          html += '<option value="' + oidx + '"' + (liveValues[f.id] == oidx ? ' selected' : '') + '>' + esc(opt.label) + (clampNum(opt.price,0) ? ' (+' + fmtMoney(opt.price) + ')' : '') + '</option>';
+        });
+        html += '</select>';
+      } else if (f.type === 'checkbox') {
+        html += '<label>' + esc(f.label) + '</label>';
+        (f.options || []).forEach(function(opt, oidx){
+          var checked = liveValues[f.id] && liveValues[f.id][oidx];
+          html += '<div class="calc-checkbox-row">';
+          html += '<span class="cb-label"><input type="checkbox" data-input-for="' + f.id + '" data-opt-idx="' + oidx + '"' + (checked ? ' checked' : '') + '> ' + esc(opt.label) + '</span>';
+          html += '<span class="cb-price">+' + fmtMoney(opt.price) + '</span>';
+          html += '</div>';
+        });
+      } else if (f.type === 'range') {
+        var val = liveValues[f.id];
+        html += '<label>' + esc(f.label) + '</label>';
+        html += '<input type="range" min="' + (f.min||0) + '" max="' + (f.max!=null?f.max:100) + '" value="' + val + '" data-input-for="' + f.id + '">';
+        html += '<div class="calc-range-value"><span>' + (f.min||0) + '</span><span class="big">' + val + '</span><span>' + (f.max!=null?f.max:100) + '</span></div>';
+      }
+      html += '</div>';
+    });
+
+    var quote = computeQuote();
+    html += '<div class="calc-breakdown">';
+    html += '<div class="calc-breakdown-title">Itemized quote</div>';
+    quote.lineItems.forEach(function(li){
+      html += '<div class="calc-line-item' + (li.isBase ? ' base' : '') + '"><span>' + esc(li.label) + '</span><span class="li-amt">' + fmtMoney(li.amount) + '</span></div>';
+    });
+    if (quote.minApplied) {
+      html += '<div class="calc-line-item"><span>Minimum charge applied</span><span class="li-amt">' + fmtMoney(quote.minCharge) + '</span></div>';
+    }
+    html += '<div class="calc-total-row"><span class="total-label">Total estimate</span><span class="total-amt">' + fmtMoney(quote.finalTotal) + '</span></div>';
+    html += '</div>';
+    html += '</div>'; // calc-body
+
+    html += '<div class="calc-cta-wrap"><button class="calc-cta" id="calcCtaBtn" style="background:' + esc(accent) + ';">' + esc(state.cta.text || 'Get My Quote') + '</button></div>';
+    html += '<div class="calc-footer-note">Estimate only. Final price confirmed after inspection.</div>';
+
+    calcShell.innerHTML = html;
+    wireCalcEvents();
+  }
+
+  function wireCalcEvents(){
+    calcShell.querySelectorAll('[data-input-for]').forEach(function(el){
+      var fid = el.getAttribute('data-input-for');
+      var f = findField(fid);
+      if (!f) return;
+
+      if (el.type === 'number') {
+        el.addEventListener('input', function(){
+          var v = clampNum(el.value, f.min || 0);
+          if (f.max != null && v > f.max) v = f.max;
+          if (f.min != null && v < f.min) v = f.min;
+          liveValues[fid] = v;
+          refreshBreakdownOnly();
+        });
+      } else if (el.tagName === 'SELECT') {
+        el.addEventListener('change', function(){
+          liveValues[fid] = parseInt(el.value, 10);
+          refreshBreakdownOnly();
+        });
+      } else if (el.type === 'checkbox') {
+        var oidx = parseInt(el.getAttribute('data-opt-idx'), 10);
+        el.addEventListener('change', function(){
+          if (!liveValues[fid]) liveValues[fid] = {};
+          liveValues[fid][oidx] = el.checked;
+          refreshBreakdownOnly();
+        });
+      } else if (el.type === 'range') {
+        el.addEventListener('input', function(){
+          liveValues[fid] = parseFloat(el.value);
+          var valueEl = el.parentElement.querySelector('.calc-range-value .big');
+          if (valueEl) valueEl.textContent = el.value;
+          refreshBreakdownOnly();
+        });
+      }
+    });
+
+    var ctaBtn = document.getElementById('calcCtaBtn');
+    if (ctaBtn) {
+      ctaBtn.addEventListener('click', function(){
+        var quote = computeQuote();
+        var text = buildQuoteText(quote);
+        if (state.cta.type === 'whatsapp') {
+          var phone = (state.cta.phone || '').replace(/[^\d]/g, '');
+          var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text);
+          window.open(url, '_blank');
+        } else {
+          var subject = encodeURIComponent('Quote request — ' + fmtMoney(quote.finalTotal));
+          var body = encodeURIComponent(text);
+          window.location.href = 'mailto:' + (state.cta.email || '') + '?subject=' + subject + '&body=' + body;
+        }
+      });
+    }
+  }
+
+  function refreshBreakdownOnly(){
+    var quote = computeQuote();
+    var breakdown = calcShell.querySelector('.calc-breakdown');
+    if (!breakdown) return;
+    var html = '<div class="calc-breakdown-title">Itemized quote</div>';
+    quote.lineItems.forEach(function(li){
+      html += '<div class="calc-line-item' + (li.isBase ? ' base' : '') + '"><span>' + esc(li.label) + '</span><span class="li-amt">' + fmtMoney(li.amount) + '</span></div>';
+    });
+    if (quote.minApplied) {
+      html += '<div class="calc-line-item"><span>Minimum charge applied</span><span class="li-amt">' + fmtMoney(quote.minCharge) + '</span></div>';
+    }
+    html += '<div class="calc-total-row"><span class="total-label">Total estimate</span><span class="total-amt">' + fmtMoney(quote.finalTotal) + '</span></div>';
+    breakdown.innerHTML = html;
+  }
+
+  // ---------------- Export: standalone calculator.html ----------------
+  function buildStandaloneHtml(){
+    var accent = state.branding.accent || '#6c5ce7';
+    var dataJson = JSON.stringify(state).replace(/</g, '\\u003c');
+
+    return '<!DOCTYPE html>\n' +
+'<html lang="en">\n' +
+'<head>\n' +
+'<meta charset="UTF-8">\n' +
+'<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+'<title>' + esc(state.branding.bizName || 'Instant Quote') + ' — Instant Quote</title>\n' +
+'<style>\n' +
+'  *,*::before,*::after{box-sizing:border-box;}\n' +
+'  body{margin:0;padding:24px 16px;background:#eef0f6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;justify-content:center;}\n' +
+'  .calc-shell{width:100%;max-width:440px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px rgba(20,20,40,0.14);color:#1a1d29;}\n' +
+'  .calc-header{padding:22px 20px 18px;display:flex;align-items:center;gap:12px;color:#fff;}\n' +
+'  .calc-header .calc-logo{width:44px;height:44px;border-radius:9px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-weight:700;font-size:18px;}\n' +
+'  .calc-header .calc-logo img{width:100%;height:100%;object-fit:cover;}\n' +
+'  .calc-header .calc-biz-name{font-weight:700;font-size:18px;letter-spacing:-0.2px;}\n' +
+'  .calc-header .calc-tagline{font-size:13px;opacity:0.85;margin-top:2px;}\n' +
+'  .calc-body{padding:22px 20px;}\n' +
+'  .calc-field{margin-bottom:18px;}\n' +
+'  .calc-field:last-of-type{margin-bottom:0;}\n' +
+'  .calc-field label{display:block;font-weight:600;font-size:14px;color:#2a2d3a;margin-bottom:8px;}\n' +
+'  .calc-field input[type=number], .calc-field select{width:100%;padding:11px 12px;border:1.5px solid #e2e4ec;border-radius:8px;font-size:14px;background:#fafafe;color:#1a1d29;}\n' +
+'  .calc-field input[type=number]:focus, .calc-field select:focus{outline:none;border-color:' + accent + ';}\n' +
+'  .calc-checkbox-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f0f1f6;}\n' +
+'  .calc-checkbox-row:last-child{border-bottom:none;}\n' +
+'  .calc-checkbox-row .cb-label{display:flex;align-items:center;gap:10px;font-size:14px;color:#2a2d3a;font-weight:500;}\n' +
+'  .calc-checkbox-row .cb-price{font-size:13px;color:#8a8fa3;font-weight:600;}\n' +
+'  .calc-checkbox-row input[type=checkbox]{width:19px;height:19px;accent-color:' + accent + ';cursor:pointer;}\n' +
+'  .calc-range-value{display:flex;justify-content:space-between;font-size:13px;color:#8a8fa3;margin-top:6px;font-weight:600;}\n' +
+'  .calc-range-value span.big{font-size:16px;color:#1a1d29;}\n' +
+'  input[type=range]{width:100%;accent-color:' + accent + ';cursor:pointer;}\n' +
+'  .calc-breakdown{margin:20px -20px -22px;padding:18px 20px;background:#f7f7fb;border-top:1px solid #ececf3;}\n' +
+'  .calc-breakdown-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#9498ab;margin-bottom:10px;}\n' +
+'  .calc-line-item{display:flex;justify-content:space-between;font-size:13.5px;color:#4a4d5c;padding:4px 0;}\n' +
+'  .calc-line-item .li-amt{font-weight:600;color:#1a1d29;}\n' +
+'  .calc-line-item.base{color:#7a7d8c;}\n' +
+'  .calc-total-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1.5px dashed #dcdee8;}\n' +
+'  .calc-total-row .total-label{font-weight:700;font-size:15px;color:#1a1d29;}\n' +
+'  .calc-total-row .total-amt{font-weight:800;font-size:26px;color:' + accent + ';}\n' +
+'  .calc-cta-wrap{padding:0 20px 22px;}\n' +
+'  .calc-cta{width:100%;padding:15px;border:none;border-radius:10px;background:' + accent + ';color:#fff;font-weight:700;font-size:16px;letter-spacing:-0.1px;cursor:pointer;transition:filter .15s ease;}\n' +
+'  .calc-cta:hover{filter:brightness(1.08);}\n' +
+'  .calc-footer-note{text-align:center;font-size:11.5px;color:#b3b6c4;padding:0 20px 18px;}\n' +
+'  .powered-by{text-align:center;font-size:11px;color:#c3c6d4;margin-top:14px;}\n' +
+'  .powered-by a{color:#9a9fb5;}\n' +
+'</style>\n' +
+'</head>\n' +
+'<body>\n' +
+'<div style="width:100%;max-width:440px;">\n' +
+'<div class="calc-shell" id="calcShell"></div>\n' +
+'<div class="powered-by">Instant quote calculator</div>\n' +
+'</div>\n' +
+'<script>\n' +
+'(function(){\n' +
+'"use strict";\n' +
+'var state = ' + dataJson + ';\n' +
+'var liveValues = {};\n' +
+'function clampNum(v,fb){var n=parseFloat(v);return isNaN(n)?fb:n;}\n' +
+'function esc(str){return String(str==null?"":str).replace(/[&<>"\']/g,function(c){return ({"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\'":"&#39;"})[c];});}\n' +
+'function fmtMoney(n){var currency=state.pricing.currency||"$";var num=Math.round((n+Number.EPSILON)*100)/100;return currency+num.toFixed(2);}\n' +
+'function findField(id){for(var i=0;i<state.fields.length;i++) if(state.fields[i].id===id) return state.fields[i]; return null;}\n' +
+'function initLiveValues(){\n' +
+'  liveValues = {};\n' +
+'  state.fields.forEach(function(f){\n' +
+'    if (f.type === "number") liveValues[f.id] = f.min || 0;\n' +
+'    else if (f.type === "range") liveValues[f.id] = f.min || 0;\n' +
+'    else if (f.type === "dropdown") liveValues[f.id] = 0;\n' +
+'    else if (f.type === "checkbox") liveValues[f.id] = {};\n' +
+'  });\n' +
+'}\n' +
+'function computeQuote(){\n' +
+'  var base = clampNum(state.pricing.basePrice, 0);\n' +
+'  var lineItems = [{ label: "Base price", amount: base, isBase: true }];\n' +
+'  var total = base;\n' +
+'  state.fields.forEach(function(f){\n' +
+'    if (f.type === "number") {\n' +
+'      var qty = clampNum(liveValues[f.id], 0);\n' +
+'      var amt = qty * clampNum(f.unitPrice, 0);\n' +
+'      if (qty > 0) { lineItems.push({ label: f.label + " (" + qty + ")", amount: amt }); total += amt; }\n' +
+'    } else if (f.type === "range") {\n' +
+'      var val = clampNum(liveValues[f.id], f.min || 0);\n' +
+'      var ramt = val * clampNum(f.unitPrice, 0);\n' +
+'      lineItems.push({ label: f.label + " (" + val + ")", amount: ramt }); total += ramt;\n' +
+'    } else if (f.type === "dropdown") {\n' +
+'      var oidx = liveValues[f.id] || 0;\n' +
+'      var opt = f.options && f.options[oidx];\n' +
+'      if (opt) { lineItems.push({ label: f.label + ": " + opt.label, amount: clampNum(opt.price, 0) }); total += clampNum(opt.price, 0); }\n' +
+'    } else if (f.type === "checkbox") {\n' +
+'      (f.options || []).forEach(function(opt, oidx){\n' +
+'        if (liveValues[f.id] && liveValues[f.id][oidx]) { lineItems.push({ label: opt.label, amount: clampNum(opt.price, 0) }); total += clampNum(opt.price, 0); }\n' +
+'      });\n' +
+'    }\n' +
+'  });\n' +
+'  var minCharge = clampNum(state.pricing.minCharge, 0);\n' +
+'  var finalTotal = total;\n' +
+'  var minApplied = false;\n' +
+'  if (finalTotal < minCharge) { finalTotal = minCharge; minApplied = true; }\n' +
+'  return { lineItems: lineItems, subtotal: total, finalTotal: finalTotal, minApplied: minApplied, minCharge: minCharge };\n' +
+'}\n' +
+'function buildQuoteText(quote){\n' +
+'  var lines = [];\n' +
+'  lines.push((state.branding.bizName || "Your Business") + " \\u2014 Instant Quote");\n' +
+'  lines.push("");\n' +
+'  quote.lineItems.forEach(function(li){ lines.push("- " + li.label + ": " + fmtMoney(li.amount)); });\n' +
+'  if (quote.minApplied) { lines.push(""); lines.push("(Minimum charge of " + fmtMoney(quote.minCharge) + " applied)"); }\n' +
+'  lines.push("");\n' +
+'  lines.push("TOTAL: " + fmtMoney(quote.finalTotal));\n' +
+'  return lines.join("\\n");\n' +
+'}\n' +
+'function render(){\n' +
+'  var accent = state.branding.accent || "#6c5ce7";\n' +
+'  var html = "";\n' +
+'  html += \'<div class="calc-header" style="background:\' + esc(accent) + \';">\';\n' +
+'  html += \'<div class="calc-logo">\' + (state.branding.logo ? (\'<img src="\' + esc(state.branding.logo) + \'" alt="logo">\') : "\\ud83c\\udfe2") + "</div>";\n' +
+'  html += "<div><div class=\\"calc-biz-name\\">" + esc(state.branding.bizName || "Your Business") + "</div>";\n' +
+'  if (state.branding.tagline) html += \'<div class="calc-tagline">\' + esc(state.branding.tagline) + "</div>";\n' +
+'  html += "</div></div>";\n' +
+'  html += \'<div class="calc-body">\';\n' +
+'  state.fields.forEach(function(f){\n' +
+'    html += \'<div class="calc-field">\';\n' +
+'    if (f.type === "number") {\n' +
+'      html += "<label>" + esc(f.label) + "</label>";\n' +
+'      html += \'<input type="number" min="\' + (f.min||0) + \'" max="\' + (f.max!=null?f.max:"") + \'" value="\' + liveValues[f.id] + \'" data-input-for="\' + f.id + \'">\';\n' +
+'    } else if (f.type === "dropdown") {\n' +
+'      html += "<label>" + esc(f.label) + "</label>";\n' +
+'      html += \'<select data-input-for="\' + f.id + \'">\';\n' +
+'      (f.options||[]).forEach(function(opt, oidx){\n' +
+'        html += \'<option value="\' + oidx + \'"\' + (liveValues[f.id]==oidx?" selected":"") + \'>\' + esc(opt.label) + (clampNum(opt.price,0) ? (" (+" + fmtMoney(opt.price) + ")") : "") + "</option>";\n' +
+'      });\n' +
+'      html += "</select>";\n' +
+'    } else if (f.type === "checkbox") {\n' +
+'      html += "<label>" + esc(f.label) + "</label>";\n' +
+'      (f.options||[]).forEach(function(opt, oidx){\n' +
+'        var checked = liveValues[f.id] && liveValues[f.id][oidx];\n' +
+'        html += \'<div class="calc-checkbox-row"><span class="cb-label"><input type="checkbox" data-input-for="\' + f.id + \'" data-opt-idx="\' + oidx + \'"\' + (checked?" checked":"") + \'> \' + esc(opt.label) + "</span>";\n' +
+'        html += \'<span class="cb-price">+\' + fmtMoney(opt.price) + "</span></div>";\n' +
+'      });\n' +
+'    } else if (f.type === "range") {\n' +
+'      var val = liveValues[f.id];\n' +
+'      html += "<label>" + esc(f.label) + "</label>";\n' +
+'      html += \'<input type="range" min="\' + (f.min||0) + \'" max="\' + (f.max!=null?f.max:100) + \'" value="\' + val + \'" data-input-for="\' + f.id + \'">\';\n' +
+'      html += \'<div class="calc-range-value"><span>\' + (f.min||0) + "</span><span class=\\"big\\">" + val + "</span><span>" + (f.max!=null?f.max:100) + "</span></div>";\n' +
+'    }\n' +
+'    html += "</div>";\n' +
+'  });\n' +
+'  var quote = computeQuote();\n' +
+'  html += \'<div class="calc-breakdown">\';\n' +
+'  html += \'<div class="calc-breakdown-title">Itemized quote</div>\';\n' +
+'  quote.lineItems.forEach(function(li){\n' +
+'    html += \'<div class="calc-line-item\' + (li.isBase?" base":"") + \'"><span>\' + esc(li.label) + \'</span><span class="li-amt">\' + fmtMoney(li.amount) + "</span></div>";\n' +
+'  });\n' +
+'  if (quote.minApplied) { html += \'<div class="calc-line-item"><span>Minimum charge applied</span><span class="li-amt">\' + fmtMoney(quote.minCharge) + "</span></div>"; }\n' +
+'  html += \'<div class="calc-total-row"><span class="total-label">Total estimate</span><span class="total-amt">\' + fmtMoney(quote.finalTotal) + "</span></div>";\n' +
+'  html += "</div></div>";\n' +
+'  html += \'<div class="calc-cta-wrap"><button class="calc-cta" id="calcCtaBtn">\' + esc(state.cta.text || "Get My Quote") + "</button></div>";\n' +
+'  html += \'<div class="calc-footer-note">Estimate only. Final price confirmed after inspection.</div>\';\n' +
+'  document.getElementById("calcShell").innerHTML = html;\n' +
+'  wireEvents();\n' +
+'}\n' +
+'function refreshBreakdownOnly(){\n' +
+'  var quote = computeQuote();\n' +
+'  var breakdown = document.querySelector(".calc-breakdown");\n' +
+'  if (!breakdown) return;\n' +
+'  var html = \'<div class="calc-breakdown-title">Itemized quote</div>\';\n' +
+'  quote.lineItems.forEach(function(li){\n' +
+'    html += \'<div class="calc-line-item\' + (li.isBase?" base":"") + \'"><span>\' + esc(li.label) + \'</span><span class="li-amt">\' + fmtMoney(li.amount) + "</span></div>";\n' +
+'  });\n' +
+'  if (quote.minApplied) { html += \'<div class="calc-line-item"><span>Minimum charge applied</span><span class="li-amt">\' + fmtMoney(quote.minCharge) + "</span></div>"; }\n' +
+'  html += \'<div class="calc-total-row"><span class="total-label">Total estimate</span><span class="total-amt">\' + fmtMoney(quote.finalTotal) + "</span></div>";\n' +
+'  breakdown.innerHTML = html;\n' +
+'}\n' +
+'function wireEvents(){\n' +
+'  document.querySelectorAll("[data-input-for]").forEach(function(el){\n' +
+'    var fid = el.getAttribute("data-input-for");\n' +
+'    var f = findField(fid);\n' +
+'    if (!f) return;\n' +
+'    if (el.type === "number") {\n' +
+'      el.addEventListener("input", function(){\n' +
+'        var v = clampNum(el.value, f.min||0);\n' +
+'        if (f.max!=null && v>f.max) v=f.max;\n' +
+'        if (f.min!=null && v<f.min) v=f.min;\n' +
+'        liveValues[fid]=v; refreshBreakdownOnly();\n' +
+'      });\n' +
+'    } else if (el.tagName === "SELECT") {\n' +
+'      el.addEventListener("change", function(){ liveValues[fid]=parseInt(el.value,10); refreshBreakdownOnly(); });\n' +
+'    } else if (el.type === "checkbox") {\n' +
+'      var oidx = parseInt(el.getAttribute("data-opt-idx"),10);\n' +
+'      el.addEventListener("change", function(){\n' +
+'        if (!liveValues[fid]) liveValues[fid] = {};\n' +
+'        liveValues[fid][oidx]=el.checked; refreshBreakdownOnly();\n' +
+'      });\n' +
+'    } else if (el.type === "range") {\n' +
+'      el.addEventListener("input", function(){\n' +
+'        liveValues[fid]=parseFloat(el.value);\n' +
+'        var valueEl = el.parentElement.querySelector(".calc-range-value .big");\n' +
+'        if (valueEl) valueEl.textContent = el.value;\n' +
+'        refreshBreakdownOnly();\n' +
+'      });\n' +
+'    }\n' +
+'  });\n' +
+'  var ctaBtn = document.getElementById("calcCtaBtn");\n' +
+'  if (ctaBtn) {\n' +
+'    ctaBtn.addEventListener("click", function(){\n' +
+'      var quote = computeQuote();\n' +
+'      var text = buildQuoteText(quote);\n' +
+'      if (state.cta.type === "whatsapp") {\n' +
+'        var phone = (state.cta.phone||"").replace(/[^\\d]/g,"");\n' +
+'        var url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(text);\n' +
+'        window.open(url, "_blank");\n' +
+'      } else {\n' +
+'        var subject = encodeURIComponent("Quote request \\u2014 " + fmtMoney(quote.finalTotal));\n' +
+'        var body = encodeURIComponent(text);\n' +
+'        window.location.href = "mailto:" + (state.cta.email||"") + "?subject=" + subject + "&body=" + body;\n' +
+'      }\n' +
+'    });\n' +
+'  }\n' +
+'}\n' +
+'initLiveValues();\n' +
+'render();\n' +
+'})();\n' +
+'<' + '/script>\n' +
+'</body>\n' +
+'</html>\n';
+  }
+
+  function downloadFile(filename, content, mime){
+    var blob = new Blob([content], { type: mime || 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  document.getElementById('btnExport').addEventListener('click', function(){
+    var html = buildStandaloneHtml();
+    downloadFile('calculator.html', html, 'text/html');
+    showToast('Downloaded calculator.html');
+  });
+
+  // ---------------- Embed modal ----------------
+  var embedModal = document.getElementById('embedModal');
+  var embedCode = document.getElementById('embedCode');
+
+  function embedSnippet(){
+    return '<iframe src="https://YOUR-HOSTED-URL/calculator.html" ' +
+      'style="width:100%; max-width:440px; height:900px; border:0;" ' +
+      'title="' + esc(state.branding.bizName || 'Instant Quote') + ' calculator" loading="lazy"></iframe>';
+  }
+
+  document.getElementById('btnEmbed').addEventListener('click', function(){
+    embedCode.textContent = embedSnippet();
+    embedModal.classList.add('open');
+  });
+  document.getElementById('btnCloseEmbed').addEventListener('click', function(){
+    embedModal.classList.remove('open');
+  });
+  embedModal.addEventListener('click', function(e){
+    if (e.target === embedModal) embedModal.classList.remove('open');
+  });
+  document.getElementById('btnCopyEmbed').addEventListener('click', function(){
+    var text = embedSnippet();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){
+        showToast('Embed code copied');
+      }).catch(function(){ fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  });
+
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('Embed code copied'); }
+    catch(e){ showToast('Copy failed — select manually'); }
+    document.body.removeChild(ta);
+  }
+
+  // ---------------- Reset ----------------
+  document.getElementById('btnReset').addEventListener('click', function(){
+    if (!window.confirm('Reset to the sample house-cleaning calculator? This will overwrite your current builder data.')) return;
+    state = sampleState();
+    fillAllUI();
+    initLiveValues();
+    renderPreview();
+    saveState();
+    showToast('Reset to sample data');
+  });
+
+  // ---------------- Init ----------------
+  function fillAllUI(){
+    fillBrandingUI();
+    fillPricingUI();
+    fillCtaUI();
+    renderFieldList();
+  }
+
+  fillAllUI();
+  initLiveValues();
+  renderPreview();
+
+})();
+</script>
+</body>
+</html>

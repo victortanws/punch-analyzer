@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Last Word — one sentence rules the internet</title>
+<meta name="description" content="One sentence rules this page until someone pays more to replace it. The price only goes up.">
+<meta property="og:title" content="The Last Word — one sentence rules the internet">
+<meta property="og:description" content="One sentence rules this page until someone pays more to replace it. The price only goes up.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230b0a09'/%3E%3Ctext x='50' y='76' font-size='72' text-anchor='middle' fill='%23c9a961' font-family='Georgia'%3E%E2%80%9D%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0a09;
+    --bg-raise: #141210;
+    --ink: #f3ede2;
+    --ink-dim: #9d938a;
+    --ink-faint: #8a8178;
+    --accent: #c9a961;
+    --accent-bright: #e6c87d;
+    --danger: #b8453a;
+    --serif: "Playfair Display", "Iowan Old Style", Georgia, serif;
+    --sans: "Inter", -apple-system, "Segoe UI", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  body::before { /* faint vignette */
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 50% 38%, rgba(201,169,97,.05), transparent 70%);
+  }
+
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.4rem 2rem; font-size: .78rem; letter-spacing: .18em;
+  }
+  .wordmark { font-family: var(--serif); font-weight: 700; font-size: .95rem; letter-spacing: .28em; color: var(--ink); }
+  .wordmark span { color: var(--accent); }
+  header nav a { color: var(--ink-dim); text-decoration: none; margin-left: 1.6rem; text-transform: uppercase; }
+  header nav a:hover { color: var(--accent-bright); }
+
+  .demo-banner {
+    text-align: center; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(201,169,97,.09); color: var(--accent); padding: .45rem 1rem;
+    border-block: 1px solid rgba(201,169,97,.18);
+  }
+
+  main { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 1.5rem; }
+
+  .stage { min-height: 72vh; display: flex; flex-direction: column; justify-content: center; align-items: center; max-width: 62rem; }
+  .kicker { font-size: .72rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 2.2rem; }
+  .the-word {
+    font-family: var(--serif); font-weight: 500; font-style: italic;
+    font-size: clamp(1.8rem, 4.6vw, 3.9rem); line-height: 1.28; color: var(--ink);
+    text-wrap: balance; transition: opacity .5s ease;
+  }
+  .the-word.swap { opacity: 0; }
+  .the-word::before { content: "“"; color: var(--accent); }
+  .the-word::after { content: "”"; color: var(--accent); }
+  .attribution { margin-top: 2.4rem; font-size: .88rem; color: var(--ink-dim); letter-spacing: .04em; }
+  .attribution b { color: var(--accent); font-weight: 600; }
+
+  .cta-block { margin-top: 3.4rem; display: flex; flex-direction: column; align-items: center; gap: .9rem; }
+  .btn-primary {
+    font-family: var(--sans); font-weight: 600; font-size: .95rem; letter-spacing: .1em; text-transform: uppercase;
+    color: #171207; background: linear-gradient(160deg, var(--accent-bright), var(--accent));
+    border: none; border-radius: 3px; padding: 1.05rem 2.6rem; cursor: pointer;
+    box-shadow: 0 0 0 1px rgba(230,200,125,.35), 0 6px 30px rgba(201,169,97,.22);
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(230,200,125,.5), 0 10px 36px rgba(201,169,97,.32); }
+  .btn-primary:disabled { opacity: .55; cursor: wait; }
+  .price-note { font-size: .78rem; color: var(--ink-faint); letter-spacing: .08em; }
+  .price-note b { color: var(--ink-dim); font-weight: 500; }
+
+  .rules {
+    display: flex; gap: 3rem; margin: 4.5rem 0 3rem; flex-wrap: wrap; justify-content: center;
+    color: var(--ink-dim); font-size: .84rem; line-height: 1.6; max-width: 56rem;
+  }
+  .rules div { max-width: 15rem; }
+  .rules .n { font-family: var(--serif); font-size: 1.5rem; color: var(--accent); display: block; margin-bottom: .4rem; }
+
+  .fallen { width: 100%; max-width: 44rem; margin: 2rem auto 6rem; text-align: left; }
+  .fallen h2 {
+    font-family: var(--serif); font-weight: 500; font-size: 1.15rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--ink-dim); text-align: center; margin-bottom: .4rem;
+  }
+  .fallen .sub { text-align: center; font-size: .78rem; color: var(--ink-faint); margin-bottom: 2.2rem; }
+  .fallen ol { list-style: none; }
+  .fallen li {
+    padding: 1.05rem .4rem; border-bottom: 1px solid #1d1a17;
+    display: flex; justify-content: space-between; gap: 1.4rem; align-items: baseline;
+  }
+  .fallen .text { font-family: var(--serif); font-style: italic; color: var(--ink-faint); text-decoration: line-through; text-decoration-color: rgba(184,69,58,.55); }
+  .fallen .meta { font-size: .74rem; color: var(--ink-faint); white-space: nowrap; }
+  .fallen .meta b { color: var(--ink-dim); font-weight: 500; }
+  .fallen .empty { text-align: center; color: var(--ink-faint); font-style: italic; padding: 2rem 0; border: none; display: block; }
+
+  footer {
+    border-top: 1px solid #1d1a17; padding: 2.2rem; text-align: center;
+    font-size: .74rem; color: var(--ink-faint); line-height: 1.9;
+  }
+  footer a { color: var(--ink-dim); }
+
+  /* modal */
+  dialog {
+    background: var(--bg-raise); color: var(--ink); border: 1px solid #2a251f; border-radius: 6px;
+    padding: 2.4rem; width: min(92vw, 34rem); box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  }
+  dialog::backdrop { background: rgba(5,4,3,.75); backdrop-filter: blur(3px); }
+  dialog h3 { font-family: var(--serif); font-weight: 500; font-size: 1.5rem; margin-bottom: .4rem; }
+  dialog .dsub { color: var(--ink-dim); font-size: .84rem; margin-bottom: 1.8rem; }
+  dialog .dsub b { color: var(--accent); }
+  label { display: block; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim); margin: 1.2rem 0 .5rem; }
+  textarea, input[type=text] {
+    width: 100%; background: #0d0c0a; color: var(--ink); border: 1px solid #2a251f; border-radius: 4px;
+    padding: .85rem .95rem; font-family: var(--serif); font-size: 1.05rem; resize: none;
+  }
+  textarea:focus, input:focus { outline: none; border-color: var(--accent); }
+  .counter { text-align: right; font-size: .72rem; color: var(--ink-faint); margin-top: .35rem; }
+  .counter.over { color: var(--danger); }
+  .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; }
+  .btn-ghost { background: none; border: none; color: var(--ink-dim); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; padding: .6rem; }
+  .btn-ghost:hover { color: var(--ink); }
+  .form-error { color: var(--danger); font-size: .8rem; margin-top: 1rem; min-height: 1.2em; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%) translateY(20px);
+    background: var(--bg-raise); border: 1px solid rgba(201,169,97,.4); color: var(--ink);
+    padding: 1rem 1.6rem; border-radius: 5px; font-size: .88rem; opacity: 0; pointer-events: none;
+    transition: all .35s ease; box-shadow: 0 12px 40px rgba(0,0,0,.5); max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast b { color: var(--accent); }
+
+  .toast a { color: var(--accent-bright); }
+
+  @media (max-width: 640px) {
+    header { padding: 1.1rem 1.2rem; flex-direction: column; gap: .6rem; }
+    header nav a { margin: 0 .5rem; }
+    .stage { min-height: 64vh; }
+    .btn-primary { padding: 1rem 1.4rem; font-size: .85rem; width: 100%; max-width: 22rem; }
+    .rules { gap: 1.6rem; }
+    .fallen li { flex-wrap: wrap; }
+    .fallen .meta { white-space: normal; }
+    dialog { padding: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wordmark">THE LAST<span> WORD</span></div>
+  <nav><a href="#how">How it works</a><a href="#fallen">The Fallen</a></nav>
+</header>
+<div class="demo-banner" id="demoBanner" hidden>Demo mode — payments are simulated. No card required.</div>
+
+<main>
+  <section class="stage">
+    <p class="kicker">One sentence rules this page — until someone pays more</p>
+    <h1 class="the-word" id="theWord">&nbsp;</h1>
+    <p class="attribution" id="attribution"></p>
+    <div class="cta-block">
+      <button class="btn-primary" id="dethroneBtn">Take the last word — <span id="btnPrice">$—</span></button>
+      <p class="price-note">The price only goes up. <b id="reignCount"></b></p>
+    </div>
+  </section>
+
+  <section class="rules" id="how">
+    <div><span class="n">I.</span>Pay the current price and your sentence replaces the one above, for the whole world to see.</div>
+    <div><span class="n">II.</span>Every takeover raises the price 25%. Your reign lasts until someone values theirs more.</div>
+    <div><span class="n">III.</span>Dethroned words are struck through and kept below, forever. Nobody escapes the ledger.</div>
+  </section>
+
+  <section class="fallen" id="fallen">
+    <h2>The Fallen</h2>
+    <p class="sub">Sentences that once ruled, and what their authors paid for the privilege.</p>
+    <ol id="fallenList"></ol>
+  </section>
+</main>
+
+<footer>
+  Every purchase is final — being dethroned is the point, not a defect.<br>
+  Hate speech and harassment are removed without refund. ·
+  <a href="#" id="termsLink">The fine print</a> ·
+  <a href="/legal.html">Terms &amp; refunds</a> ·
+  <a href="mailto:hello@example.com" id="contactLink">Contact</a>
+</footer>
+
+<dialog id="termsModal">
+  <h3>The fine print</h3>
+  <p class="dsub" style="margin-bottom:0; line-height:1.9">
+    You are buying one thing: the display of your sentence on this page until someone pays
+    more. That may take months or minutes — being dethroned is the product working, so all
+    sales are final. Dethroned sentences remain visible in The Fallen. Hate speech,
+    harassment, personal information, and spam are removed without refund. Payments are
+    processed by Stripe; we never see or store your card number, and we store only the text
+    you submit. Questions or removal requests: <a href="mailto:hello@example.com" id="termsContact" style="color:var(--accent)">email us</a>.
+    <br><br><a href="/legal.html" style="color:var(--accent)">Read the full terms, privacy &amp; refund policy →</a>
+  </p>
+  <div class="modal-actions" style="justify-content:flex-end">
+    <button type="button" class="btn-ghost" id="termsClose">Close</button>
+  </div>
+</dialog>
+
+<dialog id="modal">
+  <h3>Say it like it’s the last thing you’ll ever say.</h3>
+  <p class="dsub">Your sentence takes the page the instant payment clears — for <b id="modalPrice">$—</b>.</p>
+  <form id="dethroneForm" method="dialog">
+    <label for="text">Your sentence</label>
+    <textarea id="text" rows="3" maxlength="140" placeholder="140 characters. Choose them like they’re your last." required></textarea>
+    <div class="counter"><span id="charCount">0</span> / 140</div>
+    <label for="author">Signed (optional)</label>
+    <input type="text" id="author" maxlength="32" placeholder="Anonymous">
+    <p class="form-error" id="formError"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cancelBtn">Never mind</button>
+      <button type="submit" class="btn-primary" id="payBtn">Pay <span id="payPrice">$—</span> &amp; take the page</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const fmt = c => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: c % 100 ? 2 : 0 });
+  const fmtDate = ts => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  let state = null;
+  let fingerprint = '';
+
+  function render(s, animate) {
+    state = s;
+    fingerprint = (s.current ? s.current.id : '-') + ':' + s.history.length + ':' + s.nextPriceCents;
+    $('demoBanner').hidden = !s.demo;
+    const mail = $('contactLink'), tMail = $('termsContact');
+    if (s.contact) { mail.href = 'mailto:' + s.contact; tMail.href = 'mailto:' + s.contact; }
+    const wordEl = $('theWord');
+    const apply = () => {
+      wordEl.textContent = s.current ? s.current.text : 'The page stands empty. For now.';
+      $('attribution').innerHTML = s.current
+        ? '— <b>' + esc(s.current.author) + '</b>, who paid ' + fmt(s.current.amountCents) + ' on ' + fmtDate(s.current.at)
+        : '';
+    };
+    if (animate) { wordEl.classList.add('swap'); setTimeout(() => { apply(); wordEl.classList.remove('swap'); }, 500); }
+    else apply();
+    $('btnPrice').textContent = fmt(s.nextPriceCents);
+    $('modalPrice').textContent = fmt(s.nextPriceCents);
+    $('payPrice').textContent = fmt(s.nextPriceCents);
+    $('reignCount').textContent = s.reigns + (s.reigns === 1 ? ' reign so far.' : ' reigns so far.');
+    const list = $('fallenList');
+    list.innerHTML = '';
+    if (!s.history.length) {
+      list.innerHTML = '<li class="empty">No one has been dethroned yet. The first ruler still stands.</li>';
+    } else {
+      for (const h of s.history) {
+        const li = document.createElement('li');
+        li.innerHTML = '<span class="text">“' + esc(h.text) + '”</span>' +
+          '<span class="meta"><b>' + esc(h.author) + '</b> · ' + fmt(h.amountCents) + ' · ' + fmtDate(h.at) + '</span>';
+        list.appendChild(li);
+      }
+    }
+  }
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  async function refresh(animate) {
+    try {
+      const s = await (await fetch('/api/state')).json();
+      const fp = (s.current ? s.current.id : '-') + ':' + s.history.length + ':' + s.nextPriceCents;
+      if (fp === fingerprint) return; // nothing changed — don't re-render (keeps selection, focus)
+      const changed = state && state.current && s.current && state.current.id !== s.current.id;
+      render(s, animate && changed);
+    } catch (e) { /* transient */ }
+  }
+
+  // modal wiring
+  const modal = $('modal');
+  $('dethroneBtn').addEventListener('click', () => { $('formError').textContent = ''; modal.showModal(); $('text').focus(); });
+  $('cancelBtn').addEventListener('click', () => modal.close());
+  $('text').addEventListener('input', () => {
+    const n = $('text').value.length;
+    $('charCount').textContent = n;
+    $('charCount').parentElement.classList.toggle('over', n >= 140);
+  });
+
+  $('dethroneForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payBtn = $('payBtn');
+    payBtn.disabled = true;
+    $('formError').textContent = '';
+    try {
+      // Stash the draft so a canceled checkout never loses the user's words.
+      localStorage.setItem('lw-draft', JSON.stringify({ text: $('text').value, author: $('author').value }));
+      const r = await fetch('/api/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: $('text').value, author: $('author').value }),
+      });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body.error || 'Something went wrong.');
+      window.location.href = body.url;
+    } catch (err) {
+      $('formError').textContent = err.message;
+      payBtn.disabled = false;
+    }
+  });
+
+  $('termsLink').addEventListener('click', e => { e.preventDefault(); $('termsModal').showModal(); });
+  $('termsClose').addEventListener('click', () => $('termsModal').close());
+
+  function shareLink(text) {
+    return 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text + ' ' + location.origin);
+  }
+
+  let toastTimer;
+  function toast(html, ms) {
+    const t = $('toast');
+    t.innerHTML = html;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), ms || 6000);
+  }
+
+  // handle return from checkout
+  const q = new URLSearchParams(location.search);
+  if (q.get('sid')) {
+    fetch('/api/confirm?sid=' + encodeURIComponent(q.get('sid')))
+      .then(r => r.json().then(b => ({ ok: r.ok, b })))
+      .then(({ ok, b }) => {
+        if (ok && b.ok) {
+          localStorage.removeItem('lw-draft');
+          render(b.state);
+          toast('<b>The page is yours.</b> Hold it while you can. <a href="' +
+            shareLink('I hold The Last Word: “' + b.state.current.text + '” — dethrone me if you can.') +
+            '" target="_blank" rel="noopener">Announce your reign →</a>', 12000);
+          history.replaceState(null, '', '/');
+        } else {
+          // Payment may have gone through but confirmation lagged — keep the sid in the
+          // URL so a reload retries, and tell the user exactly that.
+          toast('<b>Confirming your payment…</b> it hasn’t landed yet. <a href="' + location.href +
+            '">Tap to check again</a> — if you were charged, your word WILL take the page.', 20000);
+        }
+      })
+      .catch(() => toast('<b>Confirming your payment…</b> connection hiccup. <a href="' + location.href +
+        '">Tap to check again</a>.', 20000));
+  } else if (q.get('canceled')) {
+    const d = JSON.parse(localStorage.getItem('lw-draft') || 'null');
+    if (d && d.text) {
+      $('text').value = d.text; $('author').value = d.author || '';
+      $('text').dispatchEvent(new Event('input'));
+      modal.showModal();
+    }
+    toast('Checkout canceled — nothing was charged. Your sentence awaits your courage.');
+    history.replaceState(null, '', '/');
+  }
+
+  refresh(false);
+  setInterval(() => refresh(true), 8000);
+})();
+</script>
+</body>
+</html>

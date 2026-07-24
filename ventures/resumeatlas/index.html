@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumeAtlas — ATS-Friendly Resume Builder</title>
+<style>
+  :root{
+    --bg: #f4f5f7;
+    --panel: #ffffff;
+    --border: #e2e4e9;
+    --text: #1c1f26;
+    --text-muted: #62697a;
+    --accent: #2f5fda;
+    --accent-soft: #e8edfd;
+    --danger: #d64545;
+    --danger-soft: #fdeaea;
+    --success: #1a8a53;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(20,22,30,.04), 0 6px 16px rgba(20,22,30,.06);
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3,h4{ margin:0; }
+  button{ font-family: inherit; }
+  input, textarea, select{ font-family: inherit; }
+
+  a { color: var(--accent); }
+
+  /* ===== Top bar ===== */
+  .topbar{
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .brand .mark{
+    width: 30px; height:30px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), #7a4fe0);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:15px; font-weight:800;
+    flex-shrink:0;
+  }
+  .topbar-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap: wrap;
+    align-items:center;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, transform .05s ease, box-shadow .12s ease;
+    white-space: nowrap;
+  }
+  .btn:hover{ background: #f6f7fb; border-color: #c9cdda; }
+  .btn:active{ transform: translateY(1px); }
+  .btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary{
+    background: var(--accent);
+    border-color: var(--accent);
+    color:#fff;
+  }
+  .btn-primary:hover{ background:#2650bb; border-color:#2650bb; }
+  .btn-danger{ color: var(--danger); }
+  .btn-danger:hover{ background: var(--danger-soft); border-color:#f0b8b8; }
+  .btn-ghost{ border-color: transparent; background: transparent; }
+  .btn-ghost:hover{ background:#f0f1f5; }
+  .btn-sm{ padding: 5px 10px; font-size: 12.5px; border-radius:7px; }
+  .btn[disabled]{ opacity:.5; cursor:not-allowed; }
+
+  input[type="file"].hidden-file{ display:none; }
+
+  /* ===== Layout ===== */
+  .layout{
+    display: grid;
+    grid-template-columns: 340px minmax(0,1fr) 380px;
+    gap: 18px;
+    max-width: 1680px;
+    margin: 0 auto;
+    padding: 18px;
+    align-items: start;
+  }
+
+  .col{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .col-header{
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+    z-index: 5;
+  }
+  .col-header h2{ font-size: 14px; text-transform: uppercase; letter-spacing:.06em; color: var(--text-muted); }
+
+  .col-body{
+    padding: 16px;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+  }
+  .col-body::-webkit-scrollbar{ width: 8px; }
+  .col-body::-webkit-scrollbar-thumb{ background: #d7dae2; border-radius: 4px; }
+  .col-body::-webkit-scrollbar-thumb:hover{ background: #b9becb; }
+
+  /* ===== Left: ATS tips ===== */
+  .tips-list{
+    list-style:none;
+    margin:0; padding:0;
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+  }
+  .tip{
+    display:flex;
+    gap:10px;
+    padding: 10px 12px;
+    background: #fbfbfd;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .tip .num{
+    flex-shrink:0;
+    width: 22px; height:22px;
+    border-radius:50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tip p{ margin:0; font-size: 13px; line-height:1.45; color: var(--text); }
+  .tip strong{ display:block; font-size: 13.5px; margin-bottom:2px; }
+
+  .template-picker{
+    margin-bottom: 18px;
+  }
+  .section-label{
+    font-size: 11.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color: var(--text-muted);
+    margin: 0 0 8px;
+  }
+  .template-options{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:8px;
+    margin-bottom: 14px;
+  }
+  .tpl-btn{
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 4px;
+    background:#fff;
+    cursor:pointer;
+    text-align:center;
+    font-size: 12px;
+    font-weight:600;
+    color: var(--text-muted);
+    transition: all .12s ease;
+  }
+  .tpl-btn:hover{ border-color: var(--accent); color:var(--text); }
+  .tpl-btn.active{
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .swatches{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom: 6px;
+  }
+  .swatch{
+    width: 26px; height:26px;
+    border-radius:50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1.5px var(--border);
+    cursor:pointer;
+    padding:0;
+    transition: box-shadow .12s ease, transform .1s ease;
+  }
+  .swatch:hover{ transform: scale(1.08); }
+  .swatch.active{ box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--current-swatch, var(--accent)); }
+  .color-custom{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:8px;
+  }
+  .color-custom input[type=color]{
+    width: 34px; height: 30px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:2px;
+    background:#fff;
+    cursor:pointer;
+  }
+  .color-custom label{ font-size:12.5px; color:var(--text-muted); }
+
+  /* ===== Middle: form ===== */
+  .form-section{
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .form-section > .fs-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 11px 14px;
+    background: #fafbfc;
+    cursor:pointer;
+    user-select:none;
+  }
+  .form-section > .fs-head h3{
+    font-size: 13.5px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .fs-head .chev{
+    transition: transform .15s ease;
+    color: var(--text-muted);
+    font-size:11px;
+  }
+  .form-section.collapsed .fs-head .chev{ transform: rotate(-90deg); }
+  .form-section.collapsed .fs-body{ display:none; }
+  .fs-body{ padding: 14px; }
+
+  .field{ margin-bottom: 12px; }
+  .field:last-child{ margin-bottom:0; }
+  .field label{
+    display:block;
+    font-size: 12px;
+    font-weight:600;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .field input[type=text], .field input[type=email], .field input[type=tel],
+  .field input[type=url], .field input[type=month], .field textarea{
+    width:100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 13.5px;
+    color: var(--text);
+    background:#fff;
+    transition: border-color .12s ease, box-shadow .12s ease;
+  }
+  .field input:focus, .field textarea:focus{
+    outline:none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .field textarea{ resize: vertical; min-height: 60px; line-height:1.5; }
+  .row2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .row3{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
+
+  .hint{ font-size:11.5px; color: var(--text-muted); margin-top:4px; }
+
+  .entry-card{
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fdfdfe;
+    position: relative;
+  }
+  .entry-card .entry-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .entry-card .entry-top .drag-label{
+    font-size:11px;
+    font-weight:700;
+    color: var(--text-muted);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    padding-top:6px;
+  }
+  .entry-controls{ display:flex; gap:4px; flex-shrink:0; }
+  .icon-btn{
+    width:28px; height:28px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:#fff;
+    color: var(--text-muted);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px;
+    transition: all .12s ease;
+  }
+  .icon-btn:hover{ background:#f0f1f5; color: var(--text); }
+  .icon-btn.danger:hover{ background: var(--danger-soft); color: var(--danger); border-color:#f0b8b8; }
+  .icon-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+
+  .bullets-list{ display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+  .bullet-row{ display:flex; gap:6px; align-items:flex-start; }
+  .bullet-row textarea{ flex:1; min-height:36px; }
+
+  .add-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 12px;
+    border-radius:7px;
+    border: 1.5px dashed var(--border);
+    background: transparent;
+    color: var(--accent);
+    font-size: 12.5px;
+    font-weight:700;
+    cursor:pointer;
+    width:100%;
+    justify-content:center;
+    transition: all .12s ease;
+  }
+  .add-btn:hover{ background: var(--accent-soft); border-color: var(--accent); }
+
+  .tag-input-wrap{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    padding: 8px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    background:#fff;
+    align-items:center;
+  }
+  .tag-input-wrap:focus-within{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .tag-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 4px 8px 4px 10px;
+    border-radius: 20px;
+    font-size:12.5px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .tag-chip button{
+    border:none; background:transparent; color: var(--accent);
+    cursor:pointer; font-size:14px; line-height:1; padding:0 2px;
+    font-weight:800;
+  }
+  .tag-input-wrap input{
+    border:none; outline:none; flex:1; min-width:120px; font-size:13.5px; padding:4px;
+  }
+
+  .empty-note{
+    font-size:12.5px;
+    color: var(--text-muted);
+    text-align:center;
+    padding: 14px;
+    border: 1px dashed var(--border);
+    border-radius:8px;
+    background: #fafbfc;
+  }
+
+  /* ===== Right: preview ===== */
+  .preview-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .zoom-controls{ display:flex; align-items:center; gap:6px; }
+  .zoom-controls span{ font-size:12px; color:var(--text-muted); min-width:38px; text-align:center; }
+
+  .preview-stage{
+    background: #dde1e9;
+    padding: 24px 14px;
+    display:flex;
+    justify-content:flex-start;
+    overflow:auto;
+    max-height: calc(100vh - 130px);
+  }
+  .preview-stage.fits{
+    justify-content:center;
+  }
+
+  .page-frame{
+    flex-shrink:0;
+    overflow:hidden;
+  }
+
+  .page{
+    background:#fff;
+    width: 210mm;
+    min-height: 297mm;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12), 0 10px 30px rgba(0,0,0,.14);
+    padding: 16mm 15mm;
+    transform-origin: top left;
+    flex-shrink:0;
+  }
+
+  /* ---- Resume content (shared) ---- */
+  .r-name{ font-size: 25px; font-weight:800; letter-spacing:-0.02em; margin-bottom:2px; }
+  .r-title{ font-size: 13.5px; font-weight:600; margin-bottom:8px; }
+  .r-contact{
+    font-size: 10.7px;
+    color:#444;
+    display:flex;
+    flex-wrap:wrap;
+    gap: 4px 10px;
+    margin-bottom: 14px;
+  }
+  .r-contact span:not(:last-child)::after{ content:"•"; margin-left:10px; color:#aaa; }
+  .r-section{ margin-bottom: 12px; break-inside: avoid-page; }
+  .r-heading{
+    font-size: 11.5px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom: 6px;
+    padding-bottom: 3px;
+    border-bottom: 1.4px solid #ccc;
+  }
+  .r-summary{ font-size: 11.3px; line-height:1.55; color:#222; }
+  .r-job{ margin-bottom: 9px; break-inside: avoid-page; }
+  .r-job:last-child{ margin-bottom:0; }
+  .r-job-head{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .r-job-role{ font-size: 12px; font-weight:700; }
+  .r-job-company{ font-size:11.5px; font-weight:600; }
+  .r-job-dates{ font-size: 10.5px; color:#555; white-space:nowrap; font-style:italic; }
+  .r-job ul{ margin: 4px 0 0; padding-left: 15px; }
+  .r-job li{ font-size: 11px; line-height:1.5; margin-bottom:2px; color:#222; }
+  .r-edu-item{ margin-bottom:7px; break-inside: avoid-page; }
+  .r-edu-item:last-child{ margin-bottom:0; }
+  .r-edu-head{ display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .r-edu-degree{ font-size:11.8px; font-weight:700; }
+  .r-edu-school{ font-size:11.2px; }
+  .r-edu-dates{ font-size:10.5px; color:#555; font-style:italic; white-space:nowrap; }
+  .r-skills{ display:flex; flex-wrap:wrap; gap: 5px 8px; }
+  .r-skill-pill{ font-size: 10.8px; }
+  .r-cert-item{ font-size:11.3px; margin-bottom:3px; }
+  .r-links{ font-size: 11px; }
+
+  /* Classic template */
+  .tpl-classic .page{ font-family: Georgia, 'Times New Roman', Times, serif; color:#1a1a1a; }
+  .tpl-classic .r-name{ text-align:center; }
+  .tpl-classic .r-title{ text-align:center; }
+  .tpl-classic .r-contact{ justify-content:center; text-align:center; }
+  .tpl-classic .r-heading{ border-bottom-color: var(--r-accent, #333); color:#111; }
+  .tpl-classic .r-job-role{ color:#111; }
+
+  /* Modern template */
+  .tpl-modern .page{ font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color:#242424; }
+  .tpl-modern .r-name{ color: var(--r-accent, #2f5fda); }
+  .tpl-modern .r-heading{
+    color: var(--r-accent, #2f5fda);
+    border-bottom: 2.4px solid var(--r-accent, #2f5fda);
+  }
+  .tpl-modern .r-job-role{ color: #1a1a1a; }
+  .tpl-modern .r-skill-pill{
+    background: var(--r-accent-soft, #e8edfd);
+    color: var(--r-accent, #2f5fda);
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight:600;
+  }
+  .tpl-modern .r-name-block{ border-left: 4px solid var(--r-accent, #2f5fda); padding-left:12px; }
+
+  /* Compact template */
+  .tpl-compact .page{ font-family: Arial, Helvetica, sans-serif; color:#1a1a1a; font-size:95%; }
+  .tpl-compact .r-name{ font-size:20px; }
+  .tpl-compact .r-section{ margin-bottom:8px; }
+  .tpl-compact .r-heading{
+    font-size:10.5px;
+    border-bottom: 1px solid var(--r-accent, #333);
+    color: var(--r-accent, #333);
+    margin-bottom:4px;
+  }
+  .tpl-compact .r-job{ margin-bottom:6px; }
+  .tpl-compact .r-job li{ font-size:10.3px; margin-bottom:1px; }
+  .tpl-compact .r-summary{ font-size:10.5px; }
+  .tpl-compact .r-contact{ margin-bottom:9px; }
+  .tpl-compact .r-skill-pill::after{ content:"·"; margin-left:6px; color:#999; }
+  .tpl-compact .r-skill-pill:last-child::after{ content:""; }
+
+  /* ===== Footer/status ===== */
+  .autosave-indicator{
+    font-size: 11.5px;
+    color: var(--success);
+    display:flex;
+    align-items:center;
+    gap:5px;
+    white-space:nowrap;
+  }
+  .autosave-indicator .dot{
+    width:6px;height:6px;border-radius:50%;
+    background: var(--success);
+  }
+
+  .toast{
+    position: fixed;
+    bottom: 20px;
+    left:50%;
+    transform: translateX(-50%) translateY(8px);
+    background: #1c1f26;
+    color:#fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight:600;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    z-index: 100;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); pointer-events:auto; }
+  .toast.error{ background: var(--danger); }
+
+  .modal-overlay{
+    position:fixed; inset:0;
+    background: rgba(20,22,30,.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    background:#fff;
+    border-radius: 12px;
+    padding: 22px;
+    max-width: 420px;
+    width:100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .modal h3{ font-size:16px; margin-bottom:8px; }
+  .modal p{ font-size:13.5px; color:var(--text-muted); line-height:1.5; margin-bottom:16px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 1300px){
+    .layout{ grid-template-columns: 300px minmax(0,1fr); }
+    .col.preview-col{ grid-column: 1 / -1; order: 3; }
+    .page{ margin: 0 auto; }
+  }
+  @media (max-width: 860px){
+    .layout{ grid-template-columns: 1fr; padding: 12px; gap:12px; }
+    .col{ order: initial; }
+    .col-body, .preview-stage{ max-height: none; }
+    .topbar{ padding: 10px 12px; }
+    .row2, .row3{ grid-template-columns: 1fr; }
+    .template-options{ grid-template-columns: repeat(3,1fr); }
+  }
+  @media (max-width: 480px){
+    .topbar{ flex-direction: column; align-items: stretch; }
+    .topbar-actions{ justify-content: center; }
+    .brand{ justify-content:center; }
+  }
+  @media (max-width: 375px){
+    .page{ width: 100%; padding: 6mm; }
+    .col-header{ padding: 10px 12px; }
+    .col-body{ padding: 10px; }
+  }
+
+  /* ===== Print ===== */
+  @media print{
+    @page{
+      size: A4;
+      margin: 14mm 15mm;
+    }
+    html, body{
+      background:#fff !important;
+      margin:0; padding:0;
+    }
+    body *{ visibility: hidden; }
+    .page, .page *{ visibility: visible; }
+    .topbar, .layout > .col:not(.preview-col), .preview-toolbar{
+      display:none !important;
+    }
+    .preview-col, .preview-col .col-body{
+      all: unset;
+      display:block;
+    }
+    /* .preview-stage and .page-frame are ancestors of .page (the actual
+       resume content), so they must stay rendered (not display:none) —
+       only their screen-only chrome (grey backdrop, padding, scroll
+       clipping, fixed pixel footprint reserved for the zoomed preview)
+       needs to be neutralized so the full-size page is what prints. */
+    .preview-stage{
+      all: unset;
+      display:block;
+    }
+    .page-frame{
+      all: unset;
+      display:block;
+    }
+    .layout{ display:block; padding:0; margin:0; max-width:none; }
+    .page{
+      position: absolute;
+      top:0; left:0;
+      width: auto;
+      min-height:0;
+      margin:0;
+      padding:0;
+      box-shadow:none;
+      transform:none !important;
+    }
+    .r-section{ break-inside: avoid; page-break-inside: avoid; }
+    .r-job{ break-inside: avoid; page-break-inside: avoid; }
+    .r-edu-item{ break-inside: avoid; page-break-inside: avoid; }
+    .r-heading{ break-after: avoid; page-break-after: avoid; }
+    .toast, .modal-overlay{ display:none !important; }
+  }
+</style>
+</head>
+<body class="tpl-modern">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">RA</div>
+      <span>ResumeAtlas</span>
+    </div>
+    <div class="topbar-actions">
+      <span class="autosave-indicator" id="autosaveIndicator"><span class="dot"></span>Saved</span>
+      <button class="btn" id="btnImport" title="Import a JSON backup">Import JSON</button>
+      <input type="file" id="fileImport" class="hidden-file" accept="application/json">
+      <button class="btn" id="btnExport" title="Download your resume data as JSON">Export JSON</button>
+      <button class="btn btn-danger" id="btnReset" title="Clear everything and reload sample">Reset</button>
+      <button class="btn btn-primary" id="btnPrint" title="Print or save as PDF">Print / Save PDF</button>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT: Template picker + ATS tips -->
+    <div class="col">
+      <div class="col-header"><h2>Design &amp; Tips</h2></div>
+      <div class="col-body">
+        <div class="template-picker">
+          <p class="section-label">Template</p>
+          <div class="template-options" id="templateOptions">
+            <button class="tpl-btn active" data-tpl="modern">Modern</button>
+            <button class="tpl-btn" data-tpl="classic">Classic</button>
+            <button class="tpl-btn" data-tpl="compact">Compact</button>
+          </div>
+          <p class="section-label">Accent color</p>
+          <div class="swatches" id="swatches"></div>
+          <div class="color-custom">
+            <input type="color" id="customColor" value="#2f5fda">
+            <label for="customColor">Custom color</label>
+          </div>
+        </div>
+
+        <p class="section-label">ATS Tips</p>
+        <ul class="tips-list">
+          <li class="tip"><span class="num">1</span><p><strong>Keep it single-column.</strong>Tables, text boxes, and multi-column layouts confuse ATS parsers and can scramble your content order.</p></li>
+          <li class="tip"><span class="num">2</span><p><strong>Mirror the job posting's language.</strong>Use the exact skill and title keywords from the listing — ATS matching is often literal string matching.</p></li>
+          <li class="tip"><span class="num">3</span><p><strong>Use standard section headings.</strong>"Work Experience," "Education," "Skills" parse reliably. Creative headings like "My Journey" often don't.</p></li>
+          <li class="tip"><span class="num">4</span><p><strong>Save as PDF from a print-safe layout.</strong>Avoid PDFs exported from design tools with embedded images of text — parsers need selectable text.</p></li>
+          <li class="tip"><span class="num">5</span><p><strong>Quantify achievements.</strong>"Reduced onboarding time by 35%" beats "Responsible for onboarding" for both ATS scoring and human reviewers.</p></li>
+          <li class="tip"><span class="num">6</span><p><strong>Spell out acronyms once.</strong>Write "Search Engine Optimization (SEO)" so you match keyword searches for either form.</p></li>
+          <li class="tip"><span class="num">7</span><p><strong>Avoid headers/footers for key info.</strong>Some parsers skip header/footer text entirely — keep contact details in the main body.</p></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- MIDDLE: Form -->
+    <div class="col">
+      <div class="col-header"><h2>Edit Resume</h2></div>
+      <div class="col-body" id="formColumn">
+
+        <!-- Contact -->
+        <div class="form-section" data-section="contact">
+          <div class="fs-head"><h3>Contact</h3><span class="chev">▾</span></div>
+          <div class="fs-body">
+            <div class="row2">
+              <div class="field"><label for="f-name">Full name</label><input type="text" id="f-name" placeholder="Jordan Alvarez"></div>
+              <div class="field"><label for="f-title">Professional title</label><input type="text" id="f-title" placeholder="Senior Product Manager"></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label for="f-email">Email</label><input type="email" id="f-email" placeholder="jordan@email.com"></div>
+              <div class="field"><label for="f-phone">Phone</label><input type="tel" id="f-phone" placeholder="(555) 123-4567"></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label for="f-location">Location</label><input type="text" id="f-location" placeholder="Austin, TX"></div>
+              <div class="field"><label for="f-website">Website / LinkedIn</label><input type="text" id="f-website" placeholder="linkedin.com/in/jordanalvarez"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="form-section" data-section="summary">
+          <div class="fs-head"><h3>Professional Summary</h3><span class="chev">▾</span></div>
+          <div class="fs-body">
+            <div class="field">
+              <label for="f-summary">Summary (2–4 sentences)</label>
+              <textarea id="f-summary" rows="4" placeholder="Results-driven product manager with 8+ years leading cross-functional teams..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Experience -->
+        <div class="form-section" data-section="experience">
+          <div class="fs-head"><h3>Work Experience</h3><span class="chev">▾</span></div>
+          <div class="fs-body">
+            <div id="experienceList"></div>
+            <button class="add-btn" id="addExperience" type="button">+ Add work experience</button>
+          </div>
+        </div>
+
+        <!-- Education -->
+        <div class="form-section" data-section="education">
+          <div class="fs-head"><h3>Education</h3><span class="chev">▾</span></div>
+          <div class="fs-body">
+            <div id="educationList"></div>
+            <button class="add-btn" id="addEducation" type="button">+ Add education</button>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="form-section" data-section="skills">
+          <div class="fs-head"><h3>Skills</h3><span class="chev">▾</span></div>
+          <div class="fs-body">
+            <div class="field">
+              <label>Type a skill and press Enter</label>
+              <div class="tag-input-wrap" id="skillsWrap">
+                <input type="text" id="skillInput" placeholder="e.g. Roadmapping, SQL, Figma">
+              </div>
+              <p class="hint">Tip: list skills exactly as they appear in job postings you're targeting.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Certifications -->
+        <div class="form-section" data-section="certifications">
+          <div class="fs-head"><h3>Certifications</h3><span class="chev">▾</span></div>
+          <div class="fs-body">
+            <div id="certList"></div>
+            <button class="add-btn" id="addCert" type="button">+ Add certification</button>
+          </div>
+        </div>
+
+        <!-- Links -->
+        <div class="form-section" data-section="links">
+          <div class="fs-head"><h3>Additional Links</h3><span class="chev">▾</span></div>
+          <div class="fs-body">
+            <div id="linksList"></div>
+            <button class="add-btn" id="addLink" type="button">+ Add link</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Preview -->
+    <div class="col preview-col">
+      <div class="col-header">
+        <h2>Live Preview</h2>
+      </div>
+      <div class="col-body" style="padding:10px 14px;">
+        <div class="preview-toolbar">
+          <div class="zoom-controls">
+            <button class="icon-btn" id="zoomOut" title="Zoom out">−</button>
+            <span id="zoomLabel">62%</span>
+            <button class="icon-btn" id="zoomIn" title="Zoom in">+</button>
+          </div>
+          <button class="btn btn-sm" id="btnPrint2">Print / Save PDF</button>
+        </div>
+      </div>
+      <div class="preview-stage" id="previewStage">
+        <div class="page-frame" id="pageFrame">
+          <div class="page" id="resumePage">
+            <!-- Rendered resume content injected here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal">
+      <h3>Reset all data?</h3>
+      <p>This will permanently erase your current resume from this browser and reload the sample resume. This cannot be undone — export a JSON backup first if you want to keep it.</p>
+      <div class="modal-actions">
+        <button class="btn" id="cancelReset">Cancel</button>
+        <button class="btn btn-danger" id="confirmReset">Erase &amp; Reset</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "resumeatlas.v1";
+  var toastTimer = null;
+  var saveTimer = null;
+
+  /* ---------------- Sample data ---------------- */
+  function sampleData(){
+    return {
+      template: "modern",
+      accent: "#2f5fda",
+      zoom: 0.62,
+      contact: {
+        name: "Jordan Alvarez",
+        title: "Senior Product Manager",
+        email: "jordan.alvarez@email.com",
+        phone: "(512) 555-0148",
+        location: "Austin, TX",
+        website: "linkedin.com/in/jordanalvarez"
+      },
+      summary: "Product manager with 8+ years leading cross-functional teams to ship consumer and B2B SaaS products. Skilled at translating ambiguous business goals into shipped features that move retention and revenue. Known for pairing data-driven prioritization with hands-on customer discovery.",
+      experience: [
+        {
+          role: "Senior Product Manager",
+          company: "Northbeam Analytics",
+          location: "Austin, TX",
+          start: "2021-03",
+          end: "",
+          current: true,
+          bullets: [
+            "Led a team of 4 engineers and 1 designer to launch a self-serve onboarding flow, cutting time-to-first-value from 9 days to 36 hours.",
+            "Grew paid conversion 22% by redesigning the pricing page based on 40+ customer interviews and A/B testing.",
+            "Defined and shipped a usage-based billing model adopted by 3,200+ accounts within 6 months of GA.",
+            "Partnered with sales and support leadership to reduce churn-driving tickets by 31% through in-app guidance."
+          ]
+        },
+        {
+          role: "Product Manager",
+          company: "Fieldstone Software",
+          location: "Remote",
+          start: "2018-06",
+          end: "2021-02",
+          current: false,
+          bullets: [
+            "Owned the roadmap for a B2B inventory management module used by 500+ mid-market warehouses.",
+            "Ran quarterly discovery sprints that identified a $1.4M ARR opportunity in barcode-scanning integrations.",
+            "Reduced average support resolution time by 40% by shipping a redesigned in-app diagnostics panel."
+          ]
+        },
+        {
+          role: "Associate Product Manager",
+          company: "Fieldstone Software",
+          location: "Remote",
+          start: "2016-08",
+          end: "2018-06",
+          current: false,
+          bullets: [
+            "Wrote product specs and managed backlog grooming for a 6-person engineering squad.",
+            "Launched a customer feedback portal that increased qualified feature requests by 3x."
+          ]
+        }
+      ],
+      education: [
+        {
+          degree: "B.S. in Business Administration, Information Systems",
+          school: "University of Texas at Austin",
+          location: "Austin, TX",
+          start: "2012-08",
+          end: "2016-05"
+        }
+      ],
+      skills: ["Product Strategy","Roadmapping","SQL","A/B Testing","Figma","Agile/Scrum","Jira","User Research","Pricing Strategy","Stakeholder Management"],
+      certifications: [
+        { name: "Certified Scrum Product Owner (CSPO)", issuer: "Scrum Alliance", date: "2020-04" },
+        { name: "Pragmatic Institute Certified — Level II", issuer: "Pragmatic Institute", date: "2019-09" }
+      ],
+      links: [
+        { label: "Portfolio", url: "jordanalvarez.dev" },
+        { label: "GitHub", url: "github.com/jalvarez" }
+      ]
+    };
+  }
+
+  var state = null;
+
+  /* ---------------- Persistence ---------------- */
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return sampleData();
+      var parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== "object") return sampleData();
+      // merge with defaults to survive schema drift
+      var base = sampleData();
+      return Object.assign({}, base, parsed, {
+        contact: Object.assign({}, base.contact, parsed.contact || {}),
+        experience: Array.isArray(parsed.experience) ? parsed.experience : base.experience,
+        education: Array.isArray(parsed.education) ? parsed.education : base.education,
+        skills: Array.isArray(parsed.skills) ? parsed.skills : base.skills,
+        certifications: Array.isArray(parsed.certifications) ? parsed.certifications : base.certifications,
+        links: Array.isArray(parsed.links) ? parsed.links : base.links
+      });
+    }catch(e){
+      console.warn("ResumeAtlas: failed to load saved state, using sample.", e);
+      return sampleData();
+    }
+  }
+
+  function persist(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      showAutosaved();
+    }catch(e){
+      console.error("ResumeAtlas: save failed", e);
+      showToast("Could not save — storage may be full.", true);
+    }
+  }
+
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persist, 250);
+  }
+
+  var autosaveEl;
+  function showAutosaved(){
+    if(!autosaveEl) autosaveEl = document.getElementById("autosaveIndicator");
+    autosaveEl.innerHTML = '<span class="dot"></span>Saved';
+    autosaveEl.style.color = "";
+  }
+
+  /* ---------------- Utilities ---------------- */
+  function escapeHtml(str){
+    if(str === undefined || str === null) return "";
+    return String(str)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
+  }
+
+  function uid(){
+    return "id" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  }
+
+  function formatMonthYear(val){
+    if(!val) return "";
+    var parts = val.split("-");
+    if(parts.length !== 2) return val;
+    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    var y = parts[0], m = parseInt(parts[1],10)-1;
+    if(m < 0 || m > 11 || isNaN(y)) return val;
+    return months[m] + " " + y;
+  }
+
+  function dateRangeLabel(start, end, current){
+    var s = formatMonthYear(start);
+    var e = current ? "Present" : formatMonthYear(end);
+    if(!s && !e) return "";
+    if(s && !e) return s;
+    if(!s && e) return e;
+    return s + " – " + e;
+  }
+
+  function showToast(msg, isError){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast show" + (isError ? " error" : "");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+  }
+
+  function hexToRgb(hex){
+    hex = hex.replace("#","");
+    if(hex.length === 3){ hex = hex.split("").map(function(c){return c+c;}).join(""); }
+    var num = parseInt(hex, 16);
+    return { r: (num>>16)&255, g: (num>>8)&255, b: num&255 };
+  }
+  function softenColor(hex){
+    var rgb = hexToRgb(hex);
+    return "rgba(" + rgb.r + "," + rgb.g + "," + rgb.b + ",0.12)";
+  }
+
+  /* ---------------- Rendering: form ---------------- */
+
+  function bindField(id, path, isBlurCommit){
+    var el = document.getElementById(id);
+    if(!el) return;
+    var evt = (el.tagName === "TEXTAREA" || el.type === "text" || el.type === "email" || el.type === "tel" || el.type === "url") ? "input" : "change";
+    el.addEventListener(evt, function(){
+      setByPath(path, el.value);
+      renderPreview();
+      scheduleSave();
+    });
+  }
+
+  function setByPath(path, value){
+    var parts = path.split(".");
+    var obj = state;
+    for(var i=0;i<parts.length-1;i++){ obj = obj[parts[i]]; }
+    obj[parts[parts.length-1]] = value;
+  }
+
+  function fillContactForm(){
+    document.getElementById("f-name").value = state.contact.name || "";
+    document.getElementById("f-title").value = state.contact.title || "";
+    document.getElementById("f-email").value = state.contact.email || "";
+    document.getElementById("f-phone").value = state.contact.phone || "";
+    document.getElementById("f-location").value = state.contact.location || "";
+    document.getElementById("f-website").value = state.contact.website || "";
+    document.getElementById("f-summary").value = state.summary || "";
+  }
+
+  /* ---- Experience ---- */
+  function renderExperienceForm(){
+    var list = document.getElementById("experienceList");
+    list.innerHTML = "";
+    if(state.experience.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty-note";
+      empty.textContent = "No experience added yet. Click \"Add work experience\" to get started.";
+      list.appendChild(empty);
+      return;
+    }
+    state.experience.forEach(function(job, idx){
+      var card = document.createElement("div");
+      card.className = "entry-card";
+      card.innerHTML =
+        '<div class="entry-top">' +
+          '<span class="drag-label">Position ' + (idx+1) + '</span>' +
+          '<div class="entry-controls">' +
+            '<button class="icon-btn" data-act="up" title="Move up" ' + (idx===0?'disabled':'') + '>↑</button>' +
+            '<button class="icon-btn" data-act="down" title="Move down" ' + (idx===state.experience.length-1?'disabled':'') + '>↓</button>' +
+            '<button class="icon-btn danger" data-act="del" title="Remove">✕</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="row2">' +
+          '<div class="field"><label>Job title</label><input type="text" data-f="role" value="' + escapeHtml(job.role) + '" placeholder="Senior Product Manager"></div>' +
+          '<div class="field"><label>Company</label><input type="text" data-f="company" value="' + escapeHtml(job.company) + '" placeholder="Acme Corp"></div>' +
+        '</div>' +
+        '<div class="row3">' +
+          '<div class="field"><label>Location</label><input type="text" data-f="location" value="' + escapeHtml(job.location) + '" placeholder="Austin, TX"></div>' +
+          '<div class="field"><label>Start date</label><input type="month" data-f="start" value="' + escapeHtml(job.start) + '"></div>' +
+          '<div class="field"><label>End date</label><input type="month" data-f="end" value="' + escapeHtml(job.end) + '" ' + (job.current?'disabled':'') + '></div>' +
+        '</div>' +
+        '<div class="field"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" data-f="current" ' + (job.current?'checked':'') + ' style="width:auto;">I currently work here</label></div>' +
+        '<div class="field"><label>Achievements (one per line)</label><div class="bullets-list" data-bullets></div>' +
+          '<button type="button" class="add-btn" data-act="addbullet">+ Add bullet point</button>' +
+        '</div>';
+
+      // bullets
+      var bulletsWrap = card.querySelector("[data-bullets]");
+      job.bullets.forEach(function(bullet, bIdx){
+        var row = document.createElement("div");
+        row.className = "bullet-row";
+        row.innerHTML = '<textarea rows="2" data-bullet-idx="' + bIdx + '" placeholder="Describe an achievement with a measurable result...">' + escapeHtml(bullet) + '</textarea>' +
+          '<button class="icon-btn danger" data-act="delbullet" data-bullet-idx="' + bIdx + '" title="Remove bullet">✕</button>';
+        bulletsWrap.appendChild(row);
+      });
+
+      // events
+      card.querySelectorAll('input[data-f]').forEach(function(inp){
+        var f = inp.getAttribute("data-f");
+        var handler = function(){
+          if(inp.type === "checkbox"){
+            job[f] = inp.checked;
+            if(f === "current" && inp.checked){
+              job.end = "";
+            }
+            renderExperienceForm();
+          } else {
+            job[f] = inp.value;
+          }
+          renderPreview();
+          scheduleSave();
+        };
+        inp.addEventListener(inp.type === "checkbox" ? "change" : "input", handler);
+      });
+
+      card.querySelectorAll('textarea[data-bullet-idx]').forEach(function(ta){
+        ta.addEventListener("input", function(){
+          var bi = parseInt(ta.getAttribute("data-bullet-idx"),10);
+          job.bullets[bi] = ta.value;
+          renderPreview();
+          scheduleSave();
+        });
+      });
+
+      card.querySelectorAll('button[data-act="delbullet"]').forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var bi = parseInt(btn.getAttribute("data-bullet-idx"),10);
+          job.bullets.splice(bi,1);
+          renderExperienceForm();
+          renderPreview();
+          scheduleSave();
+        });
+      });
+
+      card.querySelector('[data-act="addbullet"]').addEventListener("click", function(){
+        job.bullets.push("");
+        renderExperienceForm();
+        scheduleSave();
+        var textareas = card.querySelectorAll("textarea[data-bullet-idx]");
+        // focus newest after rerender happens on next tick
+        setTimeout(function(){
+          var allCards = document.querySelectorAll("#experienceList .entry-card");
+          var thisCard = allCards[idx];
+          if(thisCard){
+            var tas = thisCard.querySelectorAll("textarea[data-bullet-idx]");
+            if(tas.length) tas[tas.length-1].focus();
+          }
+        }, 0);
+      });
+
+      card.querySelector('[data-act="del"]').addEventListener("click", function(){
+        state.experience.splice(idx,1);
+        renderExperienceForm();
+        renderPreview();
+        scheduleSave();
+      });
+      card.querySelector('[data-act="up"]').addEventListener("click", function(){
+        if(idx===0) return;
+        var tmp = state.experience[idx-1];
+        state.experience[idx-1] = state.experience[idx];
+        state.experience[idx] = tmp;
+        renderExperienceForm();
+        renderPreview();
+        scheduleSave();
+      });
+      card.querySelector('[data-act="down"]').addEventListener("click", function(){
+        if(idx===state.experience.length-1) return;
+        var tmp = state.experience[idx+1];
+        state.experience[idx+1] = state.experience[idx];
+        state.experience[idx] = tmp;
+        renderExperienceForm();
+        renderPreview();
+        scheduleSave();
+      });
+
+      list.appendChild(card);
+    });
+  }
+
+  /* ---- Education ---- */
+  function renderEducationForm(){
+    var list = document.getElementById("educationList");
+    list.innerHTML = "";
+    if(state.education.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty-note";
+      empty.textContent = "No education added yet.";
+      list.appendChild(empty);
+      return;
+    }
+    state.education.forEach(function(edu, idx){
+      var card = document.createElement("div");
+      card.className = "entry-card";
+      card.innerHTML =
+        '<div class="entry-top">' +
+          '<span class="drag-label">Entry ' + (idx+1) + '</span>' +
+          '<div class="entry-controls"><button class="icon-btn danger" data-act="del" title="Remove">✕</button></div>' +
+        '</div>' +
+        '<div class="field"><label>Degree / Program</label><input type="text" data-f="degree" value="' + escapeHtml(edu.degree) + '" placeholder="B.S. in Computer Science"></div>' +
+        '<div class="row2"><div class="field"><label>School</label><input type="text" data-f="school" value="' + escapeHtml(edu.school) + '" placeholder="State University"></div>' +
+        '<div class="field"><label>Location</label><input type="text" data-f="location" value="' + escapeHtml(edu.location) + '" placeholder="City, ST"></div></div>' +
+        '<div class="row2"><div class="field"><label>Start date</label><input type="month" data-f="start" value="' + escapeHtml(edu.start) + '"></div>' +
+        '<div class="field"><label>End date</label><input type="month" data-f="end" value="' + escapeHtml(edu.end) + '"></div></div>';
+
+      card.querySelectorAll('input[data-f]').forEach(function(inp){
+        var f = inp.getAttribute("data-f");
+        inp.addEventListener("input", function(){
+          edu[f] = inp.value;
+          renderPreview();
+          scheduleSave();
+        });
+      });
+      card.querySelector('[data-act="del"]').addEventListener("click", function(){
+        state.education.splice(idx,1);
+        renderEducationForm();
+        renderPreview();
+        scheduleSave();
+      });
+      list.appendChild(card);
+    });
+  }
+
+  /* ---- Skills (tag input) ---- */
+  function renderSkills(){
+    var wrap = document.getElementById("skillsWrap");
+    var input = document.getElementById("skillInput");
+    // remove existing chips
+    wrap.querySelectorAll(".tag-chip").forEach(function(c){ c.remove(); });
+    state.skills.forEach(function(skill, idx){
+      var chip = document.createElement("span");
+      chip.className = "tag-chip";
+      chip.innerHTML = escapeHtml(skill) + ' <button type="button" aria-label="Remove ' + escapeHtml(skill) + '">×</button>';
+      chip.querySelector("button").addEventListener("click", function(){
+        state.skills.splice(idx,1);
+        renderSkills();
+        renderPreview();
+        scheduleSave();
+      });
+      wrap.insertBefore(chip, input);
+    });
+  }
+
+  function initSkillInput(){
+    var input = document.getElementById("skillInput");
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === ","){
+        e.preventDefault();
+        var val = input.value.trim().replace(/,$/,"");
+        if(val){
+          if(state.skills.indexOf(val) === -1){
+            state.skills.push(val);
+            renderSkills();
+            renderPreview();
+            scheduleSave();
+          }
+          input.value = "";
+        }
+      } else if(e.key === "Backspace" && input.value === "" && state.skills.length){
+        state.skills.pop();
+        renderSkills();
+        renderPreview();
+        scheduleSave();
+      }
+    });
+    input.addEventListener("blur", function(){
+      var val = input.value.trim();
+      if(val){
+        if(state.skills.indexOf(val) === -1){
+          state.skills.push(val);
+          renderSkills();
+          renderPreview();
+          scheduleSave();
+        }
+        input.value = "";
+      }
+    });
+  }
+
+  /* ---- Certifications ---- */
+  function renderCertForm(){
+    var list = document.getElementById("certList");
+    list.innerHTML = "";
+    if(state.certifications.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty-note";
+      empty.textContent = "No certifications added yet.";
+      list.appendChild(empty);
+      return;
+    }
+    state.certifications.forEach(function(cert, idx){
+      var card = document.createElement("div");
+      card.className = "entry-card";
+      card.innerHTML =
+        '<div class="entry-top"><span class="drag-label">Certification ' + (idx+1) + '</span>' +
+        '<div class="entry-controls"><button class="icon-btn danger" data-act="del" title="Remove">✕</button></div></div>' +
+        '<div class="field"><label>Certification name</label><input type="text" data-f="name" value="' + escapeHtml(cert.name) + '" placeholder="AWS Certified Solutions Architect"></div>' +
+        '<div class="row2"><div class="field"><label>Issuer</label><input type="text" data-f="issuer" value="' + escapeHtml(cert.issuer) + '" placeholder="Amazon Web Services"></div>' +
+        '<div class="field"><label>Date</label><input type="month" data-f="date" value="' + escapeHtml(cert.date) + '"></div></div>';
+
+      card.querySelectorAll('input[data-f]').forEach(function(inp){
+        var f = inp.getAttribute("data-f");
+        inp.addEventListener("input", function(){
+          cert[f] = inp.value;
+          renderPreview();
+          scheduleSave();
+        });
+      });
+      card.querySelector('[data-act="del"]').addEventListener("click", function(){
+        state.certifications.splice(idx,1);
+        renderCertForm();
+        renderPreview();
+        scheduleSave();
+      });
+      list.appendChild(card);
+    });
+  }
+
+  /* ---- Links ---- */
+  function renderLinksForm(){
+    var list = document.getElementById("linksList");
+    list.innerHTML = "";
+    if(state.links.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty-note";
+      empty.textContent = "No additional links added yet.";
+      list.appendChild(empty);
+      return;
+    }
+    state.links.forEach(function(link, idx){
+      var card = document.createElement("div");
+      card.className = "entry-card";
+      card.innerHTML =
+        '<div class="entry-top"><span class="drag-label">Link ' + (idx+1) + '</span>' +
+        '<div class="entry-controls"><button class="icon-btn danger" data-act="del" title="Remove">✕</button></div></div>' +
+        '<div class="row2">' +
+        '<div class="field"><label>Label</label><input type="text" data-f="label" value="' + escapeHtml(link.label) + '" placeholder="Portfolio"></div>' +
+        '<div class="field"><label>URL</label><input type="text" data-f="url" value="' + escapeHtml(link.url) + '" placeholder="yourdomain.com"></div>' +
+        '</div>';
+      card.querySelectorAll('input[data-f]').forEach(function(inp){
+        var f = inp.getAttribute("data-f");
+        inp.addEventListener("input", function(){
+          link[f] = inp.value;
+          renderPreview();
+          scheduleSave();
+        });
+      });
+      card.querySelector('[data-act="del"]').addEventListener("click", function(){
+        state.links.splice(idx,1);
+        renderLinksForm();
+        renderPreview();
+        scheduleSave();
+      });
+      list.appendChild(card);
+    });
+  }
+
+  /* ---------------- Rendering: preview ---------------- */
+  function renderPreview(){
+    var page = document.getElementById("resumePage");
+    var c = state.contact;
+
+    var contactBits = [];
+    if(c.location) contactBits.push(escapeHtml(c.location));
+    if(c.phone) contactBits.push(escapeHtml(c.phone));
+    if(c.email) contactBits.push(escapeHtml(c.email));
+    if(c.website) contactBits.push(escapeHtml(c.website));
+
+    var html = "";
+    html += '<div class="' + (state.template==='modern' ? 'r-name-block' : '') + '">';
+    html += '<div class="r-name">' + (escapeHtml(c.name) || "Your Name") + '</div>';
+    if(c.title) html += '<div class="r-title">' + escapeHtml(c.title) + '</div>';
+    html += '</div>';
+    if(contactBits.length){
+      html += '<div class="r-contact">' + contactBits.map(function(b){return '<span>'+b+'</span>';}).join("") + '</div>';
+    }
+
+    if(state.summary && state.summary.trim()){
+      html += '<div class="r-section"><div class="r-heading">Summary</div><div class="r-summary">' + escapeHtml(state.summary) + '</div></div>';
+    }
+
+    if(state.experience.length){
+      html += '<div class="r-section"><div class="r-heading">Work Experience</div>';
+      state.experience.forEach(function(job){
+        if(!job.role && !job.company) return;
+        html += '<div class="r-job">';
+        html += '<div class="r-job-head"><span class="r-job-role">' + escapeHtml(job.role) + (job.company ? (job.role ? ' — ' : '') + '<span class="r-job-company">'+escapeHtml(job.company)+'</span>' : '') + '</span>';
+        var dl = dateRangeLabel(job.start, job.end, job.current);
+        var locLabel = job.location ? escapeHtml(job.location) + (dl ? " | " : "") : "";
+        html += '<span class="r-job-dates">' + locLabel + dl + '</span></div>';
+        var bullets = (job.bullets||[]).filter(function(b){ return b && b.trim(); });
+        if(bullets.length){
+          html += '<ul>' + bullets.map(function(b){ return '<li>'+escapeHtml(b)+'</li>'; }).join("") + '</ul>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    if(state.education.length){
+      var eduHtml = "";
+      state.education.forEach(function(edu){
+        if(!edu.degree && !edu.school) return;
+        var dl = dateRangeLabel(edu.start, edu.end, false);
+        eduHtml += '<div class="r-edu-item">';
+        eduHtml += '<div class="r-edu-head"><span class="r-edu-degree">' + escapeHtml(edu.degree) + '</span><span class="r-edu-dates">' + dl + '</span></div>';
+        if(edu.school || edu.location){
+          eduHtml += '<div class="r-edu-school">' + escapeHtml(edu.school) + (edu.location ? ' — ' + escapeHtml(edu.location) : '') + '</div>';
+        }
+        eduHtml += '</div>';
+      });
+      if(eduHtml) html += '<div class="r-section"><div class="r-heading">Education</div>' + eduHtml + '</div>';
+    }
+
+    if(state.skills.length){
+      html += '<div class="r-section"><div class="r-heading">Skills</div><div class="r-skills">' +
+        state.skills.map(function(s){ return '<span class="r-skill-pill">' + escapeHtml(s) + '</span>'; }).join("") +
+        '</div></div>';
+    }
+
+    if(state.certifications.length){
+      var certHtml = "";
+      state.certifications.forEach(function(cert){
+        if(!cert.name) return;
+        certHtml += '<div class="r-cert-item"><strong>' + escapeHtml(cert.name) + '</strong>' +
+          (cert.issuer ? ' — ' + escapeHtml(cert.issuer) : '') +
+          (cert.date ? ' (' + formatMonthYear(cert.date) + ')' : '') + '</div>';
+      });
+      if(certHtml) html += '<div class="r-section"><div class="r-heading">Certifications</div>' + certHtml + '</div>';
+    }
+
+    if(state.links.length){
+      var linkHtml = state.links.filter(function(l){return l.label || l.url;}).map(function(l){
+        return escapeHtml(l.label || l.url) + (l.label && l.url ? ': ' + escapeHtml(l.url) : '');
+      }).join("  |  ");
+      if(linkHtml) html += '<div class="r-section"><div class="r-heading">Links</div><div class="r-links">' + linkHtml + '</div></div>';
+    }
+
+    page.innerHTML = html;
+
+    // apply template class
+    document.body.className = "tpl-" + state.template;
+
+    // apply accent color as CSS custom props on the page element
+    page.style.setProperty("--r-accent", state.accent);
+    page.style.setProperty("--r-accent-soft", softenColor(state.accent));
+
+    applyZoom();
+  }
+
+  /* ---------------- Template & color controls ---------------- */
+  var PRESET_COLORS = ["#2f5fda","#7a4fe0","#0f9d78","#c2410c","#0e7490","#be123c","#334155"];
+
+  function renderSwatches(){
+    var wrap = document.getElementById("swatches");
+    wrap.innerHTML = "";
+    PRESET_COLORS.forEach(function(color){
+      var b = document.createElement("button");
+      b.className = "swatch" + (state.accent.toLowerCase() === color.toLowerCase() ? " active" : "");
+      b.style.background = color;
+      b.style.setProperty("--current-swatch", color);
+      b.title = color;
+      b.type = "button";
+      b.addEventListener("click", function(){
+        state.accent = color;
+        document.getElementById("customColor").value = color;
+        renderSwatches();
+        renderPreview();
+        scheduleSave();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function initTemplatePicker(){
+    document.querySelectorAll(".tpl-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        state.template = btn.getAttribute("data-tpl");
+        document.querySelectorAll(".tpl-btn").forEach(function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        renderPreview();
+        scheduleSave();
+      });
+    });
+    document.querySelectorAll(".tpl-btn").forEach(function(btn){
+      if(btn.getAttribute("data-tpl") === state.template){
+        document.querySelectorAll(".tpl-btn").forEach(function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+      }
+    });
+
+    document.getElementById("customColor").addEventListener("input", function(e){
+      state.accent = e.target.value;
+      renderSwatches();
+      renderPreview();
+      scheduleSave();
+    });
+  }
+
+  /* ---------------- Collapsible sections ---------------- */
+  function initCollapsibles(){
+    document.querySelectorAll(".form-section > .fs-head").forEach(function(head){
+      head.addEventListener("click", function(){
+        head.parentElement.classList.toggle("collapsed");
+      });
+    });
+  }
+
+  /* ---------------- Zoom ---------------- */
+  function applyZoom(){
+    var page = document.getElementById("resumePage");
+    var frame = document.getElementById("pageFrame");
+    var stage = document.getElementById("previewStage");
+    page.style.transform = "scale(" + state.zoom + ")";
+    // Reserve exactly the scaled footprint in the flex layout so the
+    // unscaled (transform doesn't affect layout box) page doesn't get
+    // clipped by the stage's ancestor overflow:hidden.
+    var fullWidthPx = page.offsetWidth || 793.7; // 210mm at 96dpi
+    var fullHeightPx = page.scrollHeight || 1122.5; // 297mm at 96dpi min
+    var scaledWidth = fullWidthPx * state.zoom;
+    frame.style.width = scaledWidth + "px";
+    frame.style.height = (fullHeightPx * state.zoom) + "px";
+    document.getElementById("zoomLabel").textContent = Math.round(state.zoom * 100) + "%";
+    // Only center the page when it actually fits in the stage; otherwise
+    // left-align so the whole page stays reachable via scrolling (a
+    // centered item that overflows both sides traps content off-screen).
+    var stageContentWidth = stage.clientWidth - 28; // minus 14px horizontal padding each side
+    stage.classList.toggle("fits", scaledWidth <= stageContentWidth);
+  }
+
+  function fitZoomToContainer(){
+    var stage = document.getElementById("previewStage");
+    var page = document.getElementById("resumePage");
+    if(!stage || !page) return;
+    var fullWidthPx = page.offsetWidth || 793.7;
+    var available = stage.clientWidth - 28; // minus padding
+    if(available > 0 && fullWidthPx > 0){
+      var fit = available / fullWidthPx;
+      state.zoom = Math.max(0.3, Math.min(0.9, Math.round(fit * 100) / 100));
+    }
+  }
+
+  function initZoom(){
+    document.getElementById("zoomIn").addEventListener("click", function(){
+      state.zoom = Math.min(1.3, Math.round((state.zoom + 0.08) * 100) / 100);
+      applyZoom();
+      scheduleSave();
+    });
+    document.getElementById("zoomOut").addEventListener("click", function(){
+      state.zoom = Math.max(0.3, Math.round((state.zoom - 0.08) * 100) / 100);
+      applyZoom();
+      scheduleSave();
+    });
+  }
+
+  /* ---------------- Add-entry buttons ---------------- */
+  function initAddButtons(){
+    document.getElementById("addExperience").addEventListener("click", function(){
+      state.experience.push({ role:"", company:"", location:"", start:"", end:"", current:false, bullets:[""] });
+      renderExperienceForm();
+      renderPreview();
+      scheduleSave();
+    });
+    document.getElementById("addEducation").addEventListener("click", function(){
+      state.education.push({ degree:"", school:"", location:"", start:"", end:"" });
+      renderEducationForm();
+      renderPreview();
+      scheduleSave();
+    });
+    document.getElementById("addCert").addEventListener("click", function(){
+      state.certifications.push({ name:"", issuer:"", date:"" });
+      renderCertForm();
+      renderPreview();
+      scheduleSave();
+    });
+    document.getElementById("addLink").addEventListener("click", function(){
+      state.links.push({ label:"", url:"" });
+      renderLinksForm();
+      renderPreview();
+      scheduleSave();
+    });
+  }
+
+  /* ---------------- Export / Import / Reset ---------------- */
+  function initDataControls(){
+    document.getElementById("btnExport").addEventListener("click", function(){
+      try{
+        var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        var safeName = (state.contact.name || "resume").trim().replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "resume";
+        a.href = url;
+        a.download = "resumeatlas-" + safeName + ".json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+        showToast("Backup downloaded.");
+      }catch(e){
+        console.error(e);
+        showToast("Export failed.", true);
+      }
+    });
+
+    document.getElementById("btnImport").addEventListener("click", function(){
+      document.getElementById("fileImport").click();
+    });
+
+    document.getElementById("fileImport").addEventListener("change", function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(){
+        try{
+          var parsed = JSON.parse(reader.result);
+          if(!parsed || typeof parsed !== "object") throw new Error("Invalid file");
+          var base = sampleData();
+          state = Object.assign({}, base, parsed, {
+            contact: Object.assign({}, base.contact, parsed.contact || {}),
+            experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+            education: Array.isArray(parsed.education) ? parsed.education : [],
+            skills: Array.isArray(parsed.skills) ? parsed.skills : [],
+            certifications: Array.isArray(parsed.certifications) ? parsed.certifications : [],
+            links: Array.isArray(parsed.links) ? parsed.links : []
+          });
+          renderAll();
+          persist();
+          showToast("Resume imported successfully.");
+        }catch(err){
+          console.error(err);
+          showToast("That file doesn't look like a valid ResumeAtlas export.", true);
+        }finally{
+          e.target.value = "";
+        }
+      };
+      reader.onerror = function(){
+        showToast("Could not read that file.", true);
+        e.target.value = "";
+      };
+      reader.readAsText(file);
+    });
+
+    var resetModal = document.getElementById("resetModal");
+    document.getElementById("btnReset").addEventListener("click", function(){
+      resetModal.classList.add("show");
+    });
+    document.getElementById("cancelReset").addEventListener("click", function(){
+      resetModal.classList.remove("show");
+    });
+    resetModal.addEventListener("click", function(e){
+      if(e.target === resetModal) resetModal.classList.remove("show");
+    });
+    document.getElementById("confirmReset").addEventListener("click", function(){
+      localStorage.removeItem(STORAGE_KEY);
+      state = sampleData();
+      renderAll();
+      persist();
+      resetModal.classList.remove("show");
+      showToast("Resume reset to sample data.");
+    });
+  }
+
+  function initPrint(){
+    function doPrint(){ window.print(); }
+    document.getElementById("btnPrint").addEventListener("click", doPrint);
+    document.getElementById("btnPrint2").addEventListener("click", doPrint);
+  }
+
+  /* ---------------- Full render ---------------- */
+  function renderAll(){
+    fillContactForm();
+    renderExperienceForm();
+    renderEducationForm();
+    renderSkills();
+    renderCertForm();
+    renderLinksForm();
+    renderSwatches();
+    document.getElementById("customColor").value = state.accent;
+    document.querySelectorAll(".tpl-btn").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-tpl") === state.template);
+    });
+    renderPreview();
+  }
+
+  /* ---------------- Bind simple contact/summary fields ---------------- */
+  function initSimpleFieldBindings(){
+    bindField("f-name", "contact.name");
+    bindField("f-title", "contact.title");
+    bindField("f-email", "contact.email");
+    bindField("f-phone", "contact.phone");
+    bindField("f-location", "contact.location");
+    bindField("f-website", "contact.website");
+    bindField("f-summary", "summary");
+  }
+
+  /* ---------------- Keyboard shortcut for print ---------------- */
+  function initShortcuts(){
+    window.addEventListener("keydown", function(e){
+      if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "p"){
+        // let native print dialog work; our print styles already handle layout
+      }
+    });
+  }
+
+  /* ---------------- Resize handling ---------------- */
+  function initResizeHandling(){
+    var resizeTimer;
+    window.addEventListener("resize", function(){
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(applyZoom, 120);
+    });
+  }
+
+  /* ---------------- Init ---------------- */
+  function init(){
+    var hadSavedState = !!localStorage.getItem(STORAGE_KEY);
+    state = loadState();
+    initTemplatePicker();
+    initCollapsibles();
+    initZoom();
+    initAddButtons();
+    initSkillInput();
+    initDataControls();
+    initPrint();
+    initSimpleFieldBindings();
+    initShortcuts();
+    initResizeHandling();
+    renderAll();
+    if(!hadSavedState){
+      // First-ever visit: fit the zoom to whatever space is actually
+      // available instead of trusting the hardcoded sample default.
+      fitZoomToContainer();
+      applyZoom();
+    }
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+
+</body>
+</html>

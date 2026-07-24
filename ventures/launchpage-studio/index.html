@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaunchPage Studio — Build a landing page in minutes</title>
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --panel:#ffffff;
+    --border:#e2e4e9;
+    --text:#1b1e27;
+    --text-dim:#6b7280;
+    --accent:#6d5efc;
+    --accent-dim:#efecff;
+    --success:#1b9c6e;
+    --danger:#d64545;
+    --radius:12px;
+    --shadow:0 2px 10px rgba(20,20,40,.06);
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  button{font-family:inherit;}
+  ::selection{background:var(--accent-dim);}
+
+  /* ---------- App shell ---------- */
+  .app{
+    display:grid;
+    grid-template-columns:420px 1fr;
+    min-height:100vh;
+  }
+  @media (max-width: 1000px){
+    .app{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    grid-column:1/-1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 20px;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:1.05rem;
+    white-space:nowrap;
+  }
+  .brand-mark{
+    width:28px;height:28px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),#8f7bff);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:15px;font-weight:800;
+    flex:none;
+  }
+  .topbar-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .btn{
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text);
+    padding:9px 14px;
+    border-radius:9px;
+    font-size:.86rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:.15s ease;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-dim);}
+  .btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  .btn-primary:hover{background:#5b4ce0; border-color:#5b4ce0; color:#fff;}
+  .btn-danger{color:var(--danger); border-color:#f3d3d3;}
+  .btn-danger:hover{background:#fdecec; border-color:var(--danger); color:var(--danger);}
+  .btn-sm{padding:6px 10px; font-size:.78rem;}
+  .btn-ghost{background:transparent; border-color:transparent;}
+  .btn-ghost:hover{background:var(--accent-dim);}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+  .btn:disabled:hover{background:var(--panel); color:var(--text); border-color:var(--border);}
+
+  /* ---------- Editor column ---------- */
+  .editor{
+    border-right:1px solid var(--border);
+    max-height:calc(100vh - 61px);
+    overflow-y:auto;
+    background:var(--panel);
+  }
+  @media (max-width: 1000px){
+    .editor{max-height:none; border-right:none; order:2;}
+  }
+
+  .tabs{
+    display:flex;
+    gap:2px;
+    padding:10px 14px 0;
+    border-bottom:1px solid var(--border);
+    overflow-x:auto;
+    background:var(--panel);
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .tab{
+    padding:9px 13px;
+    font-size:.82rem;
+    font-weight:600;
+    color:var(--text-dim);
+    background:none;
+    border:none;
+    border-bottom:2px solid transparent;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--accent); border-bottom-color:var(--accent);}
+  .tab:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:4px;}
+
+  .panel{
+    padding:20px;
+    display:none;
+  }
+  .panel.active{display:block;}
+
+  .field{
+    margin-bottom:16px;
+  }
+  .field label{
+    display:block;
+    font-size:.78rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--text-dim);
+    margin-bottom:6px;
+  }
+  .field .hint{
+    display:block;
+    font-size:.76rem;
+    font-weight:400;
+    text-transform:none;
+    letter-spacing:0;
+    color:var(--text-dim);
+    margin-top:5px;
+    line-height:1.4;
+  }
+  .field input[type="text"],
+  .field input[type="email"],
+  .field input[type="url"],
+  .field textarea,
+  .field select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:.9rem;
+    color:var(--text);
+    background:#fff;
+    font-family:inherit;
+  }
+  .field textarea{resize:vertical; min-height:64px;}
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-dim);
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:480px){.row2{grid-template-columns:1fr;}}
+
+  .section-title{
+    font-size:.95rem;
+    font-weight:800;
+    margin:0 0 4px;
+  }
+  .section-sub{
+    font-size:.8rem;
+    color:var(--text-dim);
+    margin:0 0 16px;
+    line-height:1.4;
+  }
+
+  .logo-upload{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .logo-preview{
+    width:52px;height:52px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#fafafa;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    flex:none;
+    font-size:1.2rem;
+  }
+  .logo-preview img{width:100%;height:100%;object-fit:cover;}
+
+  /* Cards (feature/faq) */
+  .item-card{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:12px;
+    background:#fbfbfd;
+  }
+  .item-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .item-card-head strong{font-size:.8rem; color:var(--text-dim);}
+  .item-actions{display:flex; gap:6px;}
+  .icon-btn{
+    border:1px solid var(--border);
+    background:#fff;
+    width:28px;height:28px;
+    border-radius:7px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.85rem;
+    color:var(--text-dim);
+    transition:.15s;
+  }
+  .icon-btn:hover{border-color:var(--danger); color:var(--danger); background:#fdecec;}
+  .icon-btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+
+  .empty-state{
+    text-align:center;
+    padding:28px 16px;
+    color:var(--text-dim);
+    font-size:.85rem;
+    border:1px dashed var(--border);
+    border-radius:10px;
+    background:#fafafa;
+  }
+
+  .theme-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .theme-swatch{
+    border:2px solid var(--border);
+    border-radius:10px;
+    padding:10px;
+    cursor:pointer;
+    text-align:left;
+    background:#fff;
+  }
+  .theme-swatch:hover{border-color:var(--accent);}
+  .theme-swatch.selected{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);}
+  .theme-swatch:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .swatch-preview{
+    height:36px;
+    border-radius:6px;
+    margin-bottom:8px;
+    display:flex;
+  }
+  .swatch-preview span{flex:1;}
+  .theme-name{font-size:.8rem; font-weight:700;}
+  .theme-desc{font-size:.72rem; color:var(--text-dim);}
+
+  .color-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .color-swatch-btn{
+    width:30px;height:30px;
+    border-radius:50%;
+    border:2px solid #fff;
+    box-shadow:0 0 0 1px var(--border);
+    cursor:pointer;
+    padding:0;
+  }
+  .color-swatch-btn.selected{box-shadow:0 0 0 2px var(--accent);}
+  .color-swatch-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  input[type="color"]{
+    width:40px;height:32px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:2px;
+    cursor:pointer;
+    background:#fff;
+  }
+
+  .form-instructions{
+    background:var(--accent-dim);
+    border:1px solid #ded8ff;
+    border-radius:9px;
+    padding:10px 12px;
+    font-size:.78rem;
+    color:#4a3fc4;
+    line-height:1.5;
+    margin-bottom:14px;
+  }
+  .form-instructions strong{color:#3a2fb8;}
+
+  .footer-links-list .item-card{padding:10px 14px;}
+
+  /* ---------- Preview column ---------- */
+  .preview-col{
+    display:flex;
+    flex-direction:column;
+    max-height:calc(100vh - 61px);
+  }
+  @media (max-width:1000px){
+    .preview-col{max-height:none; order:1;}
+  }
+  .preview-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:12px;
+    border-bottom:1px solid var(--border);
+    background:var(--panel);
+  }
+  .device-toggle{
+    display:flex;
+    background:var(--bg);
+    border-radius:9px;
+    padding:3px;
+    gap:2px;
+  }
+  .device-toggle button{
+    border:none;
+    background:none;
+    padding:7px 14px;
+    border-radius:7px;
+    font-size:.8rem;
+    font-weight:600;
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .device-toggle button.active{background:#fff; color:var(--accent); box-shadow:var(--shadow);}
+  .device-toggle button:focus-visible{outline:2px solid var(--accent);}
+
+  .preview-frame-wrap{
+    flex:1;
+    overflow:auto;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:24px;
+    background:#e9eaef;
+  }
+  #previewFrame{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 6px 24px rgba(20,20,40,.10);
+    width:100%;
+    max-width:1000px;
+    height:calc(100vh - 145px);
+    transition:max-width .25s ease;
+  }
+  #previewFrame.mobile{
+    max-width:390px;
+    height:calc(100vh - 145px);
+  }
+
+  .toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:#1b1e27;
+    color:#fff;
+    padding:12px 20px;
+    border-radius:10px;
+    font-size:.85rem;
+    font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    z-index:999;
+    opacity:0;
+    pointer-events:none;
+    transition:.25s ease;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .faq-q-row{display:flex; gap:8px; margin-bottom:8px;}
+  .faq-q-row input{flex:1;}
+
+  /* scrollbars */
+  .editor::-webkit-scrollbar, .preview-frame-wrap::-webkit-scrollbar{width:10px; height:10px;}
+  .editor::-webkit-scrollbar-thumb, .preview-frame-wrap::-webkit-scrollbar-thumb{
+    background:#c8cad2; border-radius:6px;
+  }
+
+  @media (max-width:480px){
+    .topbar{flex-direction:column; align-items:stretch;}
+    .topbar-actions{justify-content:stretch;}
+    .topbar-actions .btn{flex:1; justify-content:center;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="brand-mark">L</span> LaunchPage Studio</div>
+    <div class="topbar-actions">
+      <button class="btn" id="resetBtn" title="Reload the sample product and discard your edits">Reset sample</button>
+      <button class="btn" id="clearBtn" title="Wipe all data and start from a blank page">Start blank</button>
+      <button class="btn btn-primary" id="downloadBtn">Download page</button>
+    </div>
+  </div>
+
+  <div class="editor">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="basics">Basics</button>
+      <button class="tab" data-tab="features">Features</button>
+      <button class="tab" data-tab="proof">Proof &amp; FAQ</button>
+      <button class="tab" data-tab="signup">Signup</button>
+      <button class="tab" data-tab="theme">Theme</button>
+      <button class="tab" data-tab="footer">Footer</button>
+    </div>
+
+    <!-- BASICS -->
+    <div class="panel active" data-panel="basics">
+      <p class="section-title">Product basics</p>
+      <p class="section-sub">The essentials that appear at the top of your page.</p>
+
+      <div class="field">
+        <label for="f-productName">Product name</label>
+        <input type="text" id="f-productName" maxlength="60">
+      </div>
+
+      <div class="field">
+        <label for="f-logo">Logo</label>
+        <div class="logo-upload">
+          <div class="logo-preview" id="logoPreview">🚀</div>
+          <input type="file" id="f-logo" accept="image/*">
+        </div>
+        <span class="hint">Optional. PNG or SVG on a transparent background works best. Stored locally as part of your page.</span>
+      </div>
+
+      <div class="field">
+        <label for="f-headline">Hero headline</label>
+        <textarea id="f-headline" rows="2" maxlength="120"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="f-subheadline">Subheadline</label>
+        <textarea id="f-subheadline" rows="2" maxlength="200"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="f-ctaText">CTA button text</label>
+        <input type="text" id="f-ctaText" maxlength="40">
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="panel" data-panel="features">
+      <p class="section-title">Feature cards</p>
+      <p class="section-sub">Add 3–6 cards explaining what makes your product worth signing up for.</p>
+      <div id="featureList"></div>
+      <button class="btn" id="addFeatureBtn">+ Add feature card</button>
+    </div>
+
+    <!-- PROOF & FAQ -->
+    <div class="panel" data-panel="proof">
+      <p class="section-title">Social proof</p>
+      <p class="section-sub">A single strong quote builds more trust than five weak ones.</p>
+      <div class="field">
+        <label for="f-quote">Quote</label>
+        <textarea id="f-quote" rows="3" maxlength="280"></textarea>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-quoteName">Attributed to</label>
+          <input type="text" id="f-quoteName" maxlength="60">
+        </div>
+        <div class="field">
+          <label for="f-quoteRole">Role / company</label>
+          <input type="text" id="f-quoteRole" maxlength="60">
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0;">
+
+      <p class="section-title">FAQ</p>
+      <p class="section-sub">Answer the objections that stop people from signing up.</p>
+      <div id="faqList"></div>
+      <button class="btn" id="addFaqBtn">+ Add question</button>
+    </div>
+
+    <!-- SIGNUP -->
+    <div class="panel" data-panel="signup">
+      <p class="section-title">Email capture</p>
+      <p class="section-sub">Collect signups without a backend of your own.</p>
+
+      <div class="form-instructions">
+        <strong>Free option:</strong> create a form at <em>formspree.io</em> (no code, free tier), copy the endpoint URL it gives you (looks like <code>https://formspree.io/f/xxxxxxx</code>), and paste it below. Every submission then lands in your inbox automatically.
+      </div>
+
+      <div class="field">
+        <label for="f-formAction">Form action URL (Formspree / Google Forms)</label>
+        <input type="url" id="f-formAction" placeholder="https://formspree.io/f/your-id">
+        <span class="hint">Leave blank to fall back to a "Notify me" mailto: button instead of a form.</span>
+      </div>
+
+      <div class="field">
+        <label for="f-signupHeadline">Signup block headline</label>
+        <input type="text" id="f-signupHeadline" maxlength="80">
+      </div>
+
+      <div class="field">
+        <label for="f-mailtoAddress">Fallback contact email (used for mailto:)</label>
+        <input type="email" id="f-mailtoAddress" placeholder="you@yourproduct.com">
+      </div>
+    </div>
+
+    <!-- THEME -->
+    <div class="panel" data-panel="theme">
+      <p class="section-title">Theme</p>
+      <p class="section-sub">Pick a preset, then fine-tune the accent color.</p>
+
+      <div class="theme-grid" id="themeGrid"></div>
+
+      <div class="field">
+        <label>Accent color</label>
+        <div class="color-row" id="accentSwatches"></div>
+        <div class="color-row" style="margin-top:10px;">
+          <input type="color" id="f-customAccent">
+          <span class="hint" style="margin:0;">Custom accent color</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="panel" data-panel="footer">
+      <p class="section-title">Footer</p>
+      <p class="section-sub">Copyright, contact, and social links shown at the bottom of the page.</p>
+
+      <div class="field">
+        <label for="f-copyright">Copyright line</label>
+        <input type="text" id="f-copyright" maxlength="100">
+      </div>
+
+      <div class="field">
+        <label for="f-contactEmail">Contact email</label>
+        <input type="email" id="f-contactEmail" maxlength="100">
+      </div>
+
+      <div class="field">
+        <label>Social links</label>
+        <div id="socialList" class="footer-links-list"></div>
+        <button class="btn btn-sm" id="addSocialBtn">+ Add social link</button>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0;">
+      <p class="section-title">SEO</p>
+      <p class="section-sub">Used for the browser tab, search results, and social share cards on export.</p>
+      <div class="field">
+        <label for="f-seoTitle">Page title</label>
+        <input type="text" id="f-seoTitle" maxlength="70">
+      </div>
+      <div class="field">
+        <label for="f-seoDesc">Meta description</label>
+        <textarea id="f-seoDesc" rows="2" maxlength="160"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-col">
+    <div class="preview-toolbar">
+      <div class="device-toggle">
+        <button id="desktopToggle" class="active" data-device="desktop">🖥 Desktop</button>
+        <button id="mobileToggle" data-device="mobile">📱 Mobile</button>
+      </div>
+    </div>
+    <div class="preview-frame-wrap">
+      <iframe id="previewFrame" title="Live preview"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "launchpageStudio.v1";
+
+  /* ---------------------------------------------------------
+     Sample data — realistic preloaded product so the app
+     demos instantly with zero setup.
+  --------------------------------------------------------- */
+  function sampleData(){
+    return {
+      productName: "Nestled",
+      logoDataUrl: "",
+      headline: "Find your next apartment without the 40 open tabs",
+      subheadline: "Nestled compares live listings across every rental site in your city and flags the ones that actually match your budget, commute, and pet policy — before they're gone.",
+      ctaText: "Get early access",
+      features: [
+        { icon: "🔍", title: "One search, every listing", desc: "We pull from 14 rental sites and dedupe the results, so you stop refreshing six tabs at once." },
+        { icon: "⚡", title: "Instant new-listing alerts", desc: "Get a text the moment something matching your filters goes live — often before it hits the main site." },
+        { icon: "🐾", title: "Pet & policy filters that work", desc: "Filter by pet weight limits, no-fee buildings, and move-in date without digging through PDFs." },
+        { icon: "🗺️", title: "Real commute times", desc: "See actual transit and driving time to your job or school, not just a straight-line radius." }
+      ],
+      quote: "I found my apartment in four days instead of four weeks. The alert texts alone were worth signing up for.",
+      quoteName: "Priya Nandakumar",
+      quoteRole: "Early user, Chicago",
+      faqs: [
+        { q: "Is Nestled free to use?", a: "Yes — searching and alerts are free. We may add an optional Pro tier later for power users, but core search will always stay free." },
+        { q: "Which cities are supported?", a: "We're launching first in Chicago, Austin, and Denver, with more cities added as we onboard local listing sources." },
+        { q: "How is this different from Zillow or StreetEasy?", a: "Those are single sources. Nestled aggregates across all of them plus smaller local sites, then dedupes so you see each unit once." }
+      ],
+      formAction: "",
+      signupHeadline: "Be first in line when we launch in your city",
+      mailtoAddress: "hello@nestledapp.com",
+      copyright: "© 2026 Nestled. All rights reserved.",
+      contactEmail: "hello@nestledapp.com",
+      socials: [
+        { label: "Twitter / X", url: "https://twitter.com/nestledapp" },
+        { label: "Instagram", url: "https://instagram.com/nestledapp" }
+      ],
+      seoTitle: "Nestled — Find your next apartment without the 40 open tabs",
+      seoDesc: "Nestled compares live rental listings across every major site in your city and alerts you instantly when a match goes live.",
+      theme: "bold-saas",
+      accent: "#6d5efc",
+      device: "desktop"
+    };
+  }
+
+  var THEMES = {
+    "bold-saas": {
+      name: "Bold SaaS Dark",
+      desc: "High-contrast dark, punchy accent",
+      bg: "#0d0e14", panel: "#161825", text: "#f3f4f8", textDim: "#9a9db3",
+      border: "#262838", heroGrad: "linear-gradient(135deg,#161825,#0d0e14)",
+      cardBg: "#1c1e2e", swatch: ["#0d0e14","#161825","#6d5efc"]
+    },
+    "clean-light": {
+      name: "Clean Light",
+      desc: "Minimal, whitespace-forward",
+      bg: "#ffffff", panel: "#f7f8fa", text: "#181a20", textDim: "#666b78",
+      border: "#e7e8ec", heroGrad: "linear-gradient(135deg,#ffffff,#f3f4f8)",
+      cardBg: "#ffffff", swatch: ["#ffffff","#f7f8fa","#2563eb"]
+    },
+    "warm-friendly": {
+      name: "Warm & Friendly",
+      desc: "Soft cream with warm accent",
+      bg: "#fdf6ec", panel: "#fffaf2", text: "#3a2f22", textDim: "#8a7a63",
+      border: "#f0e3cd", heroGrad: "linear-gradient(135deg,#fff3df,#fdf6ec)",
+      cardBg: "#ffffff", swatch: ["#fdf6ec","#fff3df","#e8743a"]
+    },
+    "premium-editorial": {
+      name: "Premium Editorial",
+      desc: "Serif headlines, ink & ivory",
+      bg: "#f7f5f0", panel: "#ffffff", text: "#1c1c1a", textDim: "#6f6d63",
+      border: "#e4e1d6", heroGrad: "linear-gradient(135deg,#f0ede4,#f7f5f0)",
+      cardBg: "#ffffff", swatch: ["#f7f5f0","#1c1c1a","#a8742f"],
+      serif: true
+    }
+  };
+
+  var ACCENTS = ["#6d5efc","#2563eb","#e8743a","#1b9c6e","#d64545","#a8742f","#0891b2","#c026d3"];
+
+  var state = null;
+  var activeTab = "basics";
+
+  /* ---------------------------------------------------------
+     Persistence
+  --------------------------------------------------------- */
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && parsed.productName !== undefined) return parsed;
+      }
+    }catch(e){ /* corrupt data, fall through to sample */ }
+    return sampleData();
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){
+      showToast("Couldn't save — storage may be full");
+    }
+  }
+
+  /* ---------------------------------------------------------
+     Utilities
+  --------------------------------------------------------- */
+  function escapeHtml(str){
+    return String(str == null ? "" : str)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function escapeAttr(str){ return escapeHtml(str); }
+
+  var toastTimer = null;
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+
+  /* ---------------------------------------------------------
+     Tabs
+  --------------------------------------------------------- */
+  document.getElementById("tabs").addEventListener("click", function(e){
+    var btn = e.target.closest(".tab");
+    if(!btn) return;
+    activeTab = btn.getAttribute("data-tab");
+    renderTabs();
+  });
+
+  function renderTabs(){
+    document.querySelectorAll(".tab").forEach(function(el){
+      el.classList.toggle("active", el.getAttribute("data-tab") === activeTab);
+    });
+    document.querySelectorAll(".panel").forEach(function(el){
+      el.classList.toggle("active", el.getAttribute("data-panel") === activeTab);
+    });
+  }
+
+  /* ---------------------------------------------------------
+     Bind simple fields (two-way: state <-> input)
+  --------------------------------------------------------- */
+  var simpleFields = [
+    ["f-productName","productName"],
+    ["f-headline","headline"],
+    ["f-subheadline","subheadline"],
+    ["f-ctaText","ctaText"],
+    ["f-quote","quote"],
+    ["f-quoteName","quoteName"],
+    ["f-quoteRole","quoteRole"],
+    ["f-formAction","formAction"],
+    ["f-signupHeadline","signupHeadline"],
+    ["f-mailtoAddress","mailtoAddress"],
+    ["f-copyright","copyright"],
+    ["f-contactEmail","contactEmail"],
+    ["f-seoTitle","seoTitle"],
+    ["f-seoDesc","seoDesc"]
+  ];
+
+  function bindSimpleFields(){
+    simpleFields.forEach(function(pair){
+      var el = document.getElementById(pair[0]);
+      var key = pair[1];
+      el.value = state[key] || "";
+      el.addEventListener("input", function(){
+        state[key] = el.value;
+        save();
+        renderPreview();
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------
+     Logo upload
+  --------------------------------------------------------- */
+  function bindLogo(){
+    var input = document.getElementById("f-logo");
+    input.addEventListener("change", function(){
+      var file = input.files && input.files[0];
+      if(!file) return;
+      if(file.size > 2 * 1024 * 1024){
+        showToast("Logo too large — please use an image under 2MB");
+        input.value = "";
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(e){
+        state.logoDataUrl = e.target.result;
+        save();
+        renderLogoPreview();
+        renderPreview();
+        showToast("Logo updated");
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderLogoPreview(){
+    var box = document.getElementById("logoPreview");
+    if(state.logoDataUrl){
+      box.innerHTML = '<img src="' + state.logoDataUrl + '" alt="Logo preview">';
+    } else {
+      box.innerHTML = "🚀";
+    }
+  }
+
+  /* ---------------------------------------------------------
+     Feature cards
+  --------------------------------------------------------- */
+  var FEATURE_ICONS = ["✨","🚀","⚡","🔍","🎯","💡","🔒","📈","🛠️","❤️","🗺️","🐾","📬","🎉"];
+
+  function renderFeatures(){
+    var list = document.getElementById("featureList");
+    var addBtn = document.getElementById("addFeatureBtn");
+    if(!state.features.length){
+      list.innerHTML = '<div class="empty-state">No feature cards yet. Add 3–6 to explain what your product does.</div>';
+    } else {
+      list.innerHTML = state.features.map(function(f, i){
+        return '' +
+        '<div class="item-card" data-idx="' + i + '">' +
+          '<div class="item-card-head">' +
+            '<strong>Card ' + (i+1) + '</strong>' +
+            '<div class="item-actions">' +
+              '<button class="icon-btn" data-action="move-up" data-idx="' + i + '" title="Move up" ' + (i===0 ? "disabled":"") + '>↑</button>' +
+              '<button class="icon-btn" data-action="move-down" data-idx="' + i + '" title="Move down" ' + (i===state.features.length-1 ? "disabled":"") + '>↓</button>' +
+              '<button class="icon-btn" data-action="delete-feature" data-idx="' + i + '" title="Delete card">✕</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="row2">' +
+            '<div class="field" style="margin-bottom:8px;">' +
+              '<label>Icon (emoji)</label>' +
+              '<input type="text" maxlength="4" data-field="icon" data-idx="' + i + '" value="' + escapeAttr(f.icon) + '">' +
+            '</div>' +
+            '<div class="field" style="margin-bottom:8px;">' +
+              '<label>Title</label>' +
+              '<input type="text" maxlength="50" data-field="title" data-idx="' + i + '" value="' + escapeAttr(f.title) + '">' +
+            '</div>' +
+          '</div>' +
+          '<div class="field" style="margin-bottom:0;">' +
+            '<label>Description</label>' +
+            '<textarea rows="2" maxlength="160" data-field="desc" data-idx="' + i + '">' + escapeHtml(f.desc) + '</textarea>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+    }
+    addBtn.disabled = state.features.length >= 6;
+    addBtn.title = state.features.length >= 6 ? "Maximum of 6 feature cards" : "";
+  }
+
+  document.getElementById("featureList").addEventListener("input", function(e){
+    var el = e.target;
+    var field = el.getAttribute("data-field");
+    if(!field) return;
+    var idx = parseInt(el.getAttribute("data-idx"), 10);
+    state.features[idx][field] = el.value;
+    save();
+    renderPreview();
+  });
+
+  document.getElementById("featureList").addEventListener("click", function(e){
+    var btn = e.target.closest("[data-action]");
+    if(!btn) return;
+    var idx = parseInt(btn.getAttribute("data-idx"), 10);
+    var action = btn.getAttribute("data-action");
+    if(action === "delete-feature"){
+      state.features.splice(idx, 1);
+    } else if(action === "move-up" && idx > 0){
+      var tmp = state.features[idx-1];
+      state.features[idx-1] = state.features[idx];
+      state.features[idx] = tmp;
+    } else if(action === "move-down" && idx < state.features.length - 1){
+      var tmp2 = state.features[idx+1];
+      state.features[idx+1] = state.features[idx];
+      state.features[idx] = tmp2;
+    }
+    save();
+    renderFeatures();
+    renderPreview();
+  });
+
+  document.getElementById("addFeatureBtn").addEventListener("click", function(){
+    if(state.features.length >= 6){
+      showToast("Maximum of 6 feature cards");
+      return;
+    }
+    var icon = FEATURE_ICONS[state.features.length % FEATURE_ICONS.length];
+    state.features.push({ icon: icon, title: "New feature", desc: "Describe the benefit to your visitor in one clear sentence." });
+    save();
+    renderFeatures();
+    renderPreview();
+  });
+
+  /* ---------------------------------------------------------
+     FAQ
+  --------------------------------------------------------- */
+  function renderFaqs(){
+    var list = document.getElementById("faqList");
+    if(!state.faqs.length){
+      list.innerHTML = '<div class="empty-state">No FAQs yet. Add a question your visitors are likely asking.</div>';
+      return;
+    }
+    list.innerHTML = state.faqs.map(function(item, i){
+      return '' +
+      '<div class="item-card" data-idx="' + i + '">' +
+        '<div class="item-card-head">' +
+          '<strong>Question ' + (i+1) + '</strong>' +
+          '<div class="item-actions">' +
+            '<button class="icon-btn" data-action="delete-faq" data-idx="' + i + '" title="Delete question">✕</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="faq-q-row">' +
+          '<input type="text" placeholder="Question" data-field="q" data-idx="' + i + '" value="' + escapeAttr(item.q) + '">' +
+        '</div>' +
+        '<div class="field" style="margin-bottom:0;">' +
+          '<textarea rows="2" placeholder="Answer" data-field="a" data-idx="' + i + '">' + escapeHtml(item.a) + '</textarea>' +
+        '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  document.getElementById("faqList").addEventListener("input", function(e){
+    var el = e.target;
+    var field = el.getAttribute("data-field");
+    if(!field) return;
+    var idx = parseInt(el.getAttribute("data-idx"), 10);
+    state.faqs[idx][field] = el.value;
+    save();
+    renderPreview();
+  });
+
+  document.getElementById("faqList").addEventListener("click", function(e){
+    var btn = e.target.closest("[data-action='delete-faq']");
+    if(!btn) return;
+    var idx = parseInt(btn.getAttribute("data-idx"), 10);
+    state.faqs.splice(idx, 1);
+    save();
+    renderFaqs();
+    renderPreview();
+  });
+
+  document.getElementById("addFaqBtn").addEventListener("click", function(){
+    state.faqs.push({ q: "New question?", a: "Your answer here." });
+    save();
+    renderFaqs();
+    renderPreview();
+  });
+
+  /* ---------------------------------------------------------
+     Social links (footer)
+  --------------------------------------------------------- */
+  function renderSocials(){
+    var list = document.getElementById("socialList");
+    if(!state.socials.length){
+      list.innerHTML = '<div class="empty-state">No social links added.</div>';
+      return;
+    }
+    list.innerHTML = state.socials.map(function(s, i){
+      return '' +
+      '<div class="item-card" data-idx="' + i + '">' +
+        '<div class="row2">' +
+          '<div class="field" style="margin-bottom:0;">' +
+            '<label>Label</label>' +
+            '<input type="text" maxlength="30" data-field="label" data-idx="' + i + '" value="' + escapeAttr(s.label) + '">' +
+          '</div>' +
+          '<div class="field" style="margin-bottom:0;">' +
+            '<label>URL</label>' +
+            '<input type="text" maxlength="200" data-field="url" data-idx="' + i + '" value="' + escapeAttr(s.url) + '">' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:right; margin-top:8px;">' +
+          '<button class="icon-btn" data-action="delete-social" data-idx="' + i + '" title="Delete link">✕</button>' +
+        '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  document.getElementById("socialList").addEventListener("input", function(e){
+    var el = e.target;
+    var field = el.getAttribute("data-field");
+    if(!field) return;
+    var idx = parseInt(el.getAttribute("data-idx"), 10);
+    state.socials[idx][field] = el.value;
+    save();
+    renderPreview();
+  });
+
+  document.getElementById("socialList").addEventListener("click", function(e){
+    var btn = e.target.closest("[data-action='delete-social']");
+    if(!btn) return;
+    var idx = parseInt(btn.getAttribute("data-idx"), 10);
+    state.socials.splice(idx, 1);
+    save();
+    renderSocials();
+    renderPreview();
+  });
+
+  document.getElementById("addSocialBtn").addEventListener("click", function(){
+    state.socials.push({ label: "Website", url: "https://" });
+    save();
+    renderSocials();
+    renderPreview();
+  });
+
+  /* ---------------------------------------------------------
+     Theme picker
+  --------------------------------------------------------- */
+  function renderThemeGrid(){
+    var grid = document.getElementById("themeGrid");
+    grid.innerHTML = Object.keys(THEMES).map(function(key){
+      var t = THEMES[key];
+      var selected = state.theme === key;
+      return '' +
+      '<button type="button" class="theme-swatch' + (selected ? " selected" : "") + '" data-theme="' + key + '">' +
+        '<div class="swatch-preview">' +
+          '<span style="background:' + t.swatch[0] + '"></span>' +
+          '<span style="background:' + t.swatch[1] + '"></span>' +
+          '<span style="background:' + t.swatch[2] + '"></span>' +
+        '</div>' +
+        '<div class="theme-name">' + t.name + '</div>' +
+        '<div class="theme-desc">' + t.desc + '</div>' +
+      '</button>';
+    }).join("");
+  }
+
+  document.getElementById("themeGrid").addEventListener("click", function(e){
+    var btn = e.target.closest("[data-theme]");
+    if(!btn) return;
+    state.theme = btn.getAttribute("data-theme");
+    save();
+    renderThemeGrid();
+    renderPreview();
+  });
+
+  function renderAccentSwatches(){
+    var row = document.getElementById("accentSwatches");
+    row.innerHTML = ACCENTS.map(function(c){
+      var selected = state.accent.toLowerCase() === c.toLowerCase();
+      return '<button type="button" class="color-swatch-btn' + (selected ? " selected" : "") + '" data-accent="' + c + '" style="background:' + c + '" title="' + c + '" aria-label="Accent color ' + c + '"></button>';
+    }).join("");
+    document.getElementById("f-customAccent").value = state.accent;
+  }
+
+  document.getElementById("accentSwatches").addEventListener("click", function(e){
+    var btn = e.target.closest("[data-accent]");
+    if(!btn) return;
+    state.accent = btn.getAttribute("data-accent");
+    save();
+    renderAccentSwatches();
+    renderPreview();
+  });
+
+  document.getElementById("f-customAccent").addEventListener("input", function(e){
+    state.accent = e.target.value;
+    save();
+    renderAccentSwatches();
+    renderPreview();
+  });
+
+  /* ---------------------------------------------------------
+     Device toggle
+  --------------------------------------------------------- */
+  document.getElementById("desktopToggle").addEventListener("click", function(){ setDevice("desktop"); });
+  document.getElementById("mobileToggle").addEventListener("click", function(){ setDevice("mobile"); });
+
+  function setDevice(device){
+    state.device = device;
+    save();
+    document.getElementById("desktopToggle").classList.toggle("active", device === "desktop");
+    document.getElementById("mobileToggle").classList.toggle("active", device === "mobile");
+    var frame = document.getElementById("previewFrame");
+    frame.classList.toggle("mobile", device === "mobile");
+  }
+
+  /* ---------------------------------------------------------
+     Top bar actions
+  --------------------------------------------------------- */
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(!confirm("Reload the sample product? This replaces all current fields.")) return;
+    state = sampleData();
+    save();
+    fullRender();
+    showToast("Sample data reloaded");
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", function(){
+    if(!confirm("Start from a completely blank page? This clears all fields.")) return;
+    state = {
+      productName: "", logoDataUrl: "", headline: "", subheadline: "", ctaText: "Get early access",
+      features: [], quote: "", quoteName: "", quoteRole: "", faqs: [],
+      formAction: "", signupHeadline: "Sign up for updates", mailtoAddress: "",
+      copyright: "", contactEmail: "", socials: [],
+      seoTitle: "", seoDesc: "", theme: "clean-light", accent: "#6d5efc", device: "desktop"
+    };
+    save();
+    fullRender();
+    showToast("Cleared — starting blank");
+  });
+
+  document.getElementById("downloadBtn").addEventListener("click", function(){
+    var html = buildStandaloneHtml(state);
+    var blob = new Blob([html], { type: "text/html" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var filename = (state.productName || "landing").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "landing";
+    a.href = url;
+    a.download = filename + ".html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    showToast("Page downloaded — open it directly in any browser");
+  });
+
+  /* ---------------------------------------------------------
+     Page HTML builder (shared by preview + export)
+  --------------------------------------------------------- */
+  function buildPageBody(s, theme){
+    var t = THEMES[theme];
+    var fontStack = t.serif
+      ? "'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif"
+      : "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+    var headingFont = t.serif ? "'Palatino Linotype',Palatino,Georgia,serif" : fontStack;
+
+    var logoHtml = s.logoDataUrl
+      ? '<img src="' + s.logoDataUrl + '" alt="' + escapeAttr(s.productName) + ' logo" class="lp-logo-img">'
+      : '<span class="lp-logo-fallback">' + escapeHtml((s.productName || "L").charAt(0).toUpperCase()) + '</span>';
+
+    var featuresHtml = s.features.map(function(f){
+      return '' +
+      '<div class="lp-card">' +
+        '<div class="lp-card-icon">' + escapeHtml(f.icon || "✨") + '</div>' +
+        '<h3>' + escapeHtml(f.title) + '</h3>' +
+        '<p>' + escapeHtml(f.desc) + '</p>' +
+      '</div>';
+    }).join("");
+
+    var quoteHtml = (s.quote || "").trim() ? (
+      '<section class="lp-section lp-quote-section">' +
+        '<div class="lp-container lp-quote-box">' +
+          '<blockquote>&ldquo;' + escapeHtml(s.quote) + '&rdquo;</blockquote>' +
+          '<div class="lp-quote-attr">' +
+            (s.quoteName ? '<strong>' + escapeHtml(s.quoteName) + '</strong>' : '') +
+            (s.quoteRole ? '<span> &middot; ' + escapeHtml(s.quoteRole) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+      '</section>'
+    ) : "";
+
+    var faqHtml = s.faqs.length ? (
+      '<section class="lp-section">' +
+        '<div class="lp-container">' +
+          '<h2 class="lp-section-title">Frequently asked questions</h2>' +
+          '<div class="lp-faq-list">' +
+          s.faqs.map(function(item){
+            return '<details class="lp-faq-item"><summary>' + escapeHtml(item.q) + '</summary><p>' + escapeHtml(item.a) + '</p></details>';
+          }).join("") +
+          '</div>' +
+        '</div>' +
+      '</section>'
+    ) : "";
+
+    var hasFormAction = (s.formAction || "").trim().length > 0;
+    var signupHtml;
+    if(hasFormAction){
+      signupHtml =
+        '<form class="lp-signup-form" action="' + escapeAttr(s.formAction) + '" method="POST">' +
+          '<input type="email" name="email" required placeholder="you@email.com" aria-label="Email address">' +
+          '<button type="submit" class="lp-btn lp-btn-primary">' + escapeHtml(s.ctaText || "Sign up") + '</button>' +
+        '</form>';
+    } else {
+      var mailto = s.mailtoAddress ? "mailto:" + s.mailtoAddress + "?subject=" + encodeURIComponent("Sign me up: " + (s.productName || "")) : "#";
+      signupHtml =
+        '<a class="lp-btn lp-btn-primary lp-signup-mailto" href="' + escapeAttr(mailto) + '">' + escapeHtml(s.ctaText || "Notify me") + '</a>';
+    }
+
+    var socialsHtml = s.socials.map(function(soc){
+      return '<a href="' + escapeAttr(soc.url) + '" target="_blank" rel="noopener">' + escapeHtml(soc.label) + '</a>';
+    }).join("");
+
+    return '' +
+    '<header class="lp-header">' +
+      '<div class="lp-container lp-header-inner">' +
+        '<div class="lp-brand">' + logoHtml + '<span>' + escapeHtml(s.productName || "Your Product") + '</span></div>' +
+        '<a href="#signup" class="lp-btn lp-btn-outline lp-nav-cta">' + escapeHtml(s.ctaText || "Get started") + '</a>' +
+      '</div>' +
+    '</header>' +
+
+    '<section class="lp-hero">' +
+      '<div class="lp-container lp-hero-inner">' +
+        '<h1>' + escapeHtml(s.headline || "Your product headline") + '</h1>' +
+        '<p class="lp-hero-sub">' + escapeHtml(s.subheadline || "A short, clear subheadline explaining the value.") + '</p>' +
+        '<a href="#signup" class="lp-btn lp-btn-primary lp-hero-cta">' + escapeHtml(s.ctaText || "Get started") + '</a>' +
+      '</div>' +
+    '</section>' +
+
+    (s.features.length ? (
+    '<section class="lp-section">' +
+      '<div class="lp-container">' +
+        '<div class="lp-card-grid">' + featuresHtml + '</div>' +
+      '</div>' +
+    '</section>') : '') +
+
+    quoteHtml +
+    faqHtml +
+
+    '<section class="lp-section lp-signup-section" id="signup">' +
+      '<div class="lp-container lp-signup-box">' +
+        '<h2>' + escapeHtml(s.signupHeadline || "Sign up for updates") + '</h2>' +
+        signupHtml +
+      '</div>' +
+    '</section>' +
+
+    '<footer class="lp-footer">' +
+      '<div class="lp-container lp-footer-inner">' +
+        '<p class="lp-footer-copy">' + escapeHtml(s.copyright || "") + '</p>' +
+        '<div class="lp-footer-right">' +
+          (s.contactEmail ? '<a href="mailto:' + escapeAttr(s.contactEmail) + '">' + escapeHtml(s.contactEmail) + '</a>' : '') +
+          socialsHtml +
+        '</div>' +
+      '</div>' +
+    '</footer>';
+  }
+
+  function buildPageCss(theme, accent){
+    var t = THEMES[theme];
+    var fontStack = t.serif
+      ? "'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif"
+      : "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+
+    return '' +
+    '*{box-sizing:border-box;margin:0;padding:0;}' +
+    'body{font-family:' + fontStack + ';background:' + t.bg + ';color:' + t.text + ';line-height:1.6;-webkit-font-smoothing:antialiased;}' +
+    'a{color:inherit;text-decoration:none;}' +
+    '.lp-container{max-width:980px;margin:0 auto;padding:0 24px;}' +
+    '.lp-header{padding:20px 0;border-bottom:1px solid ' + t.border + ';position:sticky;top:0;background:' + t.bg + 'ee;backdrop-filter:blur(6px);z-index:10;}' +
+    '.lp-header-inner{display:flex;align-items:center;justify-content:space-between;}' +
+    '.lp-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;}' +
+    '.lp-logo-img{width:32px;height:32px;border-radius:8px;object-fit:cover;}' +
+    '.lp-logo-fallback{width:32px;height:32px;border-radius:8px;background:' + accent + ';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}' +
+    '.lp-btn{display:inline-block;padding:12px 22px;border-radius:9px;font-weight:700;font-size:.92rem;cursor:pointer;border:2px solid transparent;transition:transform .15s ease, opacity .15s ease;}' +
+    '.lp-btn:hover{transform:translateY(-1px);opacity:.92;}' +
+    '.lp-btn-primary{background:' + accent + ';color:#fff;}' +
+    '.lp-btn-outline{border-color:' + accent + ';color:' + accent + ';padding:9px 18px;font-size:.85rem;}' +
+    '.lp-nav-cta{white-space:nowrap;}' +
+    '.lp-hero{padding:90px 0 80px;text-align:center;background:' + t.heroGrad + ';}' +
+    '.lp-hero-inner{max-width:760px;}' +
+    '.lp-hero h1{font-size:2.6rem;font-weight:800;letter-spacing:-.02em;margin-bottom:20px;line-height:1.15;}' +
+    '.lp-hero-sub{font-size:1.15rem;color:' + t.textDim + ';margin-bottom:34px;}' +
+    '.lp-hero-cta{font-size:1.02rem;padding:15px 34px;}' +
+    '.lp-section{padding:70px 0;}' +
+    '.lp-section-title{font-size:1.7rem;font-weight:800;text-align:center;margin-bottom:40px;}' +
+    '.lp-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px;}' +
+    '.lp-card{background:' + t.cardBg + ';border:1px solid ' + t.border + ';border-radius:14px;padding:28px 24px;}' +
+    '.lp-card-icon{font-size:1.8rem;margin-bottom:14px;}' +
+    '.lp-card h3{font-size:1.08rem;margin-bottom:8px;}' +
+    '.lp-card p{color:' + t.textDim + ';font-size:.92rem;}' +
+    '.lp-quote-section{background:' + t.panel + ';}' +
+    '.lp-quote-box{max-width:680px;text-align:center;}' +
+    '.lp-quote-box blockquote{font-size:1.35rem;font-weight:600;line-height:1.5;margin-bottom:20px;}' +
+    '.lp-quote-attr{color:' + t.textDim + ';font-size:.9rem;}' +
+    '.lp-faq-list{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px;}' +
+    '.lp-faq-item{background:' + t.panel + ';border:1px solid ' + t.border + ';border-radius:10px;padding:16px 20px;}' +
+    '.lp-faq-item summary{font-weight:700;cursor:pointer;list-style:none;}' +
+    '.lp-faq-item summary::-webkit-details-marker{display:none;}' +
+    '.lp-faq-item summary::before{content:"+ ";color:' + accent + ';font-weight:800;}' +
+    '.lp-faq-item[open] summary::before{content:"\\2212 ";}' +
+    '.lp-faq-item p{color:' + t.textDim + ';margin-top:10px;font-size:.92rem;}' +
+    '.lp-signup-section{text-align:center;background:' + t.heroGrad + ';}' +
+    '.lp-signup-box{max-width:520px;}' +
+    '.lp-signup-box h2{font-size:1.7rem;font-weight:800;margin-bottom:26px;}' +
+    '.lp-signup-form{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}' +
+    '.lp-signup-form input{flex:1;min-width:200px;padding:12px 16px;border-radius:9px;border:1px solid ' + t.border + ';font-size:.95rem;background:' + t.panel + ';color:' + t.text + ';}' +
+    '.lp-signup-form input:focus{outline:2px solid ' + accent + ';outline-offset:1px;}' +
+    '.lp-footer{padding:28px 0;border-top:1px solid ' + t.border + ';}' +
+    '.lp-footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:.85rem;color:' + t.textDim + ';}' +
+    '.lp-footer-right{display:flex;gap:18px;flex-wrap:wrap;}' +
+    '.lp-footer-right a:hover{color:' + accent + ';}' +
+    '@media (max-width:640px){' +
+      '.lp-hero{padding:60px 0 50px;}' +
+      '.lp-hero h1{font-size:1.9rem;}' +
+      '.lp-hero-sub{font-size:1rem;}' +
+      '.lp-section{padding:50px 0;}' +
+      '.lp-nav-cta{padding:8px 13px;font-size:.78rem;}' +
+      '.lp-footer-inner{flex-direction:column;text-align:center;}' +
+    '}';
+  }
+
+  function buildStandaloneHtml(s){
+    var body = buildPageBody(s, s.theme);
+    var css = buildPageCss(s.theme, s.accent);
+    var title = escapeHtml(s.seoTitle || s.productName || "Landing Page");
+    var desc = escapeHtml(s.seoDesc || s.subheadline || "");
+    var ogImage = escapeAttr(s.logoDataUrl || "");
+
+    return '<!DOCTYPE html>\n' +
+    '<html lang="en">\n<head>\n' +
+    '<meta charset="UTF-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+    '<title>' + title + '</title>\n' +
+    '<meta name="description" content="' + desc + '">\n' +
+    '<meta property="og:title" content="' + title + '">\n' +
+    '<meta property="og:description" content="' + desc + '">\n' +
+    '<meta property="og:type" content="website">\n' +
+    (ogImage ? '<meta property="og:image" content="' + ogImage + '">\n' : '') +
+    '<meta name="twitter:card" content="summary_large_image">\n' +
+    '<meta name="twitter:title" content="' + title + '">\n' +
+    '<meta name="twitter:description" content="' + desc + '">\n' +
+    '<style>' + css + '</style>\n' +
+    '</head>\n<body>\n' + body + '\n</body>\n</html>';
+  }
+
+  /* ---------------------------------------------------------
+     Preview rendering (writes full doc into iframe via srcdoc)
+  --------------------------------------------------------- */
+  function renderPreview(){
+    var frame = document.getElementById("previewFrame");
+    frame.srcdoc = buildStandaloneHtml(state);
+  }
+
+  /* ---------------------------------------------------------
+     Full render (on load / reset)
+  --------------------------------------------------------- */
+  function fullRender(){
+    bindSimpleFields();
+    renderLogoPreview();
+    renderFeatures();
+    renderFaqs();
+    renderSocials();
+    renderThemeGrid();
+    renderAccentSwatches();
+    setDevice(state.device || "desktop");
+    renderTabs();
+    renderPreview();
+  }
+
+  /* ---------------------------------------------------------
+     Init
+  --------------------------------------------------------- */
+  state = load();
+  // Backfill any missing/malformed keys (forward compatibility, and defense
+  // against hand-edited or corrupted localStorage that has the right shape
+  // for the productName check in load() but garbage in other fields).
+  var defaults = sampleData();
+  var arrayKeys = ["features", "faqs", "socials"];
+  Object.keys(defaults).forEach(function(k){
+    if(state[k] === undefined){
+      state[k] = defaults[k];
+    } else if(arrayKeys.indexOf(k) !== -1 && !Array.isArray(state[k])){
+      state[k] = defaults[k];
+    } else if(typeof defaults[k] === "string" && typeof state[k] !== "string"){
+      state[k] = defaults[k];
+    }
+  });
+  // Guard against non-object entries inside the array fields too.
+  arrayKeys.forEach(function(k){
+    state[k] = state[k].filter(function(item){ return item && typeof item === "object"; });
+  });
+  bindLogo();
+  fullRender();
+
+})();
+</script>
+</body>
+</html>

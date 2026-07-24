@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rainbow Bridge — a gentle place to remember a companion</title>
+<meta name="description" content="A quiet, permanent meadow where the pets we've loved are remembered. Place a photo, a name, and a few words on the hillside, forever.">
+<meta property="og:title" content="Rainbow Bridge — a gentle place to remember a companion">
+<meta property="og:description" content="A quiet, permanent meadow where the pets we've loved are remembered.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%230e1330'/%3E%3Cpath d='M20 78 A30 30 0 0 1 80 78' fill='none' stroke='%23e8b7d0' stroke-width='6'/%3E%3Cpath d='M28 78 A22 22 0 0 1 72 78' fill='none' stroke='%23f4d59a' stroke-width='6'/%3E%3Cpath d='M36 78 A14 14 0 0 1 64 78' fill='none' stroke='%23a9d6b6' stroke-width='6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky-1: #171a3a;   /* twilight */
+    --sky-2: #29254f;
+    --meadow-1: #2c3a37;
+    --meadow-2: #33463c;
+    --ink: #f0ece2;
+    --ink-dim: #b9b3a6;
+    --ink-faint: #b0ab9e;
+    --gold: #e8c98a;
+    --gold-soft: #d9b877;
+    --warm: #f0b64d;
+    --rose: #e8b7d0;
+    --green: #a9d6b6;
+    --rule: rgba(240,236,226,.10);
+    --serif: "EB Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Inter", -apple-system, "Segoe UI", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--sky-1); }
+  body {
+    background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 34%, var(--meadow-1) 62%, var(--meadow-2) 100%) fixed;
+    color: var(--ink); font-family: var(--serif); -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  a { color: var(--gold); }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .demo-banner {
+    text-align: center; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    background: rgba(232,201,138,.09); color: var(--gold); padding: .45rem 1rem;
+    border-bottom: 1px solid rgba(232,201,138,.16); font-family: var(--sans);
+  }
+  .confirm-banner { background: linear-gradient(180deg, rgba(232,201,138,.14), rgba(232,201,138,.06)); border-bottom: 1px solid rgba(232,201,138,.35); }
+  .confirm-banner .cb-inner { max-width: 60rem; margin: 0 auto; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.3rem; font-size: 1.02rem; line-height: 1.55; color: var(--ink); }
+  .confirm-banner #confirmText { flex: 1; }
+  .confirm-banner b { color: var(--gold); }
+  .confirm-banner #confirmClose { background: none; border: none; color: var(--ink-faint); font-size: 1.1rem; cursor: pointer; padding: .3rem .5rem; font-family: var(--sans); }
+  .confirm-banner #confirmClose:hover { color: var(--ink); }
+
+  /* ---- header with soft rainbow ---- */
+  header { text-align: center; padding: 4.5rem 1.5rem 2rem; position: relative; overflow: hidden; }
+  .rainbow {
+    position: absolute; top: -140px; left: 50%; transform: translateX(-50%);
+    width: 620px; height: 620px; border-radius: 50%; pointer-events: none; opacity: .5;
+    background: transparent;
+    box-shadow:
+      0 0 0 10px rgba(232,183,208,.16),
+      0 0 0 20px rgba(244,213,154,.14),
+      0 0 0 30px rgba(169,214,182,.13),
+      0 0 0 40px rgba(155,190,230,.11);
+    -webkit-mask-image: linear-gradient(180deg, #000 42%, transparent 52%);
+    mask-image: linear-gradient(180deg, #000 42%, transparent 52%);
+  }
+  header .inner { position: relative; }
+  h1 { font-weight: 500; font-size: clamp(2rem, 5vw, 3.1rem); letter-spacing: .04em; }
+  .sub { margin-top: 1rem; font-style: italic; font-size: 1.2rem; color: var(--ink-dim); line-height: 1.7; max-width: 32rem; margin-inline: auto; }
+  .count { margin-top: 1.5rem; font-size: .8rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); font-family: var(--sans); }
+
+  .cta-row { text-align: center; margin: 1.8rem 0 1rem; }
+  .btn-primary {
+    font-family: var(--sans); font-weight: 600; font-size: .92rem; letter-spacing: .04em;
+    color: #22190a; background: linear-gradient(160deg, var(--gold), var(--gold-soft));
+    border: none; border-radius: 999px; padding: .95rem 2.2rem; cursor: pointer;
+    box-shadow: 0 6px 26px rgba(232,201,138,.22); transition: transform .15s, box-shadow .2s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(232,201,138,.3); }
+  .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+  .cta-note { margin-top: .8rem; font-size: .8rem; color: var(--ink-faint); font-family: var(--sans); }
+
+  /* ---- today we remember ---- */
+  .today { max-width: 60rem; margin: 1.5rem auto 0; padding: 0 1.5rem; }
+  .today-inner { border: 1px solid rgba(232,201,138,.22); background: rgba(232,201,138,.05); border-radius: 12px; padding: 1.1rem 1.3rem; text-align: center; }
+  .today h2 { font-weight: 500; font-size: 1rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); font-family: var(--sans); margin-bottom: .8rem; }
+  .today .row { display: flex; gap: 1.4rem; justify-content: center; flex-wrap: wrap; }
+  .today .who { display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 5rem; }
+  .today .who .mini { width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: rgba(255,255,255,.04); }
+  .today .who .nm { margin-top: .4rem; font-size: .82rem; color: var(--ink-dim); }
+
+  /* ---- meadow ---- */
+  main { max-width: 66rem; margin: 0 auto; padding: 2.6rem 1.5rem 6rem; }
+  .meadow-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.6rem; flex-wrap: wrap; }
+  .meadow-head h2 { font-weight: 500; font-size: 1.05rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); font-family: var(--sans); }
+  .search-wrap input {
+    color: var(--ink); border: 1px solid var(--rule); border-radius: 999px; background: rgba(255,255,255,.04);
+    padding: .55rem .9rem .55rem 2.2rem; font-family: var(--sans); font-size: .85rem; width: 15rem; max-width: 62vw;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8578' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: .75rem center;
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--gold); }
+
+  .meadow { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 2.4rem 1rem; }
+  .plot { text-align: center; cursor: pointer; background: none; border: none; color: inherit; font-family: inherit; padding: 0; }
+  .locket-wrap { position: relative; width: 100px; height: 100px; margin: 0 auto; }
+  .locket {
+    width: 100px; height: 100px; border-radius: 50%; object-fit: cover; display: block;
+    border: 2px solid var(--gold-soft); box-shadow: 0 0 0 5px rgba(232,201,138,.08), 0 10px 28px rgba(0,0,0,.35);
+    background: rgba(255,255,255,.05);
+  }
+  .locket.medallion { display: flex; align-items: center; justify-content: center; font-size: 2.6rem; }
+  .plot.eternal .locket { border-color: var(--gold); box-shadow: 0 0 0 5px rgba(240,182,77,.14), 0 0 34px rgba(240,182,77,.28), 0 10px 28px rgba(0,0,0,.35); }
+  .flame {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    width: 9px; height: 16px; background: linear-gradient(to top, #f8ecc9 8%, #f3c96a 45%, #e8952e 85%, transparent);
+    border-radius: 50% 50% 48% 52% / 62% 62% 38% 38%; filter: blur(.3px);
+    animation: flick 2.6s ease-in-out infinite; display: none;
+  }
+  .plot.eternal .flame { display: block; }
+  @keyframes flick { 0%,100%{ transform: translateX(-50%) scaleY(1) rotate(-1deg);} 40%{ transform: translateX(-50%) scaleY(1.1) rotate(1.5deg);} 70%{ transform: translateX(-50%) scaleY(.95) rotate(-1.5deg);} }
+  @media (prefers-reduced-motion: reduce) { .flame { animation: none; } }
+  .plot .nm { margin-top: .9rem; font-size: 1.05rem; color: var(--ink); line-height: 1.2; overflow-wrap: anywhere; }
+  .plot .yr { margin-top: .15rem; font-size: .74rem; letter-spacing: .08em; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .plot:hover .nm { color: var(--gold); }
+  .empty-meadow { grid-column: 1/-1; text-align: center; font-style: italic; color: var(--ink-dim); font-size: 1.15rem; line-height: 1.9; padding: 3rem 1rem; }
+
+  .pager { display: flex; justify-content: center; align-items: center; gap: 1.1rem; margin-top: 2.4rem; font-family: var(--sans); }
+  .pager button { background: rgba(255,255,255,.04); border: 1px solid var(--rule); color: var(--ink-dim); border-radius: 999px; padding: .5rem 1.1rem; font-size: .78rem; cursor: pointer; }
+  .pager button:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+  .pager button:disabled { opacity: .35; cursor: default; }
+  .pager .where { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+
+  footer { border-top: 1px solid var(--rule); padding: 2.6rem 1.5rem; text-align: center; font-size: .82rem; color: var(--ink-faint); line-height: 2; font-style: italic; }
+  footer a { color: var(--ink-dim); }
+
+  /* ---- dialogs ---- */
+  dialog { background: #12162f; color: var(--ink); border: 1px solid var(--rule); border-radius: 12px; padding: 2.2rem; width: min(94vw, 34rem); box-shadow: 0 30px 90px rgba(0,0,0,.6); margin: auto; max-height: 92vh; overflow-y: auto; font-family: var(--serif); }
+  dialog::backdrop { background: rgba(6,8,20,.78); backdrop-filter: blur(4px); }
+
+  /* view a memorial */
+  #viewModal { text-align: center; }
+  #viewModal .vlocket { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; margin: 0 auto 1.3rem; border: 2px solid var(--gold); box-shadow: 0 0 34px rgba(240,182,77,.22); display: flex; align-items: center; justify-content: center; font-size: 3.4rem; background: rgba(255,255,255,.05); }
+  #viewModal h3 { font-weight: 500; font-size: 1.9rem; }
+  #viewModal .vyears { color: var(--ink-dim); margin-top: .3rem; font-variant-numeric: tabular-nums; }
+  #viewModal .vtogether { color: var(--gold-soft); font-size: .82rem; letter-spacing: .12em; text-transform: uppercase; font-family: var(--sans); margin-top: .5rem; }
+  #viewModal .vwords { margin-top: 1.4rem; font-style: italic; font-size: 1.12rem; line-height: 1.85; color: var(--ink-dim); overflow-wrap: anywhere; }
+  #viewModal .vby { margin-top: 1.5rem; font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); font-family: var(--sans); }
+  #viewModal .vclose { margin-top: 1.8rem; }
+
+  /* remember form */
+  #formModal h3 { font-weight: 500; font-size: 1.6rem; margin-bottom: .4rem; }
+  #formModal .dsub { color: var(--ink-dim); font-size: .92rem; font-style: italic; margin-bottom: 1rem; line-height: 1.6; }
+  .modal-note { font-size: .82rem; color: var(--ink-dim); background: rgba(232,201,138,.06); border-left: 2px solid var(--gold); padding: .55rem .75rem; margin-bottom: 1rem; line-height: 1.5; font-family: var(--sans); }
+  label { display: block; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim); margin: 1.1rem 0 .45rem; font-family: var(--sans); }
+  input[type=text], input[type=email], textarea, select {
+    width: 100%; background: #0c1026; color: var(--ink); border: 1px solid var(--rule); border-radius: 6px;
+    padding: .75rem .85rem; font-family: var(--serif); font-size: 1.06rem; resize: none;
+  }
+  select { font-family: var(--sans); font-size: .95rem; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--gold-soft); }
+  .row2 { display: flex; gap: .7rem; } .row2 > div { flex: 1; }
+  .counter { text-align: right; font-size: .7rem; color: var(--ink-faint); margin-top: .3rem; font-family: var(--sans); }
+
+  .photo-row { display: flex; align-items: center; gap: 1rem; }
+  .photo-prev { width: 3.6rem; height: 3.6rem; border-radius: 50%; object-fit: cover; border: 1px solid var(--gold-soft); display: none; }
+  .photo-prev.show { display: block; }
+  .btn-soft { background: #0c1026; border: 1px solid var(--rule); color: var(--ink-dim); border-radius: 6px; padding: .65rem 1rem; font-size: .8rem; cursor: pointer; font-family: var(--sans); }
+  .btn-soft:hover { border-color: var(--gold-soft); color: var(--gold); }
+  .btn-clear { background: none; border: none; color: var(--ink-faint); font-size: .74rem; cursor: pointer; text-decoration: underline; display: none; font-family: var(--sans); }
+  .btn-clear.show { display: inline; }
+  .hint { font-size: .68rem; color: var(--ink-faint); margin-top: .5rem; line-height: 1.6; font-family: var(--sans); }
+
+  .tiers { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: .3rem; }
+  .tier { background: #0c1026; border: 1px solid var(--rule); border-radius: 8px; padding: .9rem; cursor: pointer; text-align: left; transition: all .15s; }
+  .tier.sel { border-color: var(--gold); background: rgba(232,201,138,.06); }
+  .tier .t-name { font-family: var(--sans); font-weight: 600; font-size: .85rem; color: var(--ink); }
+  .tier .t-price { font-size: 1.3rem; color: var(--gold); margin: .2rem 0; }
+  .tier .t-desc { font-size: .74rem; color: var(--ink-faint); font-family: var(--sans); line-height: 1.4; }
+
+  .form-error { color: #e39a8f; font-size: .84rem; margin-top: 1rem; min-height: 1.2em; font-style: italic; }
+  .modal-footer { position: sticky; bottom: 0; background: #12162f; padding-top: .7rem; margin-top: 1.2rem; }
+  .modal-actions { display: flex; justify-content: space-between; align-items: center; }
+  .btn-ghost { background: none; border: none; color: var(--ink-dim); font-family: var(--serif); font-size: .95rem; cursor: pointer; padding: .5rem; }
+  .btn-ghost:hover { color: var(--ink); }
+  .pay-note { text-align: right; font-size: .72rem; color: var(--ink-faint); margin-top: .5rem; font-family: var(--sans); }
+
+  .toast { position: fixed; left: 50%; bottom: 2rem; transform: translateX(-50%) translateY(20px); background: #12162f; border: 1px solid rgba(232,201,138,.4); color: var(--ink); padding: 1.1rem 1.7rem; border-radius: 8px; font-size: 1rem; font-style: italic; opacity: 0; pointer-events: none; transition: all .4s; box-shadow: 0 12px 40px rgba(0,0,0,.5); max-width: 92vw; text-align: center; z-index: 50; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+  @media (max-width: 560px) {
+    header { padding: 3.2rem 1.2rem 1.6rem; }
+    .meadow { gap: 2rem .6rem; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); }
+    .meadow-head { flex-direction: column; align-items: stretch; }
+    .search-wrap input { width: 100%; max-width: none; }
+    dialog { padding: 1.6rem; }
+    .tiers { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner" id="demoBanner" hidden>Gentle preview — payments are simulated, and nothing here is charged.</div>
+<div class="confirm-banner" id="confirmBanner" hidden>
+  <div class="cb-inner"><span id="confirmText"></span><button type="button" id="confirmClose" aria-label="Dismiss">✕</button></div>
+</div>
+
+<header>
+  <div class="rainbow" aria-hidden="true"></div>
+  <div class="inner">
+    <h1>Rainbow Bridge</h1>
+    <p class="sub">A quiet meadow for the companions we’ve loved and lost.<br>Place them here, and they stay — gently, and for good.</p>
+    <p class="count" id="count"></p>
+    <div class="cta-row">
+      <button class="btn-primary" id="rememberBtn">Remember a companion</button>
+      <p class="cta-note">From $19. Every memorial is reviewed with care before it appears.</p>
+    </div>
+  </div>
+</header>
+
+<section class="today" id="today" hidden>
+  <div class="today-inner">
+    <h2>Today we remember</h2>
+    <div class="row" id="todayRow"></div>
+  </div>
+</section>
+
+<main>
+  <div class="meadow-head">
+    <h2 id="meadowTitle">The Meadow</h2>
+    <div class="search-wrap"><input type="search" id="search" placeholder="Find a companion" aria-label="Search the meadow"></div>
+  </div>
+  <div class="meadow" id="meadow" aria-live="polite"></div>
+  <div class="pager" id="pager" hidden>
+    <button id="pgPrev">← Newer</button>
+    <span class="where" id="pgWhere"></span>
+    <button id="pgNext">Older →</button>
+  </div>
+</main>
+
+<footer>
+  Every memorial placed here is permanent. We will not remove a companion to make room for another.<br>
+  <a href="#" id="aboutLink">About &amp; the promise</a> · <a href="/legal.html">Terms &amp; refunds</a> ·
+  <a href="mailto:victortanws@gmail.com" id="contactLink">Write to us</a>
+</footer>
+
+<dialog id="viewModal" aria-labelledby="viewName">
+  <div class="vlocket" id="viewLocket"></div>
+  <h3 id="viewName"></h3>
+  <div class="vyears" id="viewYears"></div>
+  <div class="vtogether" id="viewTogether"></div>
+  <p class="vwords" id="viewWords"></p>
+  <p class="vby" id="viewBy"></p>
+  <button class="btn-ghost vclose" id="viewClose">Return to the meadow</button>
+</dialog>
+
+<dialog id="aboutModal" aria-labelledby="aboutTitle">
+  <h3 id="aboutTitle" style="font-weight:500;font-size:1.5rem;margin-bottom:.8rem">Our promise</h3>
+  <p style="color:var(--ink-dim);font-style:italic;line-height:1.9">
+    Rainbow Bridge is a place to keep a companion close after they’re gone. When you place a pet here,
+    they stay — we will never remove a memorial to sell the space again, and a memorial does not expire or
+    dim if you never return. Every memorial is read by a person before it appears, so the meadow stays gentle.
+    If you ever want a memorial changed or taken down, write to us and we’ll take care of it. Payments are
+    handled by Stripe — we never see your card number.
+  </p>
+  <p style="color:var(--ink-dim);font-style:italic;line-height:1.9;margin-top:1rem;border-top:1px solid var(--rule);padding-top:1rem">
+    And if the loss is heavy right now, please know you’re not alone — losing a companion is real grief.
+    Pet-loss support lines and communities exist to sit with you through it; a gentle place to start is the
+    <a href="https://www.aspca.org/pet-care/general-pet-care/end-of-life-care" target="_blank" rel="noopener">ASPCA’s pet-loss resources</a>.
+  </p>
+  <button class="btn-ghost" id="aboutClose" style="margin-top:1.4rem">Close</button>
+</dialog>
+
+<dialog id="formModal" aria-labelledby="formTitle">
+  <h3 id="formTitle">Remember a companion</h3>
+  <p class="dsub">Take your time. You can add as little or as much as feels right.</p>
+  <form id="rememberForm" method="dialog">
+    <p class="modal-note" id="formNote" hidden></p>
+    <label for="petName">Their name</label>
+    <input type="text" id="petName" maxlength="40" placeholder="The name you called them" required>
+
+    <div class="row2">
+      <div><label for="species">They were a</label>
+        <select id="species">
+          <option value="dog">Dog</option><option value="cat">Cat</option><option value="bird">Bird</option>
+          <option value="rabbit">Rabbit</option><option value="horse">Horse</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div><label for="birth">Born</label><input type="text" id="birth" maxlength="24" placeholder="2011"></div>
+      <div><label for="passing">Passed</label><input type="text" id="passing" maxlength="24" placeholder="3 March 2024"></div>
+    </div>
+    <p class="hint" style="margin-top:.5rem">A full date for when they passed lets the meadow gently remember them each year, on their day.</p>
+
+    <label for="words">A few words (optional)</label>
+    <textarea id="words" rows="3" maxlength="280" placeholder="What you’d want the meadow to know about them"></textarea>
+    <div class="counter"><span id="wordsCount">0</span> / <span id="wordsMax">280</span></div>
+
+    <div id="photoBlock">
+      <label>A photo (optional)</label>
+      <div class="photo-row">
+        <img class="photo-prev" id="photoPrev" alt="Your photo">
+        <button type="button" class="btn-soft" id="photoBtn">Choose a photo…</button>
+        <button type="button" class="btn-clear" id="photoClear">remove</button>
+        <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" hidden>
+      </div>
+      <p class="hint">JPEG, PNG, or WebP — softly resized in your browser first. Please share only a photo that’s yours.</p>
+    </div>
+
+    <label for="litBy">Placed by (optional)</label>
+    <input type="text" id="litBy" maxlength="40" placeholder="Your name, or your family’s">
+
+    <label for="ownerEmail">Your email (optional)</label>
+    <input type="email" id="ownerEmail" maxlength="120" placeholder="Only so we can reach you about this memorial. Never shared.">
+    <p class="hint">We’ll write only if you need us — and we hope, one day, to send a gentle note on their anniversary.</p>
+
+    <label>Choose a memorial</label>
+    <div class="tiers">
+      <button type="button" class="tier sel" data-tier="place">
+        <div class="t-name">A place in the meadow</div><div class="t-price" id="priceP">$19</div>
+        <div class="t-desc">Their photo, name, and words on the hillside, forever.</div>
+      </button>
+      <button type="button" class="tier" data-tier="eternal">
+        <div class="t-name">An eternal light</div><div class="t-price" id="priceE">$29</div>
+        <div class="t-desc">Everything above, plus a candle that always glows and room for a longer story.</div>
+      </button>
+    </div>
+
+    <p class="form-error" id="formError"></p>
+    <div class="modal-footer">
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelBtn">Not now</button>
+        <button type="submit" class="btn-primary" id="payBtn">Place them &nbsp;·&nbsp; <span id="payAmt">$19</span></button>
+      </div>
+      <p class="pay-note">Reviewed with care before it appears · changed your mind is always okay — see our <a href="#" id="refundLink">refund promise</a>.</p>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>

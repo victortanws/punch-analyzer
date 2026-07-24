@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>PunchCard Loyalty — Digital Punch Cards for Local Shops</title>
+<meta name="description" content="Turn your paper punch card into a digital one. No app download, no per-customer fees.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --brand:#a15c3e;
+    --brand-dark:#7c4530;
+    --ink:#241a15;
+    --paper:#fffaf5;
+    --card:#ffffff;
+    --muted:#8a7a70;
+    --line:#eee0d5;
+    --success:#3f8c5b;
+    --danger:#c04a3e;
+    --shadow: 0 8px 24px rgba(60,30,10,0.08);
+    --radius: 16px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font);
+    background:
+      radial-gradient(circle at 10% 0%, rgba(161,92,62,0.07), transparent 45%),
+      radial-gradient(circle at 90% 10%, rgba(63,140,91,0.06), transparent 40%),
+      var(--paper);
+    color:var(--ink);
+    line-height:1.5;
+    min-height:100vh;
+  }
+  a{color:var(--brand);}
+  img{max-width:100%;display:block;}
+  button{font-family:inherit;}
+
+  /* ---------- Layout shell ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 20px;
+    background:rgba(255,250,245,0.9);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .brand{
+    display:flex; align-items:center; gap:10px;
+    font-weight:800; font-size:1.05rem; letter-spacing:-0.02em;
+  }
+  .topbar .brand .dot{
+    width:12px;height:12px;border-radius:50%;
+    background:linear-gradient(135deg,var(--brand),var(--brand-dark));
+    box-shadow: 0 0 0 4px rgba(161,92,62,0.15);
+  }
+  .topbar nav{display:flex; gap:6px;}
+  .topbar nav button{
+    border:none; background:transparent; padding:8px 14px; border-radius:999px;
+    font-size:0.88rem; font-weight:600; color:var(--muted); cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  .topbar nav button:hover{background:#f3e6da; color:var(--ink);}
+  .topbar nav button.active{background:var(--ink); color:#fff;}
+  .topbar nav button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:3px solid rgba(161,92,62,0.45); outline-offset:2px;
+  }
+
+  main{max-width:1100px; margin:0 auto; padding:28px 20px 80px;}
+  .view{display:none; animation:fadeIn .25s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  h1{font-size:1.7rem; margin:0 0 4px; letter-spacing:-0.02em;}
+  h2{font-size:1.25rem; margin:0 0 2px; letter-spacing:-0.01em;}
+  .subtitle{color:var(--muted); margin:0 0 22px; font-size:0.98rem;}
+
+  .grid{display:grid; grid-template-columns: 1.1fr 0.9fr; gap:22px;}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; box-shadow:var(--shadow);
+  }
+  .panel + .panel{margin-top:18px;}
+  .panel h3{margin:0 0 14px; font-size:1.02rem; display:flex; align-items:center; gap:8px;}
+  .panel h3 .num{
+    width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;
+  }
+
+  label{display:block; font-size:0.82rem; font-weight:700; color:var(--ink); margin:14px 0 6px;}
+  label:first-child{margin-top:0;}
+  label .hint{font-weight:500; color:var(--muted); font-size:0.78rem;}
+  input[type=text], input[type=number], input[type=password], input[type=url], select, textarea{
+    width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:0.95rem; background:#fffdfb; color:var(--ink); transition:border-color .15s, box-shadow .15s;
+  }
+  input:hover, select:hover, textarea:hover{border-color:#d8c4b3;}
+  input:focus, select:focus, textarea:focus{
+    border-color:var(--brand); box-shadow:0 0 0 3px rgba(161,92,62,0.14); outline:none;
+  }
+  input[type=color]{
+    width:56px; height:40px; padding:2px; border-radius:10px; border:1.5px solid var(--line); cursor:pointer; background:#fff;
+  }
+  .row{display:flex; gap:12px; align-items:flex-end;}
+  .row > div{flex:1;}
+  .field-color{display:flex; align-items:center; gap:12px;}
+  .swatches{display:flex; gap:8px; flex-wrap:wrap;}
+  .swatch{
+    width:28px;height:28px;border-radius:50%; cursor:pointer; border:2px solid #fff;
+    box-shadow:0 0 0 1.5px var(--line); transition:transform .12s;
+  }
+  .swatch:hover{transform:scale(1.12);}
+  .swatch.selected{box-shadow:0 0 0 2px var(--ink);}
+
+  .logo-upload{
+    display:flex; align-items:center; gap:14px; margin-top:8px;
+  }
+  .logo-preview{
+    width:64px;height:64px;border-radius:14px;object-fit:cover;background:#f3ece4;
+    border:1.5px dashed var(--line); display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:0.7rem; text-align:center; overflow:hidden;
+  }
+  .btn-file{
+    display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:10px;
+    background:#f3e6da; color:var(--brand-dark); font-weight:700; font-size:0.85rem; cursor:pointer;
+    border:1px solid #e6d2bf; transition:background .15s;
+  }
+  .btn-file:hover{background:#ecd8c6;}
+  .btn-file input{display:none;}
+  .btn-remove-logo{
+    border:none;background:none;color:var(--danger);font-size:0.8rem;font-weight:700;cursor:pointer;
+    padding:6px 4px;
+  }
+
+  button.btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 20px; border-radius:11px; border:none; font-weight:700; font-size:0.93rem;
+    cursor:pointer; transition:transform .12s, box-shadow .12s, background .15s, filter .15s;
+  }
+  button.btn:active{transform:scale(0.97);}
+  .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand-dark)); color:#fff; box-shadow:0 6px 16px rgba(161,92,62,0.28);}
+  .btn-primary:hover{filter:brightness(1.06); box-shadow:0 8px 20px rgba(161,92,62,0.34);}
+  .btn-secondary{background:#f3e6da; color:var(--brand-dark);}
+  .btn-secondary:hover{background:#ecd8c6;}
+  button.btn.btn-ghost{background:transparent; color:var(--muted); border:1.5px solid var(--line);}
+  button.btn.btn-ghost:hover{border-color:#d8c4b3; color:var(--ink);}
+  .btn-block{width:100%;}
+  .btn-lg{padding:15px 22px; font-size:1rem;}
+  button.btn:disabled{opacity:0.5; cursor:not-allowed; transform:none;}
+
+  .actions-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px;}
+
+  .helper-note{
+    font-size:0.82rem; color:var(--muted); background:#f8f2ec; border:1px solid var(--line);
+    padding:10px 12px; border-radius:10px; margin-top:14px;
+  }
+  .helper-note strong{color:var(--ink);}
+
+  /* ---------- Live demo card ---------- */
+  .phone-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .phone-frame{
+    width:280px; border-radius:34px; padding:14px;
+    background:#1b1410; box-shadow:0 20px 40px rgba(30,15,5,0.35), inset 0 0 0 2px #000;
+    position:relative;
+  }
+  .phone-frame::before{
+    content:""; position:absolute; top:26px; left:50%; transform:translateX(-50%);
+    width:70px; height:6px; border-radius:4px; background:#000;
+  }
+  .phone-screen{
+    background:var(--paper); border-radius:22px; overflow:hidden; padding:22px 16px 18px;
+    min-height:420px; display:flex; flex-direction:column; align-items:center;
+  }
+  .pc-logo{width:52px;height:52px;border-radius:14px;object-fit:cover;margin-bottom:8px; box-shadow:0 3px 8px rgba(0,0,0,0.15);}
+  .pc-logo-fallback{
+    width:52px;height:52px;border-radius:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:1.3rem;
+  }
+  .pc-bizname{font-weight:800; font-size:1.05rem; text-align:center; margin-bottom:2px;}
+  .pc-rule{font-size:0.78rem; color:var(--muted); text-align:center; margin-bottom:16px;}
+  .pc-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:9px; width:100%; margin-bottom:18px;
+  }
+  .pc-stamp{
+    aspect-ratio:1; border-radius:50%; border:2px dashed #d9c6b5; background:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:transparent;
+    position:relative; transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .2s;
+  }
+  .pc-stamp.filled{
+    border-style:solid; color:#fff; transform:scale(1);
+  }
+  .pc-stamp.pop{ animation:stampPop .45s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes stampPop{
+    0%{transform:scale(0.3) rotate(-25deg); opacity:0;}
+    60%{transform:scale(1.18) rotate(8deg); opacity:1;}
+    100%{transform:scale(1) rotate(0);}
+  }
+  .pc-progress-text{font-size:0.82rem; color:var(--muted); margin-bottom:14px; text-align:center;}
+  .pc-stamp-btn{width:100%; margin-top:auto;}
+  .pc-lifetime{font-size:0.72rem; color:var(--muted); margin-top:14px; text-align:center;}
+
+  .reward-screen{ text-align:center; padding-top:10px; }
+  .reward-badge{
+    width:74px;height:74px;border-radius:50%; margin:0 auto 14px; display:flex; align-items:center;
+    justify-content:center; font-size:2rem; background:linear-gradient(135deg,#ffd76a,#f5a623);
+    box-shadow:0 8px 18px rgba(245,166,35,0.4); animation:bounceIn .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes bounceIn{ from{transform:scale(0);} to{transform:scale(1);} }
+  .reward-title{font-weight:800; font-size:1.1rem; margin-bottom:4px;}
+  .reward-desc{font-size:0.88rem; color:var(--muted); margin-bottom:18px;}
+
+  .demo-caption{margin-top:14px; font-size:0.85rem; color:var(--muted); text-align:center; max-width:280px;}
+
+  /* ---------- PIN modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(30,18,10,0.45); display:none;
+    align-items:center; justify-content:center; z-index:200; padding:20px; backdrop-filter:blur(2px);
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:#fff; border-radius:18px; padding:26px; max-width:340px; width:100%;
+    box-shadow:0 24px 60px rgba(0,0,0,0.25); animation:modalIn .2s ease;
+  }
+  @keyframes modalIn{ from{opacity:0; transform:translateY(10px) scale(0.98);} to{opacity:1; transform:none;} }
+  .modal h3{margin:0 0 6px;}
+  .modal p{margin:0 0 16px; color:var(--muted); font-size:0.88rem;}
+  .pin-dots-input{
+    display:flex; gap:10px; justify-content:center; margin-bottom:14px;
+  }
+  .pin-dots-input input{
+    width:48px; height:56px; text-align:center; font-size:1.5rem; font-weight:800; letter-spacing:0;
+  }
+  .modal-error{
+    color:var(--danger); font-size:0.82rem; font-weight:700; text-align:center; min-height:18px; margin-bottom:6px;
+  }
+  .modal-actions{display:flex; gap:10px; margin-top:10px;}
+  .modal-actions button{flex:1;}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:12px 20px; border-radius:12px; font-size:0.88rem;
+    font-weight:600; box-shadow:0 10px 24px rgba(0,0,0,0.25); z-index:300; opacity:0; pointer-events:none;
+    transition:opacity .25s, transform .25s; max-width:90vw;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.success{background:var(--success);}
+  .toast.error{background:var(--danger);}
+
+  /* ---------- Empty states ---------- */
+  .empty-state{
+    text-align:center; padding:36px 20px; color:var(--muted);
+  }
+  .empty-state .icon{font-size:2.2rem; margin-bottom:10px;}
+  .empty-state strong{color:var(--ink); display:block; margin-bottom:4px;}
+
+  /* ---------- QR section ---------- */
+  #qrcode-box{
+    display:flex; align-items:center; justify-content:center; background:#fff; border:1.5px solid var(--line);
+    border-radius:14px; padding:18px; min-height:190px;
+  }
+  #qrcode-box img, #qrcode-box canvas{ border-radius:6px; }
+  .qr-fallback{ text-align:center; color:var(--muted); font-size:0.85rem; padding:16px; word-break:break-all; }
+
+  .sheet-preview{
+    border:1.5px dashed var(--line); border-radius:14px; padding:18px; margin-top:16px; background:#fffdfb;
+  }
+  .counter-sheet{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .counter-card{
+    border:2px solid var(--ink); border-radius:12px; padding:14px 10px; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .counter-card .cc-logo{width:34px;height:34px;border-radius:8px;object-fit:cover;}
+  .counter-card .cc-name{font-weight:800; font-size:0.82rem;}
+  .counter-card .cc-rule{font-size:0.65rem; color:var(--muted);}
+  .counter-card .cc-qr{margin:4px 0;}
+  .counter-card .cc-scan{font-size:0.62rem; color:var(--muted); font-weight:700; letter-spacing:0.03em; text-transform:uppercase;}
+
+  @media print{
+    body *{ visibility:hidden; }
+    #print-sheet-area, #print-sheet-area *{ visibility:visible; }
+    #print-sheet-area{ position:absolute; top:0; left:0; width:100%; padding:20px; }
+    .no-print{ display:none !important; }
+  }
+
+  footer{
+    text-align:center; padding:30px 20px 50px; color:var(--muted); font-size:0.8rem;
+  }
+
+  /* Sample data badges */
+  .badge{
+    display:inline-flex; align-items:center; gap:5px; background:#eaf5ee; color:var(--success);
+    padding:4px 10px; border-radius:999px; font-size:0.72rem; font-weight:700;
+  }
+
+  .kv-list{ margin-top:16px; }
+  .kv-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:0.86rem; }
+  .kv-row:last-child{ border-bottom:none; }
+  .kv-row .k{ color:var(--muted); }
+  .kv-row .v{ font-weight:700; }
+
+  textarea#card-url{ resize:vertical; min-height:44px; font-family:var(--font); }
+
+  .step-note{ font-size:0.78rem; color:var(--muted); margin-top:8px; }
+
+  @media (max-width:480px){
+    main{padding:20px 14px 70px;}
+    .panel{padding:16px;}
+    .phone-frame{width:100%; max-width:280px;}
+    .counter-sheet{grid-template-columns:repeat(2,1fr);}
+    .topbar{padding:12px 14px;}
+    .topbar .brand span.text{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span><span class="text">PunchCard Loyalty</span></div>
+  <nav>
+    <button data-view="setup" class="active" type="button">Setup</button>
+    <button data-view="demo" type="button">Demo</button>
+    <button data-view="qr" type="button">QR &amp; Print</button>
+  </nav>
+</div>
+
+<main>
+
+  <!-- ================= SETUP VIEW ================= -->
+  <section class="view active" id="view-setup">
+    <h1>Set up your loyalty card</h1>
+    <p class="subtitle">Fill this in once. Your customer card and QR sheet update instantly — nothing to install, nothing to configure twice.</p>
+
+    <div class="grid">
+      <div>
+        <div class="panel">
+          <h3><span class="num">1</span> Business details</h3>
+
+          <label for="biz-name">Business name</label>
+          <input type="text" id="biz-name" maxlength="40" placeholder="e.g. Copper Cup Coffee">
+
+          <label>Logo</label>
+          <div class="logo-upload">
+            <div class="logo-preview" id="logo-preview">No logo</div>
+            <label class="btn-file" for="logo-input">
+              <span>Upload image</span>
+              <input type="file" id="logo-input" accept="image/*">
+            </label>
+            <button type="button" class="btn-remove-logo" id="remove-logo-btn">Remove</button>
+          </div>
+
+          <label for="brand-color">Brand color</label>
+          <div class="field-color">
+            <input type="color" id="brand-color" value="#a15c3e">
+            <div class="swatches" id="swatches"></div>
+          </div>
+
+          <label for="staff-pin">Staff PIN <span class="hint">(4 digits — staff enter this at checkout)</span></label>
+          <input type="password" id="staff-pin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="1234">
+        </div>
+
+        <div class="panel">
+          <h3><span class="num">2</span> Reward rule</h3>
+          <div class="row">
+            <div>
+              <label for="reward-n">Buy how many? <span class="hint">(4–12)</span></label>
+              <input type="number" id="reward-n" min="4" max="12" value="9">
+            </div>
+            <div>
+              <label for="reward-text">Reward</label>
+              <input type="text" id="reward-text" maxlength="60" placeholder="e.g. Free coffee of your choice">
+            </div>
+          </div>
+          <div class="helper-note">Preview: <strong id="rule-preview">Buy 9, get the 10th free</strong></div>
+        </div>
+
+        <div class="panel">
+          <h3><span class="num">3</span> Export the customer card</h3>
+          <p class="subtitle" style="margin-bottom:12px;">This downloads a standalone <code>card.html</code> file — a complete, self-contained punch card your customer opens on their own phone and bookmarks. No app, no login, no server required.</p>
+          <div class="actions-row">
+            <button class="btn btn-primary btn-lg" id="export-card-btn" type="button">⬇ Download customer card</button>
+            <button class="btn btn-ghost" id="reset-data-btn" type="button">Reset to sample data</button>
+          </div>
+          <p class="step-note">After downloading, upload <code>card.html</code> to any free host (Netlify Drop, GitHub Pages, etc.) to get a URL — then use the QR &amp; Print tab to generate a poster your customers scan.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h3><span class="num">✓</span> Live preview</h3>
+          <div class="phone-wrap">
+            <div class="phone-frame">
+              <div class="phone-screen" id="setup-preview-screen"></div>
+            </div>
+            <p class="demo-caption">This is exactly what your customer will see. Changes save automatically.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEMO VIEW ================= -->
+  <section class="view" id="view-demo">
+    <h1>Pitch-ready live demo</h1>
+    <p class="subtitle">Hand your phone to a shop owner and let them tap "Stamp" themselves. This demo card uses its own separate storage from the exported customer card, so you can reset it anytime without touching real setup data.</p>
+
+    <div class="grid">
+      <div>
+        <div class="panel">
+          <div class="phone-wrap">
+            <div class="phone-frame">
+              <div class="phone-screen" id="demo-screen"></div>
+            </div>
+            <p class="demo-caption">Demo PIN is always <strong>1234</strong>.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h3><span class="num">i</span> Why this sells itself</h3>
+          <div class="kv-list">
+            <div class="kv-row"><span class="k">Setup time for a shop</span><span class="v">~5 minutes</span></div>
+            <div class="kv-row"><span class="k">Customer app download</span><span class="v">None</span></div>
+            <div class="kv-row"><span class="k">Per-customer fee</span><span class="v">$0</span></div>
+            <div class="kv-row"><span class="k">Works offline after load</span><span class="v">Yes</span></div>
+            <div class="kv-row"><span class="k">Replaces</span><span class="v">Paper punch cards</span></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn btn-secondary btn-block" id="reset-demo-btn" type="button">Reset demo card</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= QR VIEW ================= -->
+  <section class="view" id="view-qr">
+    <h1>QR code &amp; printable counter sheet</h1>
+    <p class="subtitle">Once your <code>card.html</code> is hosted somewhere with a public URL, paste it below to generate a scannable QR code and a print-ready counter sheet for the register or window.</p>
+
+    <div class="grid">
+      <div>
+        <div class="panel">
+          <h3><span class="num">1</span> Card URL</h3>
+          <label for="card-url">Hosted card URL</label>
+          <textarea id="card-url" rows="2" placeholder="https://yourshop.example.com/card.html"></textarea>
+          <div class="actions-row">
+            <button class="btn btn-primary" id="generate-qr-btn" type="button">Generate QR code</button>
+          </div>
+          <div class="helper-note">Don't have a URL yet? Drag your downloaded <code>card.html</code> onto <a href="https://app.netlify.com/drop" target="_blank" rel="noopener">Netlify Drop</a> for a free instant link, or use GitHub Pages.</div>
+        </div>
+
+        <div class="panel">
+          <h3><span class="num">2</span> QR preview</h3>
+          <div id="qrcode-box">
+            <div class="qr-fallback" id="qr-empty">Paste a URL and click Generate to see your QR code here.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h3><span class="num">3</span> Printable counter sheet <span class="badge">9 cards/page</span></h3>
+          <p class="subtitle" style="margin-bottom:10px;">Cut into a stack for your register. Customers scan, save the card, and start punching immediately.</p>
+          <div class="actions-row no-print">
+            <button class="btn btn-secondary" id="print-sheet-btn" type="button">🖨 Print sheet</button>
+          </div>
+          <div class="sheet-preview" id="print-sheet-area">
+            <div class="counter-sheet" id="counter-sheet"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  PunchCard Loyalty — everything here is stored in this browser only. <span id="storage-note"></span>
+</footer>
+
+<!-- PIN Modal (used by live demo) -->
+<div class="modal-backdrop" id="pin-modal">
+  <div class="modal">
+    <h3 id="pin-modal-title">Enter staff PIN</h3>
+    <p id="pin-modal-desc">Ask a staff member to enter the 4-digit PIN to add a stamp.</p>
+    <div class="pin-dots-input">
+      <input type="password" inputmode="numeric" maxlength="1" class="pin-digit">
+      <input type="password" inputmode="numeric" maxlength="1" class="pin-digit">
+      <input type="password" inputmode="numeric" maxlength="1" class="pin-digit">
+      <input type="password" inputmode="numeric" maxlength="1" class="pin-digit">
+    </div>
+    <div class="modal-error" id="pin-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="pin-cancel-btn" type="button">Cancel</button>
+      <button class="btn btn-primary" id="pin-confirm-btn" type="button">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     PunchCard Loyalty — main seller app
+     Storage keys:
+       pcl_setup_v1  -> business config (name, logo, color, N, reward, pin)
+       pcl_demo_v1   -> demo card state (stamps, redemptions) - independent
+  ===================================================================== */
+
+  var SETUP_KEY = "pcl_setup_v1";
+  var DEMO_KEY = "pcl_demo_v1";
+
+  var SWATCHES = ["#a15c3e","#c0392b","#2c7a4b","#1f6feb","#8e44ad","#d68910","#16697a","#3d3d3d"];
+
+  function sampleSetup(){
+    return {
+      bizName: "Copper Cup Coffee",
+      logo: "",
+      color: "#a15c3e",
+      n: 9,
+      rewardText: "10th coffee free",
+      pin: "4242"
+    };
+  }
+
+  function sampleDemoCard(setup){
+    return {
+      stamps: [
+        Date.now() - 86400000*6,
+        Date.now() - 86400000*4,
+        Date.now() - 86400000*2
+      ],
+      lifetimeRewards: 2
+    };
+  }
+
+  function loadSetup(){
+    try{
+      var raw = localStorage.getItem(SETUP_KEY);
+      if(!raw) return null;
+      var parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+      return parsed;
+    }catch(e){ return null; }
+  }
+
+  function saveSetup(s){
+    try{ localStorage.setItem(SETUP_KEY, JSON.stringify(s)); }catch(e){}
+  }
+
+  function loadDemo(){
+    try{
+      var raw = localStorage.getItem(DEMO_KEY);
+      if(!raw) return null;
+      var parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+      return parsed;
+    }catch(e){ return null; }
+  }
+
+  function saveDemo(d){
+    try{ localStorage.setItem(DEMO_KEY, JSON.stringify(d)); }catch(e){}
+  }
+
+  var setup = loadSetup();
+  var firstRun = false;
+  if(!setup){
+    setup = sampleSetup();
+    saveSetup(setup);
+    firstRun = true;
+  }
+
+  var demo = loadDemo();
+  if(!demo){
+    demo = sampleDemoCard(setup);
+    saveDemo(demo);
+  }
+
+  /* ---------------- Toast ---------------- */
+  var toastEl = document.getElementById("toast");
+  var toastTimer = null;
+  function showToast(msg, kind){
+    toastEl.textContent = msg;
+    toastEl.className = "toast show" + (kind ? " " + kind : "");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.className = "toast"; }, 2600);
+  }
+
+  /* ---------------- Nav ---------------- */
+  var navButtons = document.querySelectorAll(".topbar nav button");
+  var views = document.querySelectorAll(".view");
+  navButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      navButtons.forEach(function(b){ b.classList.remove("active"); });
+      views.forEach(function(v){ v.classList.remove("active"); });
+      btn.classList.add("active");
+      document.getElementById("view-" + btn.dataset.view).classList.add("active");
+      if(btn.dataset.view === "qr"){ renderCounterSheet(); }
+      if(btn.dataset.view === "demo"){ renderDemoCard(); }
+    });
+  });
+
+  /* ================= SETUP FORM WIRING ================= */
+  var $ = function(id){ return document.getElementById(id); };
+
+  var bizNameInput = $("biz-name");
+  var logoInput = $("logo-input");
+  var logoPreview = $("logo-preview");
+  var removeLogoBtn = $("remove-logo-btn");
+  var brandColorInput = $("brand-color");
+  var swatchesWrap = $("swatches");
+  var staffPinInput = $("staff-pin");
+  var rewardNInput = $("reward-n");
+  var rewardTextInput = $("reward-text");
+  var rulePreview = $("rule-preview");
+
+  function renderSwatches(){
+    swatchesWrap.innerHTML = "";
+    SWATCHES.forEach(function(c){
+      var sw = document.createElement("div");
+      sw.className = "swatch" + (setup.color.toLowerCase() === c.toLowerCase() ? " selected" : "");
+      sw.style.background = c;
+      sw.title = c;
+      sw.addEventListener("click", function(){
+        setup.color = c;
+        brandColorInput.value = c;
+        persistAndRefresh();
+      });
+      swatchesWrap.appendChild(sw);
+    });
+  }
+
+  function renderLogoPreview(){
+    if(setup.logo){
+      logoPreview.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = setup.logo;
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "cover";
+      logoPreview.appendChild(img);
+      removeLogoBtn.style.display = "inline-block";
+    } else {
+      logoPreview.textContent = "No logo";
+      removeLogoBtn.style.display = "none";
+    }
+  }
+
+  function fillFormFromSetup(){
+    bizNameInput.value = setup.bizName || "";
+    brandColorInput.value = setup.color || "#a15c3e";
+    staffPinInput.value = setup.pin || "";
+    rewardNInput.value = setup.n || 9;
+    rewardTextInput.value = setup.rewardText || "";
+    renderLogoPreview();
+    renderSwatches();
+    updateRulePreview();
+  }
+
+  function updateRulePreview(){
+    var n = clampN(parseInt(rewardNInput.value, 10) || 9);
+    var text = rewardTextInput.value.trim() || "your reward";
+    rulePreview.textContent = "Buy " + n + ", get: " + text;
+  }
+
+  function clampN(n){
+    if(isNaN(n)) return 9;
+    return Math.max(4, Math.min(12, n));
+  }
+
+  var persistTimer = null;
+  function persistAndRefresh(){
+    saveSetup(setup);
+    renderSetupPreview();
+    renderLogoPreview();
+    renderSwatches();
+  }
+
+  bizNameInput.addEventListener("input", function(){
+    setup.bizName = bizNameInput.value;
+    persistAndRefresh();
+  });
+
+  brandColorInput.addEventListener("input", function(){
+    setup.color = brandColorInput.value;
+    persistAndRefresh();
+  });
+
+  staffPinInput.addEventListener("input", function(){
+    staffPinInput.value = staffPinInput.value.replace(/\D/g,"").slice(0,4);
+    setup.pin = staffPinInput.value;
+    saveSetup(setup);
+  });
+
+  rewardNInput.addEventListener("input", function(){
+    setup.n = clampN(parseInt(rewardNInput.value, 10));
+    updateRulePreview();
+    saveSetup(setup);
+    renderSetupPreview();
+  });
+  rewardNInput.addEventListener("blur", function(){
+    rewardNInput.value = clampN(parseInt(rewardNInput.value, 10) || 9);
+  });
+
+  rewardTextInput.addEventListener("input", function(){
+    setup.rewardText = rewardTextInput.value;
+    updateRulePreview();
+    saveSetup(setup);
+    renderSetupPreview();
+  });
+
+  logoInput.addEventListener("change", function(){
+    var file = logoInput.files && logoInput.files[0];
+    if(!file) return;
+    if(file.size > 1.5 * 1024 * 1024){
+      showToast("Image too large — please use one under 1.5MB.", "error");
+      logoInput.value = "";
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e){
+      setup.logo = e.target.result;
+      saveSetup(setup);
+      renderLogoPreview();
+      renderSetupPreview();
+      showToast("Logo updated.", "success");
+    };
+    reader.readAsDataURL(file);
+  });
+
+  removeLogoBtn.addEventListener("click", function(){
+    setup.logo = "";
+    logoInput.value = "";
+    saveSetup(setup);
+    renderLogoPreview();
+    renderSetupPreview();
+  });
+
+  $("reset-data-btn").addEventListener("click", function(){
+    if(!confirm("Reset business setup to the Copper Cup Coffee sample data? This won't affect any card you've already downloaded.")) return;
+    setup = sampleSetup();
+    saveSetup(setup);
+    fillFormFromSetup();
+    renderSetupPreview();
+    showToast("Sample data restored.", "success");
+  });
+
+  /* ================= PHONE CARD RENDERING (shared logic) ================= */
+  // Renders a punch-card UI into a container element given a config + state.
+  // state = {stamps:[timestamps], lifetimeRewards:n}
+  function renderCardInto(container, cfg, state, opts){
+    opts = opts || {};
+    var n = clampN(cfg.n);
+    container.innerHTML = "";
+
+    // Logo / header
+    if(cfg.logo){
+      var img = document.createElement("img");
+      img.className = "pc-logo";
+      img.src = cfg.logo;
+      container.appendChild(img);
+    } else {
+      var fallback = document.createElement("div");
+      fallback.className = "pc-logo-fallback";
+      fallback.style.background = cfg.color || "#a15c3e";
+      fallback.textContent = (cfg.bizName || "?").trim().charAt(0).toUpperCase() || "?";
+      container.appendChild(fallback);
+    }
+
+    var name = document.createElement("div");
+    name.className = "pc-bizname";
+    name.textContent = cfg.bizName || "Your Business";
+    container.appendChild(name);
+
+    var rule = document.createElement("div");
+    rule.className = "pc-rule";
+    rule.textContent = "Buy " + n + " → get " + (cfg.rewardText || "a free reward");
+    container.appendChild(rule);
+
+    var stampCount = state.stamps ? state.stamps.length : 0;
+    var complete = stampCount >= n;
+
+    if(complete){
+      renderRewardScreen(container, cfg, state, opts);
+      return;
+    }
+
+    var grid = document.createElement("div");
+    grid.className = "pc-grid";
+    for(var i=0;i<n;i++){
+      var cell = document.createElement("div");
+      cell.className = "pc-stamp" + (i < stampCount ? " filled" : "");
+      if(i < stampCount){
+        cell.style.background = cfg.color || "#a15c3e";
+        cell.style.borderColor = cfg.color || "#a15c3e";
+        cell.textContent = "✓";
+        if(opts.justStampedIndex === i){ cell.classList.add("pop"); }
+      }
+      grid.appendChild(cell);
+    }
+    container.appendChild(grid);
+
+    var progress = document.createElement("div");
+    progress.className = "pc-progress-text";
+    var remaining = n - stampCount;
+    progress.textContent = remaining === 1
+      ? "1 more stamp to your reward!"
+      : stampCount === 0
+        ? "Start collecting stamps at checkout."
+        : remaining + " more stamps to go.";
+    container.appendChild(progress);
+
+    var stampBtn = document.createElement("button");
+    stampBtn.type = "button";
+    stampBtn.className = "btn btn-primary btn-block pc-stamp-btn";
+    stampBtn.textContent = "Stamp (staff only)";
+    stampBtn.addEventListener("click", function(){
+      if(opts.onStampRequest) opts.onStampRequest();
+    });
+    container.appendChild(stampBtn);
+
+    var lifetime = document.createElement("div");
+    lifetime.className = "pc-lifetime";
+    lifetime.textContent = "Lifetime rewards earned: " + (state.lifetimeRewards || 0);
+    container.appendChild(lifetime);
+  }
+
+  function renderRewardScreen(container, cfg, state, opts){
+    var wrap = document.createElement("div");
+    wrap.className = "reward-screen";
+
+    var badge = document.createElement("div");
+    badge.className = "reward-badge";
+    badge.textContent = "★";
+    wrap.appendChild(badge);
+
+    var title = document.createElement("div");
+    title.className = "reward-title";
+    title.textContent = "Card complete!";
+    wrap.appendChild(title);
+
+    var desc = document.createElement("div");
+    desc.className = "reward-desc";
+    desc.textContent = "You've earned: " + (cfg.rewardText || "your reward");
+    wrap.appendChild(desc);
+
+    var redeemBtn = document.createElement("button");
+    redeemBtn.type = "button";
+    redeemBtn.className = "btn btn-primary btn-block";
+    redeemBtn.textContent = "Redeem (staff only)";
+    redeemBtn.addEventListener("click", function(){
+      if(opts.onRedeemRequest) opts.onRedeemRequest();
+    });
+    wrap.appendChild(redeemBtn);
+
+    var lifetime = document.createElement("div");
+    lifetime.className = "pc-lifetime";
+    lifetime.style.marginTop = "16px";
+    lifetime.textContent = "Lifetime rewards earned: " + (state.lifetimeRewards || 0);
+    wrap.appendChild(lifetime);
+
+    container.appendChild(wrap);
+  }
+
+  /* ================= SETUP LIVE PREVIEW (non-interactive) ================= */
+  function renderSetupPreview(){
+    var container = $("setup-preview-screen");
+    var previewState = { stamps: sampleDemoCard(setup).stamps, lifetimeRewards: 2 };
+    renderCardInto(container, setup, previewState, {});
+    // Setup preview stamp button shouldn't do anything real — swap its label.
+    var btn = container.querySelector(".pc-stamp-btn");
+    if(btn){
+      btn.textContent = "Stamp (preview only)";
+      btn.disabled = false;
+      btn.onclick = function(e){
+        e.preventDefault();
+        showToast("This is a live preview. Download the customer card to try real stamping.", "");
+      };
+    }
+    var redeemBtn = container.querySelector(".reward-screen .btn-primary");
+    if(redeemBtn){
+      redeemBtn.textContent = "Redeem (preview only)";
+    }
+  }
+
+  /* ================= LIVE DEMO (interactive, PIN-gated) ================= */
+  var DEMO_PIN = "1234";
+
+  function renderDemoCard(justStampedIndex){
+    var container = $("demo-screen");
+    renderCardInto(container, {
+      bizName: setup.bizName || "Copper Cup Coffee",
+      logo: setup.logo,
+      color: setup.color,
+      n: setup.n,
+      rewardText: setup.rewardText
+    }, demo, {
+      justStampedIndex: justStampedIndex,
+      onStampRequest: function(){
+        openPinModal({
+          title: "Enter staff PIN",
+          desc: "Ask a staff member to enter the 4-digit PIN to add a stamp.",
+          correctPin: DEMO_PIN,
+          onSuccess: function(){
+            demo.stamps = demo.stamps || [];
+            demo.stamps.push(Date.now());
+            saveDemo(demo);
+            renderDemoCard(demo.stamps.length - 1);
+            showToast("Stamp added!", "success");
+          }
+        });
+      },
+      onRedeemRequest: function(){
+        openPinModal({
+          title: "Redeem reward",
+          desc: "Ask a staff member to enter the 4-digit PIN to redeem this reward.",
+          correctPin: DEMO_PIN,
+          onSuccess: function(){
+            demo.lifetimeRewards = (demo.lifetimeRewards || 0) + 1;
+            demo.stamps = [];
+            demo.redeemedAt = Date.now();
+            saveDemo(demo);
+            renderDemoCard();
+            showToast("Reward redeemed! Card reset for next cycle.", "success");
+          }
+        });
+      }
+    });
+  }
+
+  $("reset-demo-btn").addEventListener("click", function(){
+    demo = sampleDemoCard(setup);
+    saveDemo(demo);
+    renderDemoCard();
+    showToast("Demo card reset.", "success");
+  });
+
+  /* ================= PIN MODAL ================= */
+  var pinModal = $("pin-modal");
+  var pinDigits = Array.prototype.slice.call(document.querySelectorAll(".pin-digit"));
+  var pinError = $("pin-error");
+  var pinTitle = $("pin-modal-title");
+  var pinDesc = $("pin-modal-desc");
+  var pinConfirmBtn = $("pin-confirm-btn");
+  var pinCancelBtn = $("pin-cancel-btn");
+  var activePinCallback = null;
+  var activeCorrectPin = null;
+
+  function openPinModal(cfg){
+    pinTitle.textContent = cfg.title || "Enter staff PIN";
+    pinDesc.textContent = cfg.desc || "";
+    activeCorrectPin = cfg.correctPin;
+    activePinCallback = cfg.onSuccess;
+    pinError.textContent = "";
+    pinDigits.forEach(function(d){ d.value = ""; });
+    pinModal.classList.add("open");
+    setTimeout(function(){ pinDigits[0].focus(); }, 60);
+  }
+
+  function closePinModal(){
+    pinModal.classList.remove("open");
+    activePinCallback = null;
+    activeCorrectPin = null;
+  }
+
+  pinDigits.forEach(function(input, idx){
+    input.addEventListener("input", function(){
+      input.value = input.value.replace(/\D/g,"").slice(0,1);
+      if(input.value && idx < pinDigits.length - 1){
+        pinDigits[idx+1].focus();
+      }
+      if(input.value && idx === pinDigits.length - 1){
+        attemptPin();
+      }
+    });
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Backspace" && !input.value && idx > 0){
+        pinDigits[idx-1].focus();
+      }
+      if(e.key === "Enter"){ attemptPin(); }
+    });
+  });
+
+  function attemptPin(){
+    var entered = pinDigits.map(function(d){ return d.value; }).join("");
+    if(entered.length < 4){
+      pinError.textContent = "Enter all 4 digits.";
+      return;
+    }
+    if(entered === activeCorrectPin){
+      var cb = activePinCallback;
+      closePinModal();
+      if(cb) cb();
+    } else {
+      pinError.textContent = "Incorrect PIN. Try again.";
+      pinDigits.forEach(function(d){ d.value = ""; });
+      pinDigits[0].focus();
+      var modalBox = pinModal.querySelector(".modal");
+      modalBox.style.animation = "none";
+      void modalBox.offsetWidth;
+      modalBox.style.animation = "";
+    }
+  }
+
+  pinConfirmBtn.addEventListener("click", attemptPin);
+  pinCancelBtn.addEventListener("click", closePinModal);
+  pinModal.addEventListener("click", function(e){
+    if(e.target === pinModal) closePinModal();
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && pinModal.classList.contains("open")) closePinModal();
+  });
+
+  /* ================= EXPORT STANDALONE CARD ================= */
+  $("export-card-btn").addEventListener("click", function(){
+    if(!setup.bizName || !setup.bizName.trim()){
+      showToast("Add a business name before exporting.", "error");
+      bizNameInput.focus();
+      return;
+    }
+    if(!setup.pin || setup.pin.length !== 4){
+      showToast("Set a 4-digit staff PIN before exporting.", "error");
+      staffPinInput.focus();
+      return;
+    }
+    var html = buildStandaloneCardHtml(setup);
+    var blob = new Blob([html], {type: "text/html"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var safeName = (setup.bizName || "card").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+    a.href = url;
+    a.download = (safeName || "punchcard") + "-card.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    showToast("Customer card downloaded!", "success");
+  });
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function buildStandaloneCardHtml(cfg){
+    var n = clampN(cfg.n);
+    var configJson = JSON.stringify({
+      bizName: cfg.bizName || "Your Business",
+      logo: cfg.logo || "",
+      color: cfg.color || "#a15c3e",
+      n: n,
+      rewardText: cfg.rewardText || "a free reward",
+      pin: cfg.pin || "0000"
+    }).replace(/</g, "\\u003c");
+
+    // The exported card is fully standalone: its own CSS + JS, its own localStorage key
+    // namespaced by business name so multiple cards don't collide on the same device.
+    return "<!DOCTYPE html>\n" +
+"<html lang=\"en\">\n" +
+"<head>\n" +
+"<meta charset=\"UTF-8\">\n" +
+"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">\n" +
+"<title>" + esc(cfg.bizName || "Loyalty Card") + " — Punch Card</title>\n" +
+"<meta name=\"description\" content=\"Your digital loyalty punch card for " + esc(cfg.bizName || "") + ".\">\n" +
+"<style>\n" +
+":root{--brand:" + esc(cfg.color || "#a15c3e") + ";--ink:#241a15;--paper:#fffaf5;--muted:#8a7a70;--line:#eee0d5;--success:#3f8c5b;--danger:#c04a3e;}\n" +
+"*{box-sizing:border-box;}\n" +
+"html,body{margin:0;padding:0;}\n" +
+"body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;}\n" +
+".card-wrap{width:100%;max-width:360px;}\n" +
+".card-box{background:#fff;border-radius:26px;padding:32px 22px 26px;box-shadow:0 20px 50px rgba(60,30,10,0.12);text-align:center;border:1px solid var(--line);}\n" +
+".pc-logo{width:64px;height:64px;border-radius:16px;object-fit:cover;margin:0 auto 12px;display:block;box-shadow:0 4px 10px rgba(0,0,0,0.15);}\n" +
+".pc-logo-fallback{width:64px;height:64px;border-radius:16px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.6rem;background:var(--brand);}\n" +
+".pc-bizname{font-weight:800;font-size:1.3rem;margin-bottom:4px;letter-spacing:-0.02em;}\n" +
+".pc-rule{font-size:0.88rem;color:var(--muted);margin-bottom:24px;}\n" +
+".pc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:22px;}\n" +
+".pc-stamp{aspect-ratio:1;border-radius:50%;border:2px dashed #d9c6b5;background:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;transition:transform .25s cubic-bezier(.34,1.56,.64,1);}\n" +
+".pc-stamp.filled{border-style:solid;}\n" +
+".pc-stamp.pop{animation:stampPop .45s cubic-bezier(.34,1.56,.64,1);}\n" +
+"@keyframes stampPop{0%{transform:scale(0.3) rotate(-25deg);opacity:0;}60%{transform:scale(1.18) rotate(8deg);opacity:1;}100%{transform:scale(1) rotate(0);}}\n" +
+".pc-progress-text{font-size:0.9rem;color:var(--muted);margin-bottom:20px;}\n" +
+"button.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 20px;border-radius:13px;border:none;font-weight:700;font-size:1rem;cursor:pointer;background:linear-gradient(135deg,var(--brand),var(--brand));color:#fff;box-shadow:0 8px 20px rgba(0,0,0,0.18);transition:transform .12s,filter .15s;}\n" +
+"button.btn:active{transform:scale(0.97);}\n" +
+"button.btn:hover{filter:brightness(1.07);}\n" +
+".pc-lifetime{font-size:0.78rem;color:var(--muted);margin-top:18px;}\n" +
+".reward-badge{width:84px;height:84px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:2.3rem;background:linear-gradient(135deg,#ffd76a,#f5a623);box-shadow:0 10px 22px rgba(245,166,35,0.4);animation:bounceIn .5s cubic-bezier(.34,1.56,.64,1);}\n" +
+"@keyframes bounceIn{from{transform:scale(0);}to{transform:scale(1);}}\n" +
+".reward-title{font-weight:800;font-size:1.3rem;margin-bottom:6px;}\n" +
+".reward-desc{font-size:0.95rem;color:var(--muted);margin-bottom:22px;}\n" +
+".modal-backdrop{position:fixed;inset:0;background:rgba(30,18,10,0.45);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;backdrop-filter:blur(2px);}\n" +
+".modal-backdrop.open{display:flex;}\n" +
+".modal{background:#fff;border-radius:18px;padding:26px;max-width:320px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.25);animation:modalIn .2s ease;}\n" +
+"@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(0.98);}to{opacity:1;transform:none;}}\n" +
+".modal h3{margin:0 0 6px;}\n" +
+".modal p{margin:0 0 16px;color:var(--muted);font-size:0.88rem;}\n" +
+".pin-dots-input{display:flex;gap:10px;justify-content:center;margin-bottom:14px;}\n" +
+".pin-dots-input input{width:48px;height:56px;text-align:center;font-size:1.5rem;font-weight:800;border:1.5px solid var(--line);border-radius:10px;}\n" +
+".pin-dots-input input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,0,0,0.08);}\n" +
+".modal-error{color:var(--danger);font-size:0.82rem;font-weight:700;text-align:center;min-height:18px;margin-bottom:6px;}\n" +
+".modal-actions{display:flex;gap:10px;margin-top:10px;}\n" +
+".modal-actions button{flex:1;padding:12px;font-size:0.9rem;box-shadow:none;background:#f3e6da;color:#7c4530;}\n" +
+".modal-actions button.primary{background:linear-gradient(135deg,var(--brand),var(--brand));color:#fff;}\n" +
+".toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:0.88rem;font-weight:600;box-shadow:0 10px 24px rgba(0,0,0,0.25);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:90vw;text-align:center;}\n" +
+".toast.show{opacity:1;transform:translateX(-50%) translateY(0);}\n" +
+".toast.success{background:var(--success);}\n" +
+".toast.error{background:var(--danger);}\n" +
+".footer-note{margin-top:18px;text-align:center;font-size:0.72rem;color:var(--muted);}\n" +
+"</style>\n" +
+"</head>\n" +
+"<body>\n" +
+"<div class=\"card-wrap\">\n" +
+"  <div class=\"card-box\" id=\"card-box\"></div>\n" +
+"  <div class=\"footer-note\">Powered by PunchCard Loyalty — this card lives in your browser on this device.</div>\n" +
+"</div>\n" +
+"<div class=\"modal-backdrop\" id=\"pin-modal\">\n" +
+"  <div class=\"modal\">\n" +
+"    <h3 id=\"pin-modal-title\">Enter staff PIN</h3>\n" +
+"    <p id=\"pin-modal-desc\">Staff: enter the 4-digit PIN to add a stamp.</p>\n" +
+"    <div class=\"pin-dots-input\">\n" +
+"      <input type=\"password\" inputmode=\"numeric\" maxlength=\"1\" class=\"pin-digit\">\n" +
+"      <input type=\"password\" inputmode=\"numeric\" maxlength=\"1\" class=\"pin-digit\">\n" +
+"      <input type=\"password\" inputmode=\"numeric\" maxlength=\"1\" class=\"pin-digit\">\n" +
+"      <input type=\"password\" inputmode=\"numeric\" maxlength=\"1\" class=\"pin-digit\">\n" +
+"    </div>\n" +
+"    <div class=\"modal-error\" id=\"pin-error\"></div>\n" +
+"    <div class=\"modal-actions\">\n" +
+"      <button type=\"button\" id=\"pin-cancel-btn\">Cancel</button>\n" +
+"      <button type=\"button\" class=\"primary\" id=\"pin-confirm-btn\">Confirm</button>\n" +
+"    </div>\n" +
+"  </div>\n" +
+"</div>\n" +
+"<div class=\"toast\" id=\"toast\"></div>\n" +
+"<script>\n" +
+"(function(){\n" +
+"\"use strict\";\n" +
+"var CFG = " + configJson + ";\n" +
+"var STORAGE_KEY = \"pcl_card_\" + CFG.bizName.toLowerCase().replace(/[^a-z0-9]+/g,\"_\");\n" +
+"function loadState(){\n" +
+"  try{\n" +
+"    var raw = localStorage.getItem(STORAGE_KEY);\n" +
+"    if(!raw) return null;\n" +
+"    var p = JSON.parse(raw);\n" +
+"    if(!p || typeof p !== \"object\" || Array.isArray(p) || !Array.isArray(p.stamps)) return null;\n" +
+"    return p;\n" +
+"  }catch(e){ return null; }\n" +
+"}\n" +
+"function saveState(s){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }catch(e){} }\n" +
+"var state = loadState();\n" +
+"if(!state){ state = { stamps: [], lifetimeRewards: 0 }; saveState(state); }\n" +
+"var toastEl = document.getElementById(\"toast\");\n" +
+"var toastTimer = null;\n" +
+"function showToast(msg, kind){\n" +
+"  toastEl.textContent = msg;\n" +
+"  toastEl.className = \"toast show\" + (kind ? \" \" + kind : \"\");\n" +
+"  clearTimeout(toastTimer);\n" +
+"  toastTimer = setTimeout(function(){ toastEl.className = \"toast\"; }, 2600);\n" +
+"}\n" +
+"var pinModal = document.getElementById(\"pin-modal\");\n" +
+"var pinDigits = Array.prototype.slice.call(document.querySelectorAll(\".pin-digit\"));\n" +
+"var pinError = document.getElementById(\"pin-error\");\n" +
+"var pinTitle = document.getElementById(\"pin-modal-title\");\n" +
+"var pinDesc = document.getElementById(\"pin-modal-desc\");\n" +
+"var activeCallback = null;\n" +
+"function openPinModal(title, desc, onSuccess){\n" +
+"  pinTitle.textContent = title;\n" +
+"  pinDesc.textContent = desc;\n" +
+"  activeCallback = onSuccess;\n" +
+"  pinError.textContent = \"\";\n" +
+"  pinDigits.forEach(function(d){ d.value = \"\"; });\n" +
+"  pinModal.classList.add(\"open\");\n" +
+"  setTimeout(function(){ pinDigits[0].focus(); }, 60);\n" +
+"}\n" +
+"function closePinModal(){ pinModal.classList.remove(\"open\"); activeCallback = null; }\n" +
+"pinDigits.forEach(function(input, idx){\n" +
+"  input.addEventListener(\"input\", function(){\n" +
+"    input.value = input.value.replace(/\\D/g,\"\").slice(0,1);\n" +
+"    if(input.value && idx < pinDigits.length - 1){ pinDigits[idx+1].focus(); }\n" +
+"    if(input.value && idx === pinDigits.length - 1){ attemptPin(); }\n" +
+"  });\n" +
+"  input.addEventListener(\"keydown\", function(e){\n" +
+"    if(e.key === \"Backspace\" && !input.value && idx > 0){ pinDigits[idx-1].focus(); }\n" +
+"    if(e.key === \"Enter\"){ attemptPin(); }\n" +
+"  });\n" +
+"});\n" +
+"function attemptPin(){\n" +
+"  var entered = pinDigits.map(function(d){ return d.value; }).join(\"\");\n" +
+"  if(entered.length < 4){ pinError.textContent = \"Enter all 4 digits.\"; return; }\n" +
+"  if(entered === CFG.pin){\n" +
+"    var cb = activeCallback;\n" +
+"    closePinModal();\n" +
+"    if(cb) cb();\n" +
+"  } else {\n" +
+"    pinError.textContent = \"Incorrect PIN. Try again.\";\n" +
+"    pinDigits.forEach(function(d){ d.value = \"\"; });\n" +
+"    pinDigits[0].focus();\n" +
+"  }\n" +
+"}\n" +
+"document.getElementById(\"pin-confirm-btn\").addEventListener(\"click\", attemptPin);\n" +
+"document.getElementById(\"pin-cancel-btn\").addEventListener(\"click\", closePinModal);\n" +
+"pinModal.addEventListener(\"click\", function(e){ if(e.target === pinModal) closePinModal(); });\n" +
+"document.addEventListener(\"keydown\", function(e){ if(e.key === \"Escape\" && pinModal.classList.contains(\"open\")) closePinModal(); });\n" +
+"function render(justIndex){\n" +
+"  var box = document.getElementById(\"card-box\");\n" +
+"  box.innerHTML = \"\";\n" +
+"  if(CFG.logo){\n" +
+"    var img = document.createElement(\"img\");\n" +
+"    img.className = \"pc-logo\";\n" +
+"    img.src = CFG.logo;\n" +
+"    box.appendChild(img);\n" +
+"  } else {\n" +
+"    var fb = document.createElement(\"div\");\n" +
+"    fb.className = \"pc-logo-fallback\";\n" +
+"    fb.textContent = (CFG.bizName || \"?\").trim().charAt(0).toUpperCase() || \"?\";\n" +
+"    box.appendChild(fb);\n" +
+"  }\n" +
+"  var name = document.createElement(\"div\");\n" +
+"  name.className = \"pc-bizname\";\n" +
+"  name.textContent = CFG.bizName;\n" +
+"  box.appendChild(name);\n" +
+"  var rule = document.createElement(\"div\");\n" +
+"  rule.className = \"pc-rule\";\n" +
+"  rule.textContent = \"Buy \" + CFG.n + \" \\u2192 get \" + CFG.rewardText;\n" +
+"  box.appendChild(rule);\n" +
+"  var count = (state.stamps && state.stamps.length) || 0;\n" +
+"  if(count >= CFG.n){\n" +
+"    var badge = document.createElement(\"div\");\n" +
+"    badge.className = \"reward-badge\";\n" +
+"    badge.textContent = \"\\u2605\";\n" +
+"    box.appendChild(badge);\n" +
+"    var title = document.createElement(\"div\");\n" +
+"    title.className = \"reward-title\";\n" +
+"    title.textContent = \"Card complete!\";\n" +
+"    box.appendChild(title);\n" +
+"    var desc = document.createElement(\"div\");\n" +
+"    desc.className = \"reward-desc\";\n" +
+"    desc.textContent = \"You've earned: \" + CFG.rewardText;\n" +
+"    box.appendChild(desc);\n" +
+"    var rbtn = document.createElement(\"button\");\n" +
+"    rbtn.type = \"button\";\n" +
+"    rbtn.className = \"btn\";\n" +
+"    rbtn.textContent = \"Redeem (staff enters PIN)\";\n" +
+"    rbtn.addEventListener(\"click\", function(){\n" +
+"      openPinModal(\"Redeem reward\", \"Staff: enter the 4-digit PIN to redeem.\", function(){\n" +
+"        state.lifetimeRewards = (state.lifetimeRewards || 0) + 1;\n" +
+"        state.stamps = [];\n" +
+"        state.redeemedAt = Date.now();\n" +
+"        saveState(state);\n" +
+"        render();\n" +
+"        showToast(\"Reward redeemed! Card reset.\", \"success\");\n" +
+"      });\n" +
+"    });\n" +
+"    box.appendChild(rbtn);\n" +
+"    var lt = document.createElement(\"div\");\n" +
+"    lt.className = \"pc-lifetime\";\n" +
+"    lt.textContent = \"Lifetime rewards earned: \" + (state.lifetimeRewards || 0);\n" +
+"    box.appendChild(lt);\n" +
+"    return;\n" +
+"  }\n" +
+"  var grid = document.createElement(\"div\");\n" +
+"  grid.className = \"pc-grid\";\n" +
+"  for(var i=0;i<CFG.n;i++){\n" +
+"    var cell = document.createElement(\"div\");\n" +
+"    cell.className = \"pc-stamp\" + (i < count ? \" filled\" : \"\");\n" +
+"    if(i < count){\n" +
+"      cell.style.background = CFG.color;\n" +
+"      cell.style.borderColor = CFG.color;\n" +
+"      cell.textContent = \"\\u2713\";\n" +
+"      if(justIndex === i){ cell.classList.add(\"pop\"); }\n" +
+"    }\n" +
+"    grid.appendChild(cell);\n" +
+"  }\n" +
+"  box.appendChild(grid);\n" +
+"  var prog = document.createElement(\"div\");\n" +
+"  prog.className = \"pc-progress-text\";\n" +
+"  var remaining = CFG.n - count;\n" +
+"  prog.textContent = remaining === 1 ? \"1 more stamp to your reward!\" : (count === 0 ? \"Start collecting stamps at checkout.\" : remaining + \" more stamps to go.\");\n" +
+"  box.appendChild(prog);\n" +
+"  var sbtn = document.createElement(\"button\");\n" +
+"  sbtn.type = \"button\";\n" +
+"  sbtn.className = \"btn\";\n" +
+"  sbtn.textContent = \"Stamp (staff enters PIN)\";\n" +
+"  sbtn.addEventListener(\"click\", function(){\n" +
+"    openPinModal(\"Enter staff PIN\", \"Staff: enter the 4-digit PIN to add a stamp.\", function(){\n" +
+"      state.stamps = state.stamps || [];\n" +
+"      state.stamps.push(Date.now());\n" +
+"      saveState(state);\n" +
+"      render(state.stamps.length - 1);\n" +
+"      showToast(\"Stamp added!\", \"success\");\n" +
+"    });\n" +
+"  });\n" +
+"  box.appendChild(sbtn);\n" +
+"  var lt2 = document.createElement(\"div\");\n" +
+"  lt2.className = \"pc-lifetime\";\n" +
+"  lt2.textContent = \"Lifetime rewards earned: \" + (state.lifetimeRewards || 0);\n" +
+"  box.appendChild(lt2);\n" +
+"}\n" +
+"render();\n" +
+"})();\n" +
+"<\/script>\n" +
+"</body>\n" +
+"</html>\n";
+  }
+
+  /* ================= QR CODE GENERATION ================= */
+  var cardUrlInput = $("card-url");
+  var qrBox = $("qrcode-box");
+
+  $("generate-qr-btn").addEventListener("click", function(){
+    generateQr();
+  });
+
+  function generateQr(){
+    var url = cardUrlInput.value.trim();
+    if(!url){
+      showToast("Paste your hosted card URL first.", "error");
+      return;
+    }
+    try{
+      localStorage.setItem("pcl_card_url_v1", url);
+    }catch(e){}
+    qrBox.innerHTML = "";
+    if(typeof QRCode === "function"){
+      try{
+        var holder = document.createElement("div");
+        qrBox.appendChild(holder);
+        new QRCode(holder, {
+          text: url,
+          width: 176,
+          height: 176,
+          colorDark: "#241a15",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }catch(e){
+        renderQrFallback(url);
+      }
+    } else {
+      renderQrFallback(url);
+    }
+    renderCounterSheet();
+  }
+
+  function renderQrFallback(url){
+    qrBox.innerHTML = "";
+    var fb = document.createElement("div");
+    fb.className = "qr-fallback";
+    fb.innerHTML = "QR library unavailable offline.<br><br><strong>Card URL:</strong><br>" + esc(url) +
+      "<br><br>Customers can type this URL directly, or you can regenerate the QR once you're back online.";
+    qrBox.appendChild(fb);
+  }
+
+  /* ================= PRINTABLE COUNTER SHEET ================= */
+  function renderCounterSheet(){
+    var wrap = $("counter-sheet");
+    wrap.innerHTML = "";
+    var url = "";
+    try{ url = localStorage.getItem("pcl_card_url_v1") || cardUrlInput.value.trim(); }catch(e){ url = cardUrlInput.value.trim(); }
+
+    if(!url){
+      wrap.innerHTML = "";
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.style.gridColumn = "1 / -1";
+      empty.innerHTML = "<div class='icon'>🖨</div><strong>No URL yet</strong>Generate a QR code above first, then your printable sheet will appear here.";
+      wrap.appendChild(empty);
+      return;
+    }
+
+    for(var i=0;i<9;i++){
+      var card = document.createElement("div");
+      card.className = "counter-card";
+
+      if(setup.logo){
+        var img = document.createElement("img");
+        img.className = "cc-logo";
+        img.src = setup.logo;
+        card.appendChild(img);
+      } else {
+        var fb = document.createElement("div");
+        fb.className = "cc-logo";
+        fb.style.background = setup.color;
+        fb.style.borderRadius = "8px";
+        fb.style.width = "34px";
+        fb.style.height = "34px";
+        fb.style.display = "flex";
+        fb.style.alignItems = "center";
+        fb.style.justifyContent = "center";
+        fb.style.color = "#fff";
+        fb.style.fontWeight = "800";
+        fb.style.fontSize = "0.85rem";
+        fb.textContent = (setup.bizName || "?").trim().charAt(0).toUpperCase() || "?";
+        card.appendChild(fb);
+      }
+
+      var nameEl = document.createElement("div");
+      nameEl.className = "cc-name";
+      nameEl.textContent = setup.bizName || "Your Business";
+      card.appendChild(nameEl);
+
+      var ruleEl = document.createElement("div");
+      ruleEl.className = "cc-rule";
+      ruleEl.textContent = "Buy " + clampN(setup.n) + ", get " + (setup.rewardText || "a reward");
+      card.appendChild(ruleEl);
+
+      var qrHolder = document.createElement("div");
+      qrHolder.className = "cc-qr";
+      card.appendChild(qrHolder);
+
+      if(typeof QRCode === "function"){
+        try{
+          new QRCode(qrHolder, {
+            text: url,
+            width: 84,
+            height: 84,
+            colorDark: "#241a15",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }catch(e){
+          qrHolder.textContent = "(QR unavailable)";
+          qrHolder.style.fontSize = "0.6rem";
+          qrHolder.style.color = "#8a7a70";
+        }
+      } else {
+        qrHolder.textContent = "(QR unavailable offline)";
+        qrHolder.style.fontSize = "0.6rem";
+        qrHolder.style.color = "#8a7a70";
+      }
+
+      var scanEl = document.createElement("div");
+      scanEl.className = "cc-scan";
+      scanEl.textContent = "Scan for your card";
+      card.appendChild(scanEl);
+
+      wrap.appendChild(card);
+    }
+  }
+
+  $("print-sheet-btn").addEventListener("click", function(){
+    window.print();
+  });
+
+  /* ================= INIT ================= */
+  function init(){
+    fillFormFromSetup();
+    renderSetupPreview();
+    renderDemoCard();
+
+    try{
+      var savedUrl = localStorage.getItem("pcl_card_url_v1");
+      if(savedUrl){
+        cardUrlInput.value = savedUrl;
+        generateQr();
+      } else {
+        renderCounterSheet();
+      }
+    }catch(e){
+      renderCounterSheet();
+    }
+
+    var storageNote = $("storage-note");
+    if(typeof localStorage === "undefined"){
+      storageNote.textContent = "Warning: localStorage is unavailable in this browser — your data will not be saved.";
+    } else {
+      storageNote.textContent = "Each exported card lives in the customer's own phone browser — just like a paper punch card, but digital.";
+    }
+
+    if(firstRun){
+      showToast("Loaded sample business: Copper Cup Coffee. Edit anything to make it yours.", "");
+    }
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>
